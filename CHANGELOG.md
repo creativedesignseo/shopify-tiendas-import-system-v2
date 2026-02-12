@@ -12,6 +12,9 @@ All notable changes to this project will be documented in this file.
 - **Barcode Sanitization**: Automatic removal of leading single quotes (`'`) often added by Excel.
 - **Column Mapping Collision**: Fixed bug where numeric measure columns were overwritten with "ml" due to fuzzy word matching.
 - **Field Restoration**: Restored missing Price and Status mappings in the CSV exporter.
+- **Metafield Mapping**: Resolved missing `Aroma`, `Ocasión`, and `Estación` in CSV export by matching exact Shopify headers.
+- **Product Counting**: Fixed discrepancy by counting unique `Handles` (621) instead of `Barcodes` (543) in the master CSV.
+- **AI Content**: Included `aroma` in the AI prompt and the review dialog's HTML fallback.
 
 ## [1.1.0] - 2026-02-11
 ### Added
