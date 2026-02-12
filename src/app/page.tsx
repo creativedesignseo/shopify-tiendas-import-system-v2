@@ -1,5 +1,7 @@
 "use client"
 
+export const dynamic = "force-dynamic";
+
 import * as React from "react"
 import { FileDropzone } from "@/components/file-dropzone"
 import { ProductsTable } from "@/components/products-table"

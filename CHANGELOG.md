@@ -4,8 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [1.2.1] - 2026-02-12
 ### Fixed
-- **CI/CD Reliability**: Resolved all ESLint errors blocking Vercel deployment (unescaped HTML entities, unused imports, explicit `any` types).
-- **Accessibility**: Added descriptive `alt` text to all product images in the dashboard and review dialogs.
+- Corregida la discrepancia de conteo de productos usando `uniqueHandles.size` en lugar de `products.length`.
+- Solucionados errores de mapeo en Metafields (`Ocasión`, `Estación`, `Aroma`).
+- Eliminados errores de linting (no-explicit-any, unescaped entities) que bloqueaban el build.
+- Añadido texto alternativo (`alt`) a todas las imágenes para cumplir con accesibilidad.
+- **Vercel**: Desactivada la caché estática en `page.tsx` (`force-dynamic`) para resolver datos obsoletos en producción.
 
 ## [1.2.0] - 2026-02-12
 ### Added
