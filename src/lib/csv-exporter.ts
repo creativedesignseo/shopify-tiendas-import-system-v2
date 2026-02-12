@@ -88,6 +88,12 @@ export const generateCSV = (products: ProcessedProduct[], masterHeaders: string[
             if (target === "Unit Price Base Measure" && n.includes("base") && n.includes("measure") && !n.endsWith("unit")) return true;
             if (target === "Unit Price Base Measure Unit" && n.includes("base") && n.includes("measure") && n.endsWith("unit")) return true;
             if (target === "Variant Barcode" && n.includes("variant") && n.includes("barcode")) return true;
+            
+            // Metafields (Complex Shopify Headers)
+            if (target === "Ocasión" && n.includes("ocasion") && n.includes("occasion")) return true;
+            if (target === "Estación" && n.includes("estacion") && n.includes("season")) return true;
+            if (target === "Aroma" && n.includes("aroma") && n.includes("scent")) return true;
+            
             return false;
         });
     };

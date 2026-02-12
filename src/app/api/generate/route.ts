@@ -41,8 +41,8 @@ export async function POST(req: Request) {
          - Género (Hombre, Mujer, Unisex)
          - Notas de salida (comma separated)
          - Ocasión (e.g. Noche, Día, Cita)
-         - Estación (e.g. Invierno, Verano)
-         - Aroma (e.g. Intenso, Suave)
+         - Estación (e.g. Invierno, Verano, Otoño, Primavera)
+         - Aroma (e.g. Intenso, Suave, Dulce, Fresco, Especiado)
          - Sexo objetivo (Male, Female, Unisex)
       
       Output Format: JSON ONLY. No markdown.
@@ -58,7 +58,7 @@ export async function POST(req: Request) {
           "notas_salida": "string",
           "ocasion": "string",
           "estacion": "string",
-          "aroma": "string",
+          "aroma": "string (e.g. Intenso, Floral, Amaderado)",
           "sexo_objetivo": "string"
         },
         "image_query": "string (specific product search query for images)"

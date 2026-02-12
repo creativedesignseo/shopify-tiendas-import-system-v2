@@ -3,6 +3,7 @@ import Papa from "papaparse";
 export interface MasterData {
   headers: string[];
   existingBarcodes: Set<string>;
+  totalProductsCount: number;
   htmlTemplate: string;
 }
 
@@ -15,12 +16,18 @@ export const parseMasterCSV = (file: File): Promise<MasterData> => {
         if (results.meta.fields && results.meta.fields.length > 0) {
           const headers = results.meta.fields;
           const existingBarcodes = new Set<string>();
+          const uniqueHandles = new Set<string>();
           let htmlTemplate = "";
 
-          results.data.forEach((row: any, index: number) => {
-            // Extract Barcode (Variant Barcode)
+          results.data.forEach((row: any) => {
+            // Extract Barcode (Variant Barcode) for collision detection
             if (row["Variant Barcode"]) {
               existingBarcodes.add(row["Variant Barcode"].trim());
+            }
+
+            // Extract Handle for total product count (Shopify logic: one handle = one product)
+            if (row["Handle"]) {
+              uniqueHandles.add(row["Handle"].trim());
             }
 
             // Extract HTML Template from the first row that has it
@@ -50,6 +57,7 @@ export const parseMasterCSV = (file: File): Promise<MasterData> => {
           resolve({
             headers,
             existingBarcodes,
+            totalProductsCount: uniqueHandles.size,
             htmlTemplate,
           });
         } else {

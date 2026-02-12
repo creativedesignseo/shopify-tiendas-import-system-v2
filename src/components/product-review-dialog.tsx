@@ -65,6 +65,7 @@ export function ProductReviewDialog({
             .replace(/{{genero}}/g, aiData.metafields?.genero || "N/A")
             .replace(/{{ocasion}}/g, aiData.metafields?.ocasion || "N/A")
             .replace(/{{estacion}}/g, aiData.metafields?.estacion || "N/A")
+            .replace(/{{aroma}}/g, aiData.metafields?.aroma || "N/A")
       }
 
       onUpdate(product.id, {

@@ -182,7 +182,7 @@ Cabeceras Requeridas (Aceptamos variaciones):
             </CardTitle>
             <CardDescription>
               {masterData 
-                 ? `${masterData.existingBarcodes.size} productos existentes rastreados.` 
+                 ? `${masterData.totalProductsCount} productos rastreados en la tienda.` 
                  : "Sube el último 'products_export.csv' para aprender cabeceras y códigos."}
             </CardDescription>
           </CardHeader>
