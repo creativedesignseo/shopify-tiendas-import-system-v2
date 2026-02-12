@@ -35,8 +35,8 @@ Para tener el proyecto accesible desde cualquier lugar y en cualquier dispositiv
 3.  **Importar desde GitHub**: Verás tu repositorio `shopify-tiendas-import-system-v2`. Haz clic en **"Import"**.
 4.  **Configurar Variables de Entorno (CRÍTICO)**: 
     - Antes de darle a "Deploy", busca la sección **"Environment Variables"**.
-    - Añade una nueva variable:
-        - **Key**: `GOOGLE_GENERATIVE_AI_API_KEY`
+    - Añade una nueva variable con cualquiera de estos dos nombres:
+        - **Key**: `GEMINI_API_KEY` (o `GOOGLE_GENERATIVE_AI_API_KEY`)
         - **Value**: Tu clave de la API de Gemini.
     - Haz clic en **"Add"**.
 5.  **Desplegar**: Haz clic en **"Deploy"**.
