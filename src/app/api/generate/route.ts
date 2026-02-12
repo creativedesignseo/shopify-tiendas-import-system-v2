@@ -81,8 +81,9 @@ export async function POST(req: Request) {
       jsonResponse.model_used = "gemini-2.5-flash";
       return NextResponse.json(jsonResponse);
     
-    } catch (error: any) {
-      console.warn("Gemini 2.5 Flash failed, falling back to 2.0 Flash. Error:", error.message);
+    } catch (error: unknown) {
+      const err = error as Error;
+      console.warn("Gemini 2.5 Flash failed, falling back to 2.0 Flash. Error:", err.message);
       
       // Fallback to Secondary Model (2.0 Flash)
       try {
@@ -100,37 +101,39 @@ export async function POST(req: Request) {
         jsonResponse.model_used = "gemini-2.0-flash";
         return NextResponse.json(jsonResponse);
 
-      } catch (fallbackError: any) {
-        console.error("Gemini 2.0 Fallback failed:", fallbackError);
+      } catch (fallbackError: unknown) {
+        const err = fallbackError as any;
+        console.error("Gemini 2.0 Fallback failed:", err);
         
         let errorMessage = "Failed to generate content";
         let status = 500;
-        const errBody = fallbackError.response || fallbackError;
+        const errBody = err.response || err;
 
         // Detect Quota/Rate Limit errors
         if (
           errBody.status === 429 || 
-          fallbackError.message?.includes("429") || 
-          fallbackError.message?.includes("Quota") ||
-          fallbackError.message?.includes("quota")
+          err.message?.includes("429") || 
+          err.message?.includes("Quota") ||
+          err.message?.includes("quota")
         ) {
           errorMessage = "⏳ Límite de cuota excedido (Google Free Tier). Intenta más tarde o añade facturación.";
           status = 429;
         } else {
-          errorMessage = fallbackError.message || errorMessage;
+          errorMessage = err.message || errorMessage;
         }
 
         return NextResponse.json(
-          { error: errorMessage, details: fallbackError.message }, 
+          { error: errorMessage, details: err.message }, 
           { status }
         );
       }
     }
 
-  } catch (error: any) {
-    console.error("General API Error:", error);
+  } catch (error: unknown) {
+    const err = error as Error;
+    console.error("General API Error:", err);
     return NextResponse.json(
-      { error: "Internal Server Error", details: error.message }, 
+      { error: "Internal Server Error", details: err.message }, 
       { status: 500 }
     );
   }

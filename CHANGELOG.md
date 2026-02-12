@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.1] - 2026-02-12
+### Fixed
+- **CI/CD Reliability**: Resolved all ESLint errors blocking Vercel deployment (unescaped HTML entities, unused imports, explicit `any` types).
+- **Accessibility**: Added descriptive `alt` text to all product images in the dashboard and review dialogs.
+
 ## [1.2.0] - 2026-02-12
 ### Added
 - **Final Shopify Compliance**: Stronger fuzzy matching logic for Unit Price headers.

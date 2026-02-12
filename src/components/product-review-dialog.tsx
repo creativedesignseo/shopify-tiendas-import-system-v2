@@ -11,7 +11,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ProcessedProduct } from "@/lib/product-processor"
 import { MasterData } from "@/lib/csv-parser"
-import { Loader2, Sparkles, Search, ExternalLink, Check, Image as ImageIcon, Code, FileText } from "lucide-react"
+import { Loader2, Sparkles, Search, ExternalLink, Check, Image as ImageIcon, FileText } from "lucide-react"
 
 interface ProductReviewDialogProps {
   product: ProcessedProduct
@@ -167,7 +167,7 @@ export function ProductReviewDialog({
                           <img 
                             src={product.images[0]} 
                             className="h-40 w-40 object-contain rounded-lg border bg-white shadow-sm"
-                            alt="Main preview"
+                            alt={`Imagen principal de ${product.title}`}
                           />
                        ) : (
                           <div className="h-40 w-40 flex flex-col items-center justify-center rounded-lg border border-dashed bg-muted/50 text-muted-foreground gap-2">

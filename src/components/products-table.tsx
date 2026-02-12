@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/dialog"
 import { Textarea } from "@/components/ui/textarea"
 import { ProcessedProduct } from "@/lib/product-processor"
-import { Check, AlertCircle, Loader2, FileText, Settings2, ExternalLink, Search } from "lucide-react"
+import { Check, AlertCircle, Loader2, Settings2, ExternalLink, Search } from "lucide-react"
 import { MasterData } from "@/lib/csv-parser"
 import { ProductReviewDialog } from "./product-review-dialog"
 
@@ -160,7 +160,7 @@ export function ProductsTable({
                     {product.images[0] ? (
                       <img 
                         src={product.images[0]} 
-                        alt="Preview" 
+                        alt={`Vista previa de ${product.title}`}
                         className="h-16 w-16 rounded object-cover border cursor-pointer hover:scale-105 hover:border-blue-500 transition-all shadow-sm"
                         onClick={() => window.open(`https://www.google.com/search?q=${encodeURIComponent(product.vendor + " " + product.title + " perfume bottle")}&tbm=isch`, '_blank')}
                         title="Buscar en Google"

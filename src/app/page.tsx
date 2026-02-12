@@ -5,7 +5,6 @@ import { FileDropzone } from "@/components/file-dropzone"
 import { ProductsTable } from "@/components/products-table"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Progress } from "@/components/ui/progress"
 import { MasterData, parseMasterCSV } from "@/lib/csv-parser"
 import { ProcessedProduct, processNewProducts, SkippedProduct } from "@/lib/product-processor"
 import { generateCSV } from "@/lib/csv-exporter"
@@ -163,7 +162,7 @@ Cabeceras Requeridas (Aceptamos variaciones):
           <div className="flex items-center">
             <AlertTriangle className="h-5 w-5 text-blue-500 mr-3" />
             <p className="text-sm text-blue-700">
-              Utiliza el botón <strong>"Revisar / IA"</strong> en cada producto para generar su contenido uno por uno. Solo los productos con el check verde se exportarán.
+              Utiliza el botón <strong>&quot;Revisar / IA&quot;</strong> en cada producto para generar su contenido uno por uno. Solo los productos con el check verde se exportarán.
             </p>
           </div>
         </div>
