@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.4.0] - 2026-02-13
+### Changed
+- **Visual Overhaul**: Complete redesign using **Uber's Design System** (Black/White palette, Pill buttons, Clean aesthetics).
+- **Routing Revert**: Restored the Dashboard logic to the root path (`/`) and removed the separated Landing Page/Dashboard structure.
+- **UI Components**: Refactored `Button`, `Input`, and `Card` components to match the new premium design language.
+
 ## [1.3.0] - 2026-02-13
 ### Added
 - **Quota Management**: Smart "Quota Exceeded (429)" modal with actionable advice for free tier limits.
