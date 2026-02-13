@@ -18,7 +18,7 @@ export function SettingsDialog() {
   const [open, setOpen] = React.useState(false)
   const [provider, setProvider] = React.useState("gemini")
   const [apiKey, setApiKey] = React.useState("")
-  const [modelVersion, setModelVersion] = React.useState("gemini-2.0-flash")
+  const [modelVersion, setModelVersion] = React.useState("gemini-2.5-flash")
   const [showApiKey, setShowApiKey] = React.useState(false)
 
 
@@ -26,7 +26,7 @@ export function SettingsDialog() {
     if (open) {
       const storedProvider = localStorage.getItem("ai_provider") || "gemini"
       const storedKey = localStorage.getItem("ai_api_key") || ""
-      const storedModel = localStorage.getItem("ai_model_version") || "gemini-2.0-flash"
+      const storedModel = localStorage.getItem("ai_model_version") || "gemini-2.5-flash"
       setProvider(storedProvider)
       setApiKey(storedKey)
       setModelVersion(storedModel)

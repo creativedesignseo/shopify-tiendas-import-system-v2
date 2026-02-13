@@ -51,7 +51,7 @@ export function ProductReviewDialog({
           htmlTemplate: masterData.htmlTemplate,
           provider: localStorage.getItem("ai_provider") || "gemini",
           apiKey: localStorage.getItem("ai_api_key") || "",
-          modelVersion: localStorage.getItem("ai_model_version") || "gemini-2.0-flash"
+          modelVersion: localStorage.getItem("ai_model_version") || "gemini-2.5-flash"
         })
       })
 
