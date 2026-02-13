@@ -49,7 +49,9 @@ export interface ProcessedProduct {
 
   // Status
   isDuplicate: boolean;
+  isChecked: boolean;
   status: "pending" | "generating" | "complete" | "error";
+  observation?: string;
   errorDetails?: string;
   modelUsed?: string;
 }
@@ -208,6 +210,7 @@ export const processNewProducts = (
 
             unitPrice: unitPriceCalc,
             isDuplicate: false, // We filtered them out
+            isChecked: true,
             status: "pending",
           });
         });

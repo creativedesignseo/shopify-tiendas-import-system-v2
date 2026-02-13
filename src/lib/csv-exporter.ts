@@ -12,7 +12,7 @@ const normalize = (str: string) =>
 export const generateCSV = (products: ProcessedProduct[], masterHeaders: string[]): string => {
   const rows: any[] = [];
 
-  products.forEach((product) => {
+  products.filter(p => p.isChecked).forEach((product) => {
     // 1. Prepare Base Data for Row 1
     const handle = slugify(product.generatedTitle, { lower: true, strict: true });
     

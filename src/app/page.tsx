@@ -202,9 +202,9 @@ Cabeceras Requeridas (Aceptamos variaciones):
   // 5. Exportar
   const handleExport = () => {
     if (!masterData) return
-    const readyProducts = products.filter(p => p.status === "complete")
+    const readyProducts = products.filter(p => p.status === "complete" && p.isChecked)
     if (readyProducts.length === 0) {
-      alert("No hay productos marcados como 'Listos' para exportar.")
+      alert("No hay productos SELECCIONADOS y terminados para exportar.")
       return
     }
     const csvArgs = generateCSV(readyProducts, masterData.headers)
@@ -242,11 +242,11 @@ Cabeceras Requeridas (Aceptamos variaciones):
             <Button 
               className={cn("cursor-pointer transition-all active:scale-95", "hover:bg-primary/90")}
               onClick={handleExport} 
-              disabled={!products.some(p => p.status === "complete") || !masterData}
+              disabled={!products.some(p => p.status === "complete" && p.isChecked) || !masterData}
               variant="default"
             >
               <Download className="mr-2 h-4 w-4" /> 
-              Exportar {products.filter(p => p.status === "complete").length} Productos Listos
+              Exportar {products.filter(p => p.status === "complete" && p.isChecked).length} Seleccionados
             </Button>
         </div>
       </div>

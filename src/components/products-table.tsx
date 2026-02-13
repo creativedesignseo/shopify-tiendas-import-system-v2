@@ -53,13 +53,25 @@ export function ProductsTable({
     <div className="space-y-4">
       <div className="flex items-center gap-2 text-xs text-muted-foreground bg-blue-50/50 p-2 rounded-md border border-blue-100">
         <Check className="h-3 w-3 text-green-500" />
-        Solo los productos marcados como <b>"Listo"</b> serán incluidos en el archivo de exportación para Shopify.
+        Solo los productos <b>marcados</b> con el checkbox serán incluidos en el archivo de exportación.
       </div>
       {/* Desktop/Tablet Table View */}
       <div className="hidden md:block border rounded-md overflow-x-auto">
         <Table className="min-w-[800px]">
           <TableHeader>
             <TableRow>
+              <TableHead className="w-[40px]">
+                <input 
+                  type="checkbox" 
+                  checked={products.length > 0 && products.every(p => p.isChecked)}
+                  onChange={(e) => {
+                    const checked = e.target.checked;
+                    products.forEach(p => onUpdateProduct(p.id, "isChecked", checked));
+                  }}
+                  className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-600 cursor-pointer"
+                  title="Seleccionar todo"
+                />
+              </TableHead>
               <TableHead className="w-[50px]">Estado</TableHead>
               <TableHead className="min-w-[200px]">Título</TableHead>
               <TableHead>Marca</TableHead>
@@ -72,8 +84,21 @@ export function ProductsTable({
           </TableHeader>
           <TableBody>
           {products.map((product) => (
-            <TableRow key={product.id} className="transition-colors hover:bg-accent/40 group/row">
-              {/* Existing Table Cells... (Keeping them as they effectively are, but wrapped in valid structure) */}
+            <TableRow 
+              key={product.id} 
+              className={cn(
+                "transition-colors group/row",
+                product.isChecked ? "hover:bg-accent/40" : "bg-muted/30 grayscale-[0.5] opacity-80"
+              )}
+            >
+              <TableCell>
+                <input 
+                  type="checkbox"
+                  checked={product.isChecked}
+                  onChange={(e) => onUpdateProduct(product.id, "isChecked", e.target.checked)}
+                  className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-600 cursor-pointer"
+                />
+              </TableCell>
               <TableCell>
                 {product.status === "pending" && (
                   <Badge variant="outline" className="text-muted-foreground">
@@ -124,6 +149,15 @@ export function ProductsTable({
                         onChange={(e) => onUpdateProduct(product.id, "seoTitle", e.target.value)}
                         className="h-6 text-xs w-full hover:border-blue-400 focus:border-blue-500 transition-colors"
                         placeholder="Título SEO"
+                     />
+                  </div>
+                  <div className="flex items-center gap-2 text-[10px] text-muted-foreground italic">
+                     <span>Nota:</span>
+                     <Input 
+                        value={product.observation || ""}
+                        onChange={(e) => onUpdateProduct(product.id, "observation", e.target.value)}
+                        className="h-6 text-[10px] w-full bg-yellow-50/30 hover:border-amber-200 focus:border-amber-400 transition-colors italic border-dashed"
+                        placeholder="Escribe una observación aquí (ej: falta imagen)..."
                      />
                   </div>
                 </div>
@@ -272,11 +306,23 @@ export function ProductsTable({
       {/* Mobile Card View */}
       <div className="md:hidden space-y-4">
         {products.map((product) => (
-          <div key={product.id} className="bg-white rounded-xl border shadow-sm p-4 space-y-4">
-            {/* Header: Status + Title */}
+          <div 
+            key={product.id} 
+            className={cn(
+               "bg-white rounded-xl border shadow-sm p-4 space-y-4 transition-all",
+               !product.isChecked && "grayscale opacity-70 bg-gray-50 border-dashed"
+            )}
+          >
+            {/* Header: Status + Selection + Title */}
             <div className="flex justify-between items-start gap-3">
                <div className="flex-1 space-y-1">
                  <div className="flex items-center gap-2 mb-1">
+                    <input 
+                      type="checkbox"
+                      checked={product.isChecked}
+                      onChange={(e) => onUpdateProduct(product.id, "isChecked", e.target.checked)}
+                      className="h-5 w-5 rounded border-gray-300 text-blue-600 focus:ring-blue-600 cursor-pointer mr-1"
+                    />
                     {product.status === "complete" ? (
                       <Badge variant="secondary" className="bg-green-100 text-green-700 text-[10px] px-2 h-5">
                         <Check className="w-3 h-3 mr-1" /> Listo
