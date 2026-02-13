@@ -119,10 +119,10 @@ export function SettingsDialog() {
                       onChange={(e) => setModelVersion(e.target.value)}
                       className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                   >
-                      <option value="gemini-2.0-flash">Gemini 2.0 Flash (Recomendado)</option>
-                      <option value="gemini-2.0-flash-lite">Gemini 2.0 Flash Lite</option>
-                      <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
-                      <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
+                      <option value="gemini-2.0-flash">Gemini 2.0 Flash (Experimental)</option>
+                      <option value="gemini-2.0-flash-lite-preview-02-05">Gemini 2.0 Flash Lite (Preview)</option>
+                      <option value="gemini-1.5-flash-latest">Gemini 1.5 Flash (Stable)</option>
+                      <option value="gemini-1.5-pro-latest">Gemini 1.5 Pro (Stable)</option>
                   </select>
               </div>
             </div>
