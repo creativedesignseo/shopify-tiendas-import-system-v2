@@ -5,6 +5,28 @@ import OpenAI from "openai";
 const DEFAULT_GEMINI_KEY = process.env.GEMINI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY || "";
 const DEFAULT_OPENAI_KEY = process.env.OPENAI_API_KEY || "";
 
+/**
+ * SAFETY NET: Ensures the brand is ALWAYS the first tag.
+ * - If tags are empty → returns just the brand.
+ * - If brand is already first → returns as-is.
+ * - If brand exists elsewhere → moves it to first position.
+ * - If brand is missing → prepends it.
+ */
+function ensureBrandFirstTag(tags: string | undefined, brand: string): string {
+  if (!brand) return tags || "";
+  
+  const brandClean = brand.trim();
+  if (!tags || !tags.trim()) return brandClean;
+  
+  const tagList = tags.split(",").map(t => t.trim()).filter(Boolean);
+  
+  // Remove brand if it exists anywhere (case-insensitive)
+  const filtered = tagList.filter(t => t.toLowerCase() !== brandClean.toLowerCase());
+  
+  // Always put brand first
+  return [brandClean, ...filtered].join(", ");
+}
+
 export async function POST(req: Request) {
   let body: any = {};
   
@@ -51,7 +73,7 @@ export async function POST(req: Request) {
       2. **body_html**: MUST contain original HTML content about "${product.Nombre}". Use the same HTML tag structure as the reference but with COMPLETELY NEW text. Include olfactory notes, characteristics, and recommendations.
       3. **seo_title**: SEO-optimized title (max 60 chars) for "${product.Nombre}".
       4. **seo_description**: Compelling meta description (max 160 chars).
-      5. **tags**: 5-8 relevant comma-separated tags.
+      5. **tags**: CRITICAL: The FIRST tag MUST ALWAYS be the brand name "${product.Marca}". Then add 4-7 more relevant tags. Example: "${product.Marca}, perfume, oriental, amaderado". NEVER omit the brand as first tag.
       6. **metafields**: Object with keys: acorde, genero, notas_salida, ocasion, estacion, aroma, sexo_objetivo.
       7. **image_url**: Leave as empty string "".
       
@@ -97,6 +119,8 @@ export async function POST(req: Request) {
       
       const jsonResponse = JSON.parse(content);
       jsonResponse.model_used = "gpt-4o-mini";
+      // SAFETY NET: Ensure brand is always the first tag
+      jsonResponse.tags = ensureBrandFirstTag(jsonResponse.tags, product.Marca);
       return NextResponse.json(jsonResponse);
     }
 
@@ -117,6 +141,8 @@ export async function POST(req: Request) {
     const response = await result.response;
     const jsonResponse = JSON.parse(response.text());
     jsonResponse.model_used = activeModel;
+    // SAFETY NET: Ensure brand is always the first tag
+    jsonResponse.tags = ensureBrandFirstTag(jsonResponse.tags, product.Marca);
     return NextResponse.json(jsonResponse);
 
   } catch (error: any) {
