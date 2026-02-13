@@ -6,8 +6,11 @@ const DEFAULT_GEMINI_KEY = process.env.GEMINI_API_KEY || process.env.GOOGLE_GENE
 const DEFAULT_OPENAI_KEY = process.env.OPENAI_API_KEY || "";
 
 export async function POST(req: Request) {
+  let body: any = {};
+  
   try {
-    const { product, htmlTemplate, provider = "gemini", apiKey, modelVersion } = await req.json();
+    body = await req.json();
+    const { product, htmlTemplate, provider = "gemini", apiKey, modelVersion } = body;
 
     const activeApiKey = apiKey || (provider === "openai" ? DEFAULT_OPENAI_KEY : DEFAULT_GEMINI_KEY);
 
@@ -40,8 +43,7 @@ export async function POST(req: Request) {
       4. **SEO Description**: Compelling meta description (160 chars max).
       5. **Tags**: 5-8 relevant tags (comma separated string).
       6. **Metafields**: Infer attributes (Acorde, Género, Notas, Ocasión, Estación, Aroma).
-      
-      Output Format: JSON ONLY. No markdown.
+      7. **Output Format**: JSON ONLY. No markdown.
     `;
 
     // --- OPENAI HANDLER ---
@@ -87,8 +89,29 @@ export async function POST(req: Request) {
 
   } catch (error: any) {
     console.error("AI Generation Error:", error);
+    
+    // Determine which key was active using the pre-parsed body
+    const { provider = "gemini", apiKey } = body || {}; 
+    const isCustomKey = !!apiKey;
+    const activeApiKey = apiKey || (provider === "openai" ? DEFAULT_OPENAI_KEY : DEFAULT_GEMINI_KEY);
+    
+    // Mask logic
+    const maskedKey = activeApiKey && activeApiKey.length > 4 
+        ? `...${activeApiKey.slice(-4)}` 
+        : (activeApiKey ? "***" : "None");
+        
+    const keySource = isCustomKey ? "Settings (User)" : ".env (System)";
+
     return NextResponse.json(
-      { error: error.message || "Internal Server Error" }, 
+      { 
+        error: error.message || "Internal Server Error",
+        details: {
+            masked_key: maskedKey,
+            key_source: keySource,
+            provider: provider,
+            model_tried: body?.modelVersion || "default"
+        }
+      }, 
       { status: 500 }
     );
   }

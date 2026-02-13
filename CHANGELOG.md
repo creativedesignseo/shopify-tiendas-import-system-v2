@@ -8,6 +8,8 @@ All notable changes to this project will be documented in this file.
 - **Model Selector**: Settings dropdown to switch between Gemini 2.0 Flash, 1.5 Pro, and Lite versions.
 - **API Key Visibility**: Toggle to show/hide API Key and masked preview (last 4 chars) for verification.
 - **Master Data Persistence**: Auto-save of "Master CSV" to `localStorage` to prevent data loss on reload.
+- **Error Transparency**: Backend now returns masked API key and source (.env vs Settings) in 429/500 errors.
+- **Debug UI**: Quota Error modal displays exactly which token failed and where it came from.
 
 ## [1.2.1] - 2026-02-12
 ### Fixed

@@ -32,6 +32,7 @@ export function ProductReviewDialog({
   const [activeTab, setActiveTab] = React.useState("details")
   const [showQuotaError, setShowQuotaError] = React.useState(false)
   const [quotaErrorMessage, setQuotaErrorMessage] = React.useState("")
+  const [errorMetadata, setErrorMetadata] = React.useState<{masked_key?: string, key_source?: string, provider?: string} | null>(null)
 
   const handleGenerate = async () => {
     if (!masterData) return
@@ -55,7 +56,12 @@ export function ProductReviewDialog({
       })
 
       const rawData = await res.json()
-      if (!res.ok) throw new Error(rawData.error || rawData.details || "API Error")
+      if (!res.ok) {
+         const error = new Error(rawData.error || "API Error")
+         // Attach details to the error object for the catch block
+         ;(error as any).details = rawData.details
+         throw error
+      }
       
       const aiData = rawData
 
@@ -100,6 +106,12 @@ export function ProductReviewDialog({
       console.error("Error generating single product:", error)
       const errorMsg = error.message || ""
       const isQuotaError = errorMsg.includes("429") || errorMsg.toLowerCase().includes("quota")
+      
+      if (error.details) {
+         setErrorMetadata(error.details)
+      } else {
+         setErrorMetadata(null)
+      }
 
       if (isQuotaError) {
          setQuotaErrorMessage(errorMsg)
@@ -402,6 +414,21 @@ export function ProductReviewDialog({
           </DialogDescription>
         </DialogHeader>
         <div className="py-4 text-sm text-muted-foreground">
+          {errorMetadata && (
+             <div className="mb-4 bg-orange-50 border border-orange-200 rounded p-3 text-orange-800 text-xs">
+                <div className="flex justify-between items-center mb-1">
+                   <strong>Token Utilizado:</strong> 
+                   <code className="bg-white px-1 py-0.5 rounded border border-orange-300 font-mono">
+                      {errorMetadata.masked_key}
+                   </code>
+                </div>
+                <div className="flex justify-between items-center">
+                   <strong>Origen:</strong>
+                   <span>{errorMetadata.key_source}</span>
+                </div>
+             </div>
+          )}
+
           <div className="mb-2">
             <strong>Detalle del error:</strong> 
             <div className="bg-red-50 p-2 rounded mt-1 border border-red-100 max-h-[200px] overflow-y-auto">
