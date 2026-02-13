@@ -50,10 +50,16 @@ export const BackupService = {
         .eq('session_id', sessionId)
         .single();
 
-      if (error) throw error;
+      if (error) {
+        // PGRST116 is the error for "0 rows found" when using .single()
+        if (error.code === 'PGRST116') {
+          return null;
+        }
+        throw error;
+      }
       return data;
-    } catch (error) {
-      console.error('Error fetching backup:', error);
+    } catch (error: any) {
+      console.error('Error fetching backup:', error.message || error);
       return null;
     }
   },
