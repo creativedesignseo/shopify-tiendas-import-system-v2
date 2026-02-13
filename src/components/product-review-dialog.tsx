@@ -11,7 +11,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ProcessedProduct } from "@/lib/product-processor"
 import { MasterData } from "@/lib/csv-parser"
-import { Loader2, Sparkles, Search, ExternalLink, Check, Image as ImageIcon, FileText } from "lucide-react"
+import { Loader2, Sparkles, Search, ExternalLink, Check, Image as ImageIcon, FileText, TriangleAlert } from "lucide-react"
 
 interface ProductReviewDialogProps {
   product: ProcessedProduct
@@ -30,6 +30,8 @@ export function ProductReviewDialog({
 }: ProductReviewDialogProps) {
   const [isGenerating, setIsGenerating] = React.useState(false)
   const [activeTab, setActiveTab] = React.useState("details")
+  const [showQuotaError, setShowQuotaError] = React.useState(false)
+  const [quotaErrorMessage, setQuotaErrorMessage] = React.useState("")
 
   const handleGenerate = async () => {
     if (!masterData) return
@@ -45,7 +47,10 @@ export function ProductReviewDialog({
             Marca: product.vendor,
             Tamaño: product.size
           },
-          htmlTemplate: masterData.htmlTemplate
+          htmlTemplate: masterData.htmlTemplate,
+          provider: localStorage.getItem("ai_provider") || "gemini",
+          apiKey: localStorage.getItem("ai_api_key") || "",
+          modelVersion: localStorage.getItem("ai_model_version") || "gemini-2.0-flash"
         })
       })
 
@@ -93,10 +98,19 @@ export function ProductReviewDialog({
 
     } catch (error: any) {
       console.error("Error generating single product:", error)
-      alert(`Error: ${error.message}`)
+      const errorMsg = error.message || ""
+      const isQuotaError = errorMsg.includes("429") || errorMsg.toLowerCase().includes("quota")
+
+      if (isQuotaError) {
+         setQuotaErrorMessage(errorMsg)
+         setShowQuotaError(true)
+      } else {
+         alert(`Error: ${errorMsg}`)
+      }
+      
       onUpdate(product.id, { 
          status: "error", 
-         errorDetails: error.message 
+         errorDetails: errorMsg 
       })
     } finally {
       setIsGenerating(false)
@@ -108,6 +122,7 @@ export function ProductReviewDialog({
   }
 
   return (
+    <>
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col p-0 gap-0">
         <DialogHeader className="p-6 border-b">
@@ -122,7 +137,13 @@ export function ProductReviewDialog({
                        </Badge>
                        {product.modelUsed && (
                          <Badge variant="outline" className="text-[10px] bg-blue-50 text-blue-700 border-blue-200">
-                           {product.modelUsed.replace("gemini-", "").replace("-flash", "")}
+                           {product.modelUsed
+                              .replace("models/", "")
+                              .replace("gemini-", "Gemini ")
+                              .replace("-flash", " Flash")
+                              .replace("-pro", " Pro")
+                              .replace("-lite", " Lite")
+                              .replace("gpt-", "GPT-")}
                          </Badge>
                        )}
                      </div>
@@ -135,7 +156,7 @@ export function ProductReviewDialog({
               <Button 
                 onClick={handleGenerate} 
                 disabled={isGenerating || !masterData}
-                className="bg-blue-600 hover:bg-blue-700 text-white shadow-sm"
+                className="bg-black hover:bg-black/80 text-white shadow-md rounded-full px-6"
               >
                 {isGenerating ? (
                   <>
@@ -151,9 +172,9 @@ export function ProductReviewDialog({
            </div>
         </DialogHeader>
 
-        <div className="flex-1 overflow-hidden flex">
+        <div className="flex-1 overflow-hidden flex flex-col md:flex-row">
            {/* LEFT COLUMN: Data & Images */}
-           <ScrollArea className="w-1/3 border-r bg-muted/10 p-6">
+           <ScrollArea className="w-full md:w-1/3 border-b md:border-b-0 md:border-r bg-muted/10 p-6 h-[400px] md:h-auto">
               <div className="space-y-6">
                  
                  {/* Images Section */}
@@ -360,12 +381,55 @@ export function ProductReviewDialog({
               <div className="text-xs text-muted-foreground">
                  {product.id}
               </div>
-              <Button onClick={() => onOpenChange(false)}>
-                 Cerrar / Guardar Cambios
-              </Button>
+               <Button onClick={() => onOpenChange(false)} className="bg-black text-white hover:bg-black/90 rounded-full px-8 shadow-lg">
+                  Cerrar / Guardar Cambios
+               </Button>
            </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>
+
+    {/* Quota Error Dialog */}
+    <Dialog open={showQuotaError} onOpenChange={setShowQuotaError}>
+      <DialogContent className="sm:max-w-[425px] border-red-200">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2 text-red-600">
+            <TriangleAlert className="h-5 w-5" />
+            Límite de Cuota Excedido (429)
+          </DialogTitle>
+          <DialogDescription className="pt-2">
+            El modelo de IA ha alcanzado su límite de uso gratuito.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="py-4 text-sm text-muted-foreground">
+          <div className="mb-2">
+            <strong>Detalle del error:</strong> 
+            <div className="bg-red-50 p-2 rounded mt-1 border border-red-100 max-h-[200px] overflow-y-auto">
+               <code className="text-red-500 text-xs font-mono break-all whitespace-pre-wrap">{quotaErrorMessage}</code>
+            </div>
+          </div>
+          <p>
+            Esto suele ocurrir con <strong>Gemini 2.0 Flash</strong> en cuentas gratuitas bajo alta demanda.
+          </p>
+          <ul className="list-disc pl-5 mt-2 space-y-1 text-xs">
+             <li>Intenta cambiar a <strong>Gemini 2.0 Flash Lite</strong> en Configuración.</li>
+             <li>Espera unos minutos antes de intentar de nuevo.</li>
+             <li>Usa tu propia API Key si tienes una cuenta de pago.</li>
+          </ul>
+        </div>
+        <DialogFooter>
+          <Button variant="secondary" onClick={() => setShowQuotaError(false)}>
+            Cerrar
+          </Button> 
+          <Button 
+            className="bg-red-600 hover:bg-red-700 text-white"
+            onClick={() => setShowQuotaError(false)}
+          >
+            Entendido
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+    </>
   )
 }

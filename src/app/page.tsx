@@ -14,6 +14,19 @@ import { Download, Play, Trash2, FileSpreadsheet, UploadCloud, AlertTriangle } f
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { cn } from "@/lib/utils"
+import { BackupService } from "@/lib/backup-service"
+import { SettingsDialog } from "@/components/settings-dialog"
+
+// Helper for generating UUIDs in non-secure contexts
+function generateUUID() {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+}
 
 export default function Dashboard() {
   const [masterData, setMasterData] = React.useState<MasterData | null>(null)
@@ -25,11 +38,83 @@ export default function Dashboard() {
   const [skippedProducts, setSkippedProducts] = React.useState<SkippedProduct[]>([])
   const [showSkippedDialog, setShowSkippedDialog] = React.useState(false)
 
+  // Backup State
+  const [showRestoreDialog, setShowRestoreDialog] = React.useState(false)
+  const [backupProducts, setBackupProducts] = React.useState<ProcessedProduct[]>([])
+  const [sessionId, setSessionId] = React.useState<string>("")
+
+  // Init Session & Check Backup
+  React.useEffect(() => {
+    // 1. Get or create Session ID
+    let sid = localStorage.getItem("shopify_importer_device_id")
+    if (!sid) {
+      sid = generateUUID()
+      localStorage.setItem("shopify_importer_device_id", sid)
+    }
+    setSessionId(sid)
+
+    // 2. Check for backups
+    const checkBackup = async () => {
+       if (!sid) return
+       const backup = await BackupService.getBackup(sid)
+       if (backup && backup.products && Array.isArray(backup.products) && backup.products.length > 0) {
+          setBackupProducts(backup.products)
+          setShowRestoreDialog(true)
+       }
+    }
+    checkBackup()
+
+    // 3. Load MasterData from LocalStorage
+    const storedMaster = localStorage.getItem("shopify_importer_master_data")
+    if (storedMaster) {
+      try {
+        const parsed = JSON.parse(storedMaster)
+        // Rehydrate Set
+        if (parsed.existingBarcodes) {
+           parsed.existingBarcodes = new Set(parsed.existingBarcodes)
+        }
+        setMasterData(parsed)
+      } catch (e) {
+        console.error("Error loading master data from local storage", e)
+      }
+    }
+  }, [])
+
+  // Auto-Save Effect (Debounced)
+  React.useEffect(() => {
+    if (!sessionId || products.length === 0) return
+
+    const timeoutId = setTimeout(() => {
+       console.log("Auto-saving to Supabase...", products.length)
+       BackupService.saveBackup(sessionId, products)
+    }, 2000) // 2s debounce
+
+    return () => clearTimeout(timeoutId)
+  }, [products, sessionId])
+
+  const handleRestore = () => {
+    setProducts(backupProducts)
+    setShowRestoreDialog(false)
+    alert("✅ Sesión restaurada con éxito.")
+  }
+
+  const handleDiscardBackup = () => {
+    setShowRestoreDialog(false)
+  }
+
   // 1. Manejar Archivo Maestro
   const handleMasterFile = async (file: File) => {
     try {
       const data = await parseMasterCSV(file)
       setMasterData(data)
+      
+      // Persist to LocalStorage (Serialize Set to Array)
+      const toStore = {
+         ...data,
+         existingBarcodes: Array.from(data.existingBarcodes)
+      }
+      localStorage.setItem("shopify_importer_master_data", JSON.stringify(toStore))
+
     } catch (error) {
       console.error("Error al procesar CSV Maestro:", error)
       alert("Error al procesar CSV Maestro. Revisa la consola.")
@@ -138,12 +223,19 @@ Cabeceras Requeridas (Aceptamos variaciones):
            <h1 className="text-3xl font-bold tracking-tight">Arquitecto de Importación Shopify</h1>
            <p className="text-muted-foreground">Filtro de duplicados, precios UE y enriquecimiento con IA.</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 items-center">
+            <SettingsDialog />
             <Button 
                className="cursor-pointer hover:bg-destructive/90"
                variant="outline" 
-               onClick={() => setProducts([])} 
-               disabled={products.length === 0}
+               onClick={() => {
+                  if (confirm("¿Estás seguro? Esto borrará todos los productos y el archivo maestro.")) {
+                     setProducts([])
+                     setMasterData(null)
+                     localStorage.removeItem("shopify_importer_master_data")
+                  }
+               }} 
+               disabled={products.length === 0 && !masterData}
             >
               <Trash2 className="mr-2 h-4 w-4" /> Limpiar Todo
             </Button>
@@ -276,6 +368,29 @@ Cabeceras Requeridas (Aceptamos variaciones):
           </div>
           <div className="flex justify-end">
              <Button onClick={() => setShowSkippedDialog(false)}>Entendido</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+       {/* Dialogo de Restauración de Backup */}
+      <Dialog open={showRestoreDialog} onOpenChange={setShowRestoreDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+               <UploadCloud className="h-5 w-5 text-blue-600" />
+               Sesión Encontrada
+            </DialogTitle>
+            <DialogDescription>
+               Encontramos una copia de seguridad en la nube con <strong>{backupProducts.length} productos</strong>.
+               <br/>
+               ¿Quieres restaurar tu trabajo anterior?
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-2 mt-4">
+             <Button variant="outline" onClick={handleDiscardBackup}>Iniciar de Cero</Button>
+             <Button onClick={handleRestore} className="bg-blue-600 hover:bg-blue-700 text-white">
+               <Download className="mr-2 h-4 w-4" /> Restaurar Sesión
+             </Button>
           </div>
         </DialogContent>
       </Dialog>

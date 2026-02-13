@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.3.0] - 2026-02-13
+### Added
+- **Quota Management**: Smart "Quota Exceeded (429)" modal with actionable advice for free tier limits.
+- **Model Selector**: Settings dropdown to switch between Gemini 2.0 Flash, 1.5 Pro, and Lite versions.
+- **API Key Visibility**: Toggle to show/hide API Key and masked preview (last 4 chars) for verification.
+- **Master Data Persistence**: Auto-save of "Master CSV" to `localStorage` to prevent data loss on reload.
+
 ## [1.2.1] - 2026-02-12
 ### Fixed
 - Corregida la discrepancia de conteo de productos usando `uniqueHandles.size` en lugar de `products.length`.
@@ -9,6 +16,7 @@ All notable changes to this project will be documented in this file.
 - Eliminados errores de linting (no-explicit-any, unescaped entities) que bloqueaban el build.
 - Añadido texto alternativo (`alt`) a todas las imágenes para cumplir con accesibilidad.
 - **Vercel**: Desactivada la caché estática en `page.tsx` (`force-dynamic`) para resolver datos obsoletos en producción.
+- **Despliegue**: Migrado exitosamente a **Netlify** para garantizar la frescura de datos y estabilidad del build.
 
 ## [1.2.0] - 2026-02-12
 ### Added
