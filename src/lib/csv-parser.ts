@@ -4,6 +4,7 @@ import { sanitizeBarcode } from "./barcode-utils";
 export interface MasterData {
   headers: string[];
   existingBarcodes: Set<string>;
+  existingTitles: Set<string>;
   totalProductsCount: number;
   htmlTemplate: string;
 }
@@ -17,6 +18,7 @@ export const parseMasterCSV = (file: File): Promise<MasterData> => {
         if (results.meta.fields && results.meta.fields.length > 0) {
           const headers = results.meta.fields;
           const existingBarcodes = new Set<string>();
+          const existingTitles = new Set<string>();
           const uniqueHandles = new Set<string>();
           let htmlTemplate = "";
 
@@ -25,6 +27,12 @@ export const parseMasterCSV = (file: File): Promise<MasterData> => {
             if (row["Variant Barcode"]) {
               const barcode = sanitizeBarcode(row["Variant Barcode"]);
               if (barcode) existingBarcodes.add(barcode);
+            }
+
+            // Extract Title for semantic duplicate detection
+            if (row["Title"]) {
+              const title = row["Title"].trim().toLowerCase();
+              if (title) existingTitles.add(title);
             }
 
             // Extract Handle for total product count (Shopify logic: one handle = one product)
@@ -59,6 +67,7 @@ export const parseMasterCSV = (file: File): Promise<MasterData> => {
           resolve({
             headers,
             existingBarcodes,
+            existingTitles,
             totalProductsCount: uniqueHandles.size,
             htmlTemplate,
           });

@@ -101,6 +101,7 @@ export const calculateUnitPrice = (sizeStr: string) => {
 export interface SkippedProduct {
   name: string;
   barcode: string;
+  reason?: string;
 }
 
 // Flexible Header Mappings
@@ -145,7 +146,8 @@ export const processNewProducts = (
         
         const processed: ProcessedProduct[] = [];
         const skipped: SkippedProduct[] = [];
-        const seenInFile = new Set<string>(); // Para evitar duplicados en el mismo archivo
+        const seenBarcodesInFile = new Set<string>(); // Para evitar duplicados en el mismo archivo
+        const seenTitlesInFile = new Set<string>();
 
         // Debug log to help diagnosis if it still fails
         console.log("Resolved Headers:", headerMap);
@@ -161,19 +163,34 @@ export const processNewProducts = (
           // Skip if no barcode (critical)
           if (!barcode) return;
 
-          // Evitar duplicados dentro del mismo archivo or contra el master
-          if (masterData.existingBarcodes.has(barcode) || seenInFile.has(barcode)) {
+          // 1. Check Barcode Duplicates (Primary - Exact Match)
+          if (masterData.existingBarcodes.has(barcode) || seenBarcodesInFile.has(barcode)) {
             // Solo lo añadimos a skipped si no lo hemos "visto" ya (para no duplicar el reporte)
-            if (!seenInFile.has(barcode)) {
+            if (!seenBarcodesInFile.has(barcode)) {
                skipped.push({
                  name: name || "Desconocido",
-                 barcode: barcode
+                 barcode: barcode,
+                 reason: "Código de Barras Duplicado"
                });
             }
             return;
           }
 
-          seenInFile.add(barcode);
+          // 2. Check Title Duplicates (Secondary - Reinforcement)
+          const normalizedTitle = name ? name.trim().toLowerCase() : "";
+          if (normalizedTitle && (masterData.existingTitles.has(normalizedTitle) || seenTitlesInFile.has(normalizedTitle))) {
+             if (!seenTitlesInFile.has(normalizedTitle)) {
+                skipped.push({
+                  name: name,
+                  barcode: barcode,
+                  reason: "Nombre Exacto Duplicado"
+                });
+             }
+             return; 
+          }
+
+          if (normalizedTitle) seenTitlesInFile.add(normalizedTitle);
+          seenBarcodesInFile.add(barcode);
 
           const sizeField = headerMap.size;
           const size = sizeField ? raw[sizeField] : "";
