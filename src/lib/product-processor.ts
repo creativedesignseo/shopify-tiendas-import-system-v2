@@ -1,5 +1,6 @@
 import Papa from "papaparse";
 import { MasterData } from "./csv-parser";
+import { sanitizeBarcode } from "./barcode-utils";
 
 export interface NewProductRaw {
   Nombre: string;
@@ -152,12 +153,7 @@ export const processNewProducts = (
         rawProducts.forEach((raw: any, index: number) => {
           // Use mapped headers
           const barcodeField = headerMap.barcode;
-          let barcode = barcodeField ? (raw[barcodeField]?.trim() || "") : "";
-          
-          // Sanitize: strip leading single quote if present (often added by Excel)
-          if (barcode.startsWith("'")) {
-            barcode = barcode.slice(1);
-          }
+          const barcode = sanitizeBarcode(barcodeField ? (raw[barcodeField] || "") : "");
           
           const titleField = headerMap.title;
           const name = titleField ? raw[titleField] : "";

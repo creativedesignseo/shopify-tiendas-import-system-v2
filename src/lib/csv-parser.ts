@@ -1,4 +1,5 @@
 import Papa from "papaparse";
+import { sanitizeBarcode } from "./barcode-utils";
 
 export interface MasterData {
   headers: string[];
@@ -22,7 +23,8 @@ export const parseMasterCSV = (file: File): Promise<MasterData> => {
           results.data.forEach((row: any) => {
             // Extract Barcode (Variant Barcode) for collision detection
             if (row["Variant Barcode"]) {
-              existingBarcodes.add(row["Variant Barcode"].trim());
+              const barcode = sanitizeBarcode(row["Variant Barcode"]);
+              if (barcode) existingBarcodes.add(barcode);
             }
 
             // Extract Handle for total product count (Shopify logic: one handle = one product)
