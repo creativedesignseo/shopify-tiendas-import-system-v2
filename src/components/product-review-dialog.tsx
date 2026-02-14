@@ -11,7 +11,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ProcessedProduct } from "@/lib/product-processor"
 import { MasterData } from "@/lib/csv-parser"
-import { Loader2, Sparkles, Search, ExternalLink, Check, Image as ImageIcon, FileText, TriangleAlert } from "lucide-react"
+import { Loader2, Sparkles, Search, ExternalLink, Check, Image as ImageIcon, FileText, TriangleAlert, X, Plus } from "lucide-react"
 
 interface ProductReviewDialogProps {
   product: ProcessedProduct
@@ -136,11 +136,11 @@ export function ProductReviewDialog({
   return (
     <>
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col p-0 gap-0">
+      <DialogContent className="max-w-6xl max-h-[95vh] flex flex-col p-0 gap-0">
         <DialogHeader className="p-6 border-b">
            <div className="flex justify-between items-start">
               <div>
-                <DialogTitle className="text-xl flex items-center gap-2">
+                <DialogTitle className="text-xl flex flex-wrap items-center gap-2">
                    {product.title}
                    {product.status === "complete" && (
                      <div className="flex items-center gap-2">
@@ -186,58 +186,101 @@ export function ProductReviewDialog({
 
         <div className="flex-1 overflow-hidden flex flex-col md:flex-row">
            {/* LEFT COLUMN: Data & Images */}
-           <ScrollArea className="w-full md:w-1/3 border-b md:border-b-0 md:border-r bg-muted/10 p-6 h-[400px] md:h-auto">
+           <ScrollArea className="w-full md:w-[35%] border-b md:border-b-0 md:border-r bg-muted/10 p-6 h-[400px] md:h-auto">
               <div className="space-y-6">
                  
                  {/* Images Section */}
                  <div className="space-y-3">
                     <Label className="text-xs font-semibold uppercase text-muted-foreground flex items-center gap-2">
-                       <ImageIcon className="w-3 h-3" /> Imágenes
+                       <ImageIcon className="w-3 h-3" /> Imágenes ({product.images.filter(Boolean).length}/3)
                     </Label>
                     
-                    <div className="flex justify-center mb-4">
-                       {product.images[0] ? (
-                          <img 
-                            src={product.images[0]} 
-                            className="h-40 w-40 object-contain rounded-lg border bg-white shadow-sm"
-                            alt={`Imagen principal de ${product.title}`}
-                          />
-                       ) : (
-                          <div className="h-40 w-40 flex flex-col items-center justify-center rounded-lg border border-dashed bg-muted/50 text-muted-foreground gap-2">
-                             <ImageIcon className="w-8 h-8 opacity-20" />
-                             <span className="text-xs">Sin imagen</span>
-                          </div>
-                       )}
+                    {/* Image cards */}
+                    <div className="rounded-xl border border-[var(--border)] overflow-hidden">
+                       {(product.images.length > 0 ? product.images : [""]).map((imgUrl, idx) => (
+                         <div 
+                           key={idx} 
+                           className={`flex items-center gap-3 px-3 py-2.5 bg-white hover:bg-muted/30 transition-colors ${
+                             idx > 0 ? "border-t border-[var(--border)]" : ""
+                           }`}
+                         >
+                            {/* Thumbnail */}
+                            <div className="shrink-0">
+                              {imgUrl ? (
+                                <img 
+                                  src={imgUrl} 
+                                  className="h-10 w-10 object-contain rounded-md border border-[var(--border)] bg-white"
+                                  alt={`Img ${idx + 1}`}
+                                  onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden') }}
+                                />
+                              ) : null}
+                              <div className={`h-10 w-10 flex items-center justify-center rounded-md border border-dashed border-[var(--border)] bg-muted/30 text-muted-foreground ${imgUrl ? 'hidden' : ''}`}>
+                                <ImageIcon className="w-4 h-4 opacity-30" />
+                              </div>
+                            </div>
+
+                            {/* URL Input */}
+                            <Input 
+                               value={imgUrl || ""}
+                               onChange={(e) => {
+                                  const newImgs = [...product.images]
+                                  newImgs[idx] = e.target.value
+                                  onUpdate(product.id, "images", newImgs)
+                               }}
+                               placeholder={`URL Imagen ${idx + 1}`}
+                               className="h-8 text-xs flex-1 border-[var(--border)] focus-visible:ring-1"
+                            />
+
+                            {/* Action buttons */}
+                            <div className="flex shrink-0 gap-0.5">
+                              {imgUrl ? (
+                                <Button size="icon" variant="ghost" className="h-7 w-7 text-muted-foreground hover:text-foreground" onClick={() => window.open(imgUrl, '_blank')} title="Abrir imagen">
+                                   <ExternalLink className="w-3 h-3" />
+                                </Button>
+                              ) : (
+                                <Button size="icon" variant="ghost" className="h-7 w-7 text-blue-600 hover:text-blue-700" onClick={handleImageSearch} title="Buscar en Google">
+                                   <Search className="w-3 h-3" />
+                                </Button>
+                              )}
+                              <Button 
+                                size="icon" 
+                                variant="ghost" 
+                                className="h-7 w-7 text-muted-foreground hover:text-red-600" 
+                                onClick={() => {
+                                  const newImgs = product.images.filter((_, i) => i !== idx)
+                                  onUpdate(product.id, "images", newImgs.length > 0 ? newImgs : [""])
+                                }}
+                                title="Eliminar imagen"
+                              >
+                                <X className="w-3 h-3" />
+                              </Button>
+                            </div>
+                         </div>
+                       ))}
                     </div>
 
-                    <div className="space-y-2">
-                      {[0, 1].map((idx) => (
-                        <div key={idx} className="flex gap-2">
-                           <Input 
-                              value={product.images[idx] || ""}
-                              onChange={(e) => {
-                                 const newImgs = [...product.images]
-                                 newImgs[idx] = e.target.value
-                                 onUpdate(product.id, "images", newImgs)
-                              }}
-                              placeholder={`URL Imagen ${idx + 1}`}
-                              className="h-8 text-xs"
-                           />
-                           {product.images[idx] ? (
-                              <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => window.open(product.images[idx], '_blank')}>
-                                 <ExternalLink className="w-3 h-3" />
-                              </Button>
-                           ) : (
-                              <Button size="icon" variant="ghost" className="h-8 w-8 text-blue-600" onClick={handleImageSearch} title="Buscar en Google Images">
-                                 <Search className="w-3 h-3" />
-                              </Button>
-                           )}
-                        </div>
-                      ))}
+                    {/* Add image + Search buttons */}
+                    <div className="flex gap-2">
+                      {product.images.filter(Boolean).length < 3 && (
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="flex-1 text-xs rounded-lg"
+                          onClick={() => {
+                            const newImgs = [...product.images]
+                            if (newImgs.length < 3) {
+                              newImgs.push("")
+                              onUpdate(product.id, "images", newImgs)
+                            }
+                          }}
+                        >
+                          <Plus className="w-3 h-3 mr-1.5" /> Añadir Imagen
+                        </Button>
+                      )}
+                      <Button variant="outline" size="sm" className="flex-1 text-xs rounded-lg" onClick={handleImageSearch}>
+                         <Search className="w-3 h-3 mr-1.5" /> Buscar en Google
+                      </Button>
                     </div>
-                    <Button variant="outline" size="sm" className="w-full text-xs" onClick={handleImageSearch}>
-                       <Search className="w-3 h-3 mr-2" /> Buscar en Google
-                    </Button>
                  </div>
 
                  <div className="h-px bg-border" />
@@ -317,18 +360,247 @@ export function ProductReviewDialog({
                        </div>
                     </TabsContent>
 
-                    <TabsContent value="preview" className="p-6 m-0 h-full">
-                       <div className="prose prose-sm max-w-none bg-white p-8 rounded-lg border shadow-sm mx-auto min-h-[400px]">
-                          {product.bodyHtml ? (
-                             <div dangerouslySetInnerHTML={{ __html: product.bodyHtml }} />
-                          ) : (
-                             <div className="flex flex-col items-center justify-center h-[300px] text-muted-foreground opacity-50">
-                                <FileText className="w-12 h-12 mb-2" />
-                                <p>Genera contenido con IA para ver la previsualización</p>
+                     <TabsContent value="preview" className="p-0 m-0 h-full overflow-y-auto" style={{ maxHeight: '72vh' }}>
+                        {/* Shopify Admin Polaris-style editable preview */}
+                        <div style={{
+                          background: '#f1f1f1',
+                          minHeight: '100%',
+                          padding: '1.25rem',
+                          fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'San Francisco', 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif",
+                          fontSize: '0.8125rem',
+                          lineHeight: '1.25rem',
+                          color: '#303030',
+                          fontWeight: 450,
+                          WebkitFontSmoothing: 'antialiased',
+                        }}>
+                           {product.bodyHtml ? (
+                             <div style={{ display: 'flex', gap: '1.25rem', maxWidth: '62rem', margin: '0 auto', alignItems: 'flex-start' }}>
+                               {/* ======= LEFT MAIN COLUMN ======= */}
+                               <div style={{ flex: '1 1 0%', minWidth: 0 }}>
+                                 {/* Title Card */}
+                                 <div style={{
+                                   background: '#fff',
+                                   borderRadius: '0.75rem',
+                                   padding: '1.25rem',
+                                   marginBottom: '1rem',
+                                   boxShadow: '0 0.0625rem 0.1875rem rgba(0,0,0,.04), 0 0 0 0.0625rem rgba(0,0,0,.06)',
+                                 }}>
+                                   <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 600, color: '#303030', marginBottom: '0.25rem' }}>Título</label>
+                                   <div
+                                     contentEditable
+                                     suppressContentEditableWarning
+                                     onBlur={(e) => onUpdate(product.id, "generatedTitle", e.currentTarget.textContent || "")}
+                                     style={{
+                                       border: '0.0625rem solid #8a8a8a',
+                                       borderRadius: '0.5rem',
+                                       padding: '0.375rem 0.75rem',
+                                       fontSize: '0.8125rem',
+                                       lineHeight: '1.25rem',
+                                       color: '#303030',
+                                       background: '#fff',
+                                       minHeight: '2rem',
+                                       outline: 'none',
+                                       cursor: 'text',
+                                     }}
+                                     dangerouslySetInnerHTML={{ __html: product.generatedTitle || product.title }}
+                                   />
+                                 </div>
+
+                                 {/* Description Card */}
+                                 <div style={{
+                                   background: '#fff',
+                                   borderRadius: '0.75rem',
+                                   padding: '1.25rem',
+                                   marginBottom: '1rem',
+                                   boxShadow: '0 0.0625rem 0.1875rem rgba(0,0,0,.04), 0 0 0 0.0625rem rgba(0,0,0,.06)',
+                                 }}>
+                                   <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 600, color: '#303030', marginBottom: '0.5rem' }}>Descripción</label>
+                                   {/* ── Full Polaris Toolbar ── */}
+                                   <div style={{
+                                     display: 'flex',
+                                     alignItems: 'center',
+                                     flexWrap: 'wrap',
+                                     gap: '0.0625rem',
+                                     padding: '0.25rem 0.375rem',
+                                     background: '#f7f7f7',
+                                     borderTopLeftRadius: '0.5rem',
+                                     borderTopRightRadius: '0.5rem',
+                                     border: '0.0625rem solid #8a8a8a',
+                                     borderBottom: '0.0625rem solid #e3e3e3',
+                                   }}>
+                                     {/* Paragraph dropdown */}
+                                     <button type="button" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem', padding: '0.25rem 0.5rem', fontSize: '0.75rem', color: '#303030', background: 'transparent', border: 'none', borderRadius: '0.375rem', cursor: 'default', fontFamily: 'inherit', fontWeight: 450, height: '1.75rem' }}>
+                                       Párrafo
+                                       <svg width="10" height="10" viewBox="0 0 20 20" fill="none"><path d="M6 8l4 4 4-4" stroke="#616161" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                                     </button>
+                                     <div style={{ width: '0.0625rem', height: '1.25rem', background: '#d9d9d9', margin: '0 0.25rem' }} />
+                                     {/* Bold */}
+                                     <button type="button" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '1.75rem', height: '1.75rem', background: 'transparent', border: 'none', borderRadius: '0.375rem', cursor: 'default', padding: 0 }}>
+                                       <svg width="14" height="14" viewBox="0 0 20 20" fill="none"><path d="M6 4h5.5a3 3 0 010 6H6V4z" stroke="#4a4a4a" strokeWidth="1.8"/><path d="M6 10h6.5a3 3 0 010 6H6v-6z" stroke="#4a4a4a" strokeWidth="1.8"/></svg>
+                                     </button>
+                                     {/* Italic */}
+                                     <button type="button" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '1.75rem', height: '1.75rem', background: 'transparent', border: 'none', borderRadius: '0.375rem', cursor: 'default', padding: 0 }}>
+                                       <svg width="14" height="14" viewBox="0 0 20 20" fill="none"><line x1="13" y1="4" x2="7" y2="16" stroke="#4a4a4a" strokeWidth="1.8"/><line x1="8" y1="4" x2="14" y2="4" stroke="#4a4a4a" strokeWidth="1.5"/><line x1="6" y1="16" x2="12" y2="16" stroke="#4a4a4a" strokeWidth="1.5"/></svg>
+                                     </button>
+                                     {/* Underline */}
+                                     <button type="button" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '1.75rem', height: '1.75rem', background: 'transparent', border: 'none', borderRadius: '0.375rem', cursor: 'default', padding: 0 }}>
+                                       <svg width="14" height="14" viewBox="0 0 20 20" fill="none"><path d="M6 4v6a4 4 0 008 0V4" stroke="#4a4a4a" strokeWidth="1.8" strokeLinecap="round"/><line x1="5" y1="17" x2="15" y2="17" stroke="#4a4a4a" strokeWidth="1.5"/></svg>
+                                     </button>
+                                     {/* Strikethrough */}
+                                     <button type="button" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '1.75rem', height: '1.75rem', background: 'transparent', border: 'none', borderRadius: '0.375rem', cursor: 'default', padding: 0 }}>
+                                       <svg width="14" height="14" viewBox="0 0 20 20" fill="none"><line x1="3" y1="10" x2="17" y2="10" stroke="#4a4a4a" strokeWidth="1.5"/><path d="M12.5 6.5C12.5 5.12 11.38 4 10 4S7.5 5.12 7.5 6.5" stroke="#4a4a4a" strokeWidth="1.5" fill="none"/><path d="M7.5 13.5c0 1.38 1.12 2.5 2.5 2.5s2.5-1.12 2.5-2.5" stroke="#4a4a4a" strokeWidth="1.5" fill="none"/></svg>
+                                     </button>
+                                     <div style={{ width: '0.0625rem', height: '1.25rem', background: '#d9d9d9', margin: '0 0.25rem' }} />
+                                     {/* Bulleted list */}
+                                     <button type="button" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '1.75rem', height: '1.75rem', background: 'transparent', border: 'none', borderRadius: '0.375rem', cursor: 'default', padding: 0 }}>
+                                       <svg width="14" height="14" viewBox="0 0 20 20" fill="none"><circle cx="4" cy="5" r="1.5" fill="#4a4a4a"/><circle cx="4" cy="10" r="1.5" fill="#4a4a4a"/><circle cx="4" cy="15" r="1.5" fill="#4a4a4a"/><line x1="8" y1="5" x2="17" y2="5" stroke="#4a4a4a" strokeWidth="1.5"/><line x1="8" y1="10" x2="17" y2="10" stroke="#4a4a4a" strokeWidth="1.5"/><line x1="8" y1="15" x2="17" y2="15" stroke="#4a4a4a" strokeWidth="1.5"/></svg>
+                                     </button>
+                                     {/* Numbered list */}
+                                     <button type="button" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '1.75rem', height: '1.75rem', background: 'transparent', border: 'none', borderRadius: '0.375rem', cursor: 'default', padding: 0 }}>
+                                       <svg width="14" height="14" viewBox="0 0 20 20" fill="none"><text x="2" y="7" fontSize="5" fill="#4a4a4a" fontFamily="Inter, sans-serif" fontWeight="600">1</text><text x="2" y="12" fontSize="5" fill="#4a4a4a" fontFamily="Inter, sans-serif" fontWeight="600">2</text><text x="2" y="17" fontSize="5" fill="#4a4a4a" fontFamily="Inter, sans-serif" fontWeight="600">3</text><line x1="8" y1="5" x2="17" y2="5" stroke="#4a4a4a" strokeWidth="1.5"/><line x1="8" y1="10" x2="17" y2="10" stroke="#4a4a4a" strokeWidth="1.5"/><line x1="8" y1="15" x2="17" y2="15" stroke="#4a4a4a" strokeWidth="1.5"/></svg>
+                                     </button>
+                                     {/* Outdent */}
+                                     <button type="button" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '1.75rem', height: '1.75rem', background: 'transparent', border: 'none', borderRadius: '0.375rem', cursor: 'default', padding: 0 }}>
+                                       <svg width="14" height="14" viewBox="0 0 20 20" fill="none"><line x1="8" y1="5" x2="17" y2="5" stroke="#4a4a4a" strokeWidth="1.5"/><line x1="8" y1="10" x2="17" y2="10" stroke="#4a4a4a" strokeWidth="1.5"/><line x1="3" y1="15" x2="17" y2="15" stroke="#4a4a4a" strokeWidth="1.5"/><path d="M5 7l-3 3 3 3" stroke="#4a4a4a" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none"/></svg>
+                                     </button>
+                                     {/* Indent */}
+                                     <button type="button" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '1.75rem', height: '1.75rem', background: 'transparent', border: 'none', borderRadius: '0.375rem', cursor: 'default', padding: 0 }}>
+                                       <svg width="14" height="14" viewBox="0 0 20 20" fill="none"><line x1="8" y1="5" x2="17" y2="5" stroke="#4a4a4a" strokeWidth="1.5"/><line x1="8" y1="10" x2="17" y2="10" stroke="#4a4a4a" strokeWidth="1.5"/><line x1="3" y1="15" x2="17" y2="15" stroke="#4a4a4a" strokeWidth="1.5"/><path d="M3 7l3 3-3 3" stroke="#4a4a4a" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none"/></svg>
+                                     </button>
+                                     <div style={{ width: '0.0625rem', height: '1.25rem', background: '#d9d9d9', margin: '0 0.25rem' }} />
+                                     {/* Link */}
+                                     <button type="button" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '1.75rem', height: '1.75rem', background: 'transparent', border: 'none', borderRadius: '0.375rem', cursor: 'default', padding: 0 }}>
+                                       <svg width="14" height="14" viewBox="0 0 20 20" fill="none"><path d="M8.5 11.5l3-3" stroke="#4a4a4a" strokeWidth="1.5"/><path d="M9 13l-1.5 1.5a2.12 2.12 0 01-3-3L6 10" stroke="#4a4a4a" strokeWidth="1.5" strokeLinecap="round"/><path d="M11 7l1.5-1.5a2.12 2.12 0 013 3L14 10" stroke="#4a4a4a" strokeWidth="1.5" strokeLinecap="round"/></svg>
+                                     </button>
+                                     {/* Font color */}
+                                     <button type="button" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '1.75rem', height: '1.75rem', background: 'transparent', border: 'none', borderRadius: '0.375rem', cursor: 'default', padding: 0 }}>
+                                       <svg width="14" height="14" viewBox="0 0 20 20" fill="none"><path d="M7 14l3-10 3 10" stroke="#4a4a4a" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><line x1="8" y1="11" x2="12" y2="11" stroke="#4a4a4a" strokeWidth="1.5"/><rect x="5" y="16" width="10" height="2" rx="0.5" fill="#303030"/></svg>
+                                     </button>
+                                     {/* Alignment */}
+                                     <button type="button" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '1.75rem', height: '1.75rem', background: 'transparent', border: 'none', borderRadius: '0.375rem', cursor: 'default', padding: 0 }}>
+                                       <svg width="14" height="14" viewBox="0 0 20 20" fill="none"><line x1="3" y1="4" x2="17" y2="4" stroke="#4a4a4a" strokeWidth="1.5"/><line x1="3" y1="8" x2="13" y2="8" stroke="#4a4a4a" strokeWidth="1.5"/><line x1="3" y1="12" x2="17" y2="12" stroke="#4a4a4a" strokeWidth="1.5"/><line x1="3" y1="16" x2="11" y2="16" stroke="#4a4a4a" strokeWidth="1.5"/></svg>
+                                     </button>
+                                     <div style={{ width: '0.0625rem', height: '1.25rem', background: '#d9d9d9', margin: '0 0.25rem' }} />
+                                     {/* Table */}
+                                     <button type="button" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '1.75rem', height: '1.75rem', background: 'transparent', border: 'none', borderRadius: '0.375rem', cursor: 'default', padding: 0 }}>
+                                       <svg width="14" height="14" viewBox="0 0 20 20" fill="none"><rect x="3" y="3" width="14" height="14" rx="1.5" stroke="#4a4a4a" strokeWidth="1.5" fill="none"/><line x1="3" y1="8" x2="17" y2="8" stroke="#4a4a4a" strokeWidth="1.2"/><line x1="3" y1="13" x2="17" y2="13" stroke="#4a4a4a" strokeWidth="1.2"/><line x1="10" y1="3" x2="10" y2="17" stroke="#4a4a4a" strokeWidth="1.2"/></svg>
+                                     </button>
+                                     {/* Image */}
+                                     <button type="button" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '1.75rem', height: '1.75rem', background: 'transparent', border: 'none', borderRadius: '0.375rem', cursor: 'default', padding: 0 }}>
+                                       <svg width="14" height="14" viewBox="0 0 20 20" fill="none"><rect x="3" y="4" width="14" height="12" rx="1.5" stroke="#4a4a4a" strokeWidth="1.5" fill="none"/><circle cx="7.5" cy="8" r="1.5" fill="#4a4a4a"/><path d="M3 14l4-4 3 3 2-2 5 5H4.5A1.5 1.5 0 013 14.5V14z" fill="#4a4a4a" opacity="0.3"/></svg>
+                                     </button>
+                                     {/* Video */}
+                                     <button type="button" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '1.75rem', height: '1.75rem', background: 'transparent', border: 'none', borderRadius: '0.375rem', cursor: 'default', padding: 0 }}>
+                                       <svg width="14" height="14" viewBox="0 0 20 20" fill="none"><rect x="2" y="5" width="11" height="10" rx="1.5" stroke="#4a4a4a" strokeWidth="1.5" fill="none"/><path d="M13 8l5-2.5v9L13 12" stroke="#4a4a4a" strokeWidth="1.5" strokeLinejoin="round" fill="none"/></svg>
+                                     </button>
+                                   </div>
+                                   {/* ── Editable Content Area ── */}
+                                   <div
+                                     contentEditable
+                                     suppressContentEditableWarning
+                                     onBlur={(e) => onUpdate(product.id, "bodyHtml", e.currentTarget.innerHTML)}
+                                     style={{
+                                       border: '0.0625rem solid #8a8a8a',
+                                       borderTop: 'none',
+                                       borderBottomLeftRadius: '0.5rem',
+                                       borderBottomRightRadius: '0.5rem',
+                                       padding: '0.75rem 1rem',
+                                       background: '#fff',
+                                       fontSize: '0.8125rem',
+                                       lineHeight: '1.25rem',
+                                       color: '#303030',
+                                       minHeight: '14rem',
+                                       outline: 'none',
+                                       cursor: 'text',
+                                       whiteSpace: 'pre-wrap',
+                                       wordBreak: 'break-word',
+                                       overflowWrap: 'break-word',
+                                     }}
+                                     dangerouslySetInnerHTML={{ __html: product.bodyHtml }}
+                                   />
+                                 </div>
+
+                                 {/* ── Multimedia Card ── */}
+                                 <div style={{
+                                   background: '#fff',
+                                   borderRadius: '0.75rem',
+                                   padding: '1.25rem',
+                                   marginBottom: '1rem',
+                                   boxShadow: '0 0.0625rem 0.1875rem rgba(0,0,0,.04), 0 0 0 0.0625rem rgba(0,0,0,.06)',
+                                 }}>
+                                   <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 600, color: '#303030', marginBottom: '0.75rem' }}>Multimedia</label>
+                                   {product.images.filter(Boolean).length > 0 ? (
+                                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(5rem, 1fr))', gap: '0.5rem' }}>
+                                       {product.images.filter(Boolean).map((img, i) => (
+                                         <div key={i} style={{ position: 'relative', aspectRatio: '1', borderRadius: '0.5rem', border: '0.0625rem solid #e3e3e3', overflow: 'hidden', background: '#f6f6f7' }}>
+                                           <img src={img} alt={`Producto ${i + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                         </div>
+                                       ))}
+                                       <div style={{ aspectRatio: '1', borderRadius: '0.5rem', border: '0.125rem dashed #c9cccf', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'default', background: '#f6f6f7' }}>
+                                         <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><line x1="10" y1="4" x2="10" y2="16" stroke="#8c9196" strokeWidth="2" strokeLinecap="round"/><line x1="4" y1="10" x2="16" y2="10" stroke="#8c9196" strokeWidth="2" strokeLinecap="round"/></svg>
+                                       </div>
+                                     </div>
+                                   ) : (
+                                     <div style={{ border: '0.125rem dashed #c9cccf', borderRadius: '0.5rem', padding: '2rem', textAlign: 'center', color: '#6d7175', background: '#f6f6f7' }}>
+                                       <svg width="28" height="28" viewBox="0 0 20 20" fill="none" style={{ margin: '0 auto 0.5rem' }}><rect x="2" y="3" width="16" height="14" rx="2" stroke="#8c9196" strokeWidth="1.5" fill="none"/><circle cx="7" cy="8" r="2" fill="#8c9196"/><path d="M2 15l5-5 3 3 2-2 6 6H4a2 2 0 01-2-2v-0z" fill="#8c9196" opacity="0.2"/></svg>
+                                       <div style={{ fontSize: '0.75rem' }}>Agrega imágenes, videos o modelos 3D</div>
+                                     </div>
+                                   )}
+                                 </div>
+                               </div>
+
+                               {/* ======= RIGHT SIDEBAR ======= */}
+                               <div style={{ width: '15rem', flexShrink: 0 }}>
+                                 {/* Status */}
+                                 <div style={{ background: '#fff', borderRadius: '0.75rem', padding: '1.25rem', marginBottom: '1rem', boxShadow: '0 0.0625rem 0.1875rem rgba(0,0,0,.04), 0 0 0 0.0625rem rgba(0,0,0,.06)' }}>
+                                   <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 600, color: '#303030', marginBottom: '0.5rem' }}>Estado</label>
+                                   <div style={{ border: '0.0625rem solid #8a8a8a', borderRadius: '0.5rem', padding: '0.375rem 0.75rem', fontSize: '0.8125rem', background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                     <span>Activo</span>
+                                     <svg width="10" height="10" viewBox="0 0 20 20" fill="none"><path d="M6 8l4 4 4-4" stroke="#616161" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                                   </div>
+                                 </div>
+
+                                 {/* Product Organization */}
+                                 <div style={{ background: '#fff', borderRadius: '0.75rem', padding: '1.25rem', boxShadow: '0 0.0625rem 0.1875rem rgba(0,0,0,.04), 0 0 0 0.0625rem rgba(0,0,0,.06)' }}>
+                                   <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 600, color: '#303030', marginBottom: '1rem' }}>Organización del producto</label>
+                                   {/* Tipo */}
+                                   <div style={{ marginBottom: '0.875rem' }}>
+                                     <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 500, color: '#616161', marginBottom: '0.25rem' }}>Tipo de producto</label>
+                                     <div style={{ border: '0.0625rem solid #8a8a8a', borderRadius: '0.5rem', padding: '0.375rem 0.75rem', fontSize: '0.8125rem', color: '#303030', background: '#fff' }}>Perfumes</div>
+                                   </div>
+                                   {/* Proveedor */}
+                                   <div style={{ marginBottom: '0.875rem' }}>
+                                     <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 500, color: '#616161', marginBottom: '0.25rem' }}>Proveedor</label>
+                                     <div style={{ border: '0.0625rem solid #8a8a8a', borderRadius: '0.5rem', padding: '0.375rem 0.75rem', fontSize: '0.8125rem', color: '#303030', background: '#fff' }}>{product.vendor || '—'}</div>
+                                   </div>
+                                   {/* Colecciones */}
+                                   <div style={{ marginBottom: '0.875rem' }}>
+                                     <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 500, color: '#616161', marginBottom: '0.25rem' }}>Colecciones</label>
+                                     <div style={{ border: '0.0625rem solid #8a8a8a', borderRadius: '0.5rem', padding: '0.375rem 0.75rem', fontSize: '0.8125rem', color: '#8c9196', fontStyle: 'italic', background: '#fff' }}>Buscar colecciones</div>
+                                   </div>
+                                   {/* Etiquetas */}
+                                   <div>
+                                     <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 500, color: '#616161', marginBottom: '0.25rem' }}>Etiquetas</label>
+                                     <div style={{ border: '0.0625rem solid #8a8a8a', borderRadius: '0.5rem', padding: '0.375rem 0.75rem', fontSize: '0.8125rem', color: '#303030', background: '#fff', display: 'flex', flexWrap: 'wrap', gap: '0.25rem', minHeight: '2rem', alignItems: 'center' }}>
+                                       {product.tags ? product.tags.split(',').filter(Boolean).map((tag, i) => (
+                                         <span key={i} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem', background: '#e4e5e7', borderRadius: '0.375rem', padding: '0.125rem 0.5rem', fontSize: '0.75rem', color: '#303030', fontWeight: 450 }}>
+                                           {tag.trim()}
+                                           <svg width="8" height="8" viewBox="0 0 12 12" fill="none"><path d="M3 3l6 6M9 3l-6 6" stroke="#616161" strokeWidth="1.5" strokeLinecap="round"/></svg>
+                                         </span>
+                                       )) : <span style={{ color: '#8c9196', fontStyle: 'italic' }}>Sin etiquetas</span>}
+                                     </div>
+                                   </div>
+                                 </div>
+                               </div>
                              </div>
-                          )}
-                       </div>
-                    </TabsContent>
+                           ) : (
+                              <div className="flex flex-col items-center justify-center h-[400px] text-muted-foreground opacity-50">
+                                 <FileText className="w-12 h-12 mb-2" />
+                                 <p>Genera contenido con IA para ver la previsualización</p>
+                              </div>
+                           )}
+                        </div>
+                     </TabsContent>
 
                     <TabsContent value="code" className="p-0 m-0 h-full flex flex-col">
                        <Textarea 

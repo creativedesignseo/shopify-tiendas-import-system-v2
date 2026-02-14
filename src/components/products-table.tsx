@@ -58,10 +58,10 @@ export function ProductsTable({
       </div>
       {/* Desktop/Tablet Table View */}
       <div className="hidden md:block border rounded-md overflow-x-auto">
-        <Table className="min-w-[800px]">
+        <Table className="min-w-[900px] table-fixed">
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[40px]">
+              <TableHead className="w-[45px]">
                 <input 
                   type="checkbox" 
                   checked={products.length > 0 && products.every(p => p.isChecked)}
@@ -73,14 +73,14 @@ export function ProductsTable({
                   title="Seleccionar todo"
                 />
               </TableHead>
-              <TableHead className="w-[50px]">Estado</TableHead>
-              <TableHead className="min-w-[200px]">Título</TableHead>
-              <TableHead>Marca</TableHead>
+              <TableHead className="w-[75px] text-center">Estado</TableHead>
+              <TableHead className="w-auto">Título</TableHead>
+              <TableHead className="w-[110px]">Marca</TableHead>
               <TableHead className="w-[100px]">Precio</TableHead>
               <TableHead className="w-[100px]">Tamaño</TableHead>
               <TableHead className="w-[300px]">Imágenes</TableHead>
-              <TableHead>Etiquetas</TableHead>
-              <TableHead className="text-right">Acciones</TableHead>
+              <TableHead className="w-[150px]">Etiquetas</TableHead>
+              <TableHead className="w-[110px] text-right">Acciones</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -100,9 +100,9 @@ export function ProductsTable({
                   className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-600 cursor-pointer"
                 />
               </TableCell>
-              <TableCell>
+              <TableCell className="text-center">
                 {product.status === "pending" && (
-                  <Badge variant="outline" className="text-muted-foreground">
+                  <Badge variant="outline" className="text-muted-foreground whitespace-nowrap text-[10px] px-2">
                     En cola
                   </Badge>
                 )}
@@ -131,8 +131,8 @@ export function ProductsTable({
                 )}
               </TableCell>
               
-              <TableCell>
-                <div className="flex flex-col gap-2">
+              <TableCell className="overflow-hidden">
+                <div className="flex flex-col gap-1.5">
                   <Input
                     value={product.generatedTitle}
                     onChange={(e) =>
@@ -164,7 +164,7 @@ export function ProductsTable({
                 </div>
               </TableCell>
 
-              <TableCell>{product.vendor}</TableCell>
+              <TableCell className="truncate max-w-[110px]" title={product.vendor}>{product.vendor}</TableCell>
 
               <TableCell>
                 <Input
@@ -192,7 +192,7 @@ export function ProductsTable({
               </TableCell>
 
               <TableCell>
-                <div className="flex flex-col gap-3 min-w-[280px]">
+                <div className="flex flex-col gap-3 min-w-[220px]">
                   <div className="flex items-start gap-3">
                     {product.images[0] ? (
                       <img 

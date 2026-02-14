@@ -2,6 +2,9 @@
 
 export const dynamic = "force-dynamic";
 
+import Link from "next/link"
+import versionData from "@/data/version.json"
+
 import * as React from "react"
 import { FileDropzone } from "@/components/file-dropzone"
 import { ProductsTable } from "@/components/products-table"
@@ -218,12 +221,20 @@ Cabeceras Requeridas (Aceptamos variaciones):
 
   return (
     <main className="container mx-auto p-8 space-y-8 min-h-screen bg-gray-50">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-wrap justify-between items-center gap-4">
         <div>
-           <h1 className="text-3xl font-bold tracking-tight">Arquitecto de Importación Shopify</h1>
+           <div className="flex items-center gap-3">
+             <h1 className="text-3xl font-bold tracking-tight">Arquitecto de Importación Shopify</h1>
+             <Link
+               href="/changelog"
+               className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[var(--foreground)] text-[var(--background)] hover:opacity-80 transition-opacity no-underline"
+             >
+               v{versionData.current}
+             </Link>
+           </div>
            <p className="text-muted-foreground">Filtro de duplicados, precios UE y enriquecimiento con IA.</p>
         </div>
-        <div className="flex gap-2 items-center">
+        <div className="flex flex-wrap gap-2 items-center">
             <SettingsDialog />
             <Button 
                className="cursor-pointer hover:bg-destructive/90"
@@ -245,8 +256,8 @@ Cabeceras Requeridas (Aceptamos variaciones):
               disabled={!products.some(p => p.status === "complete" && p.isChecked) || !masterData}
               variant="default"
             >
-              <Download className="mr-2 h-4 w-4" /> 
-              Exportar {products.filter(p => p.status === "complete" && p.isChecked).length} Seleccionados
+              <Download className="mr-2 h-4 w-4 shrink-0" /> 
+              Exportar ({products.filter(p => p.status === "complete" && p.isChecked).length})
             </Button>
         </div>
       </div>
@@ -389,7 +400,7 @@ Cabeceras Requeridas (Aceptamos variaciones):
           <div className="flex justify-end gap-2 mt-4">
              <Button variant="outline" onClick={handleDiscardBackup}>Iniciar de Cero</Button>
              <Button onClick={handleRestore} className="bg-blue-600 hover:bg-blue-700 text-white">
-               <Download className="mr-2 h-4 w-4" /> Restaurar Sesión
+               <Download className="mr-2 h-4 w-4 shrink-0" /> Restaurar Sesión
              </Button>
           </div>
         </DialogContent>

@@ -82,3 +82,48 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
+/* Layout Safeguards */
+.overflow-x-auto {
+  -webkit-overflow-scrolling: touch;
+}
+
+table {
+  table-layout: auto;
+  width: 100%;
+}
+
+td, th {
+  word-wrap: break-word;
+  word-break: break-word;
+  max-width: 0; /* Ensures overflow-hidden/text-ellipsis works in flex-based tables if needed */
+}
+
+.text-ellipsis {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Custom Scrollbar for a premium look */
+@media (min-width: 768px) {
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #d1d5db;
+    border-radius: 10px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #9ca3af;
+  }
+  .dark {
+    ::-webkit-scrollbar-thumb {
+      background: #374151;
+    }
+  }
+}

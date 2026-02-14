@@ -1,0 +1,78 @@
+{
+  "current": "1.5.0",
+  "releases": [
+    {
+      "version": "1.5.0",
+      "date": "2026-02-14",
+      "entries": [
+        { "type": "added", "text": "Página de Changelog visual con historial completo de versiones" },
+        { "type": "added", "text": "Badge de versión visible en el dashboard con enlace al changelog" },
+        { "type": "fixed", "text": "Detección de duplicados: sanitización centralizada de códigos de barras (comillas de Excel)" },
+        { "type": "added", "text": "Utilidad centralizada sanitizeBarcode() para limpieza consistente de barcodes" }
+      ]
+    },
+    {
+      "version": "1.4.0",
+      "date": "2026-02-13",
+      "entries": [
+        { "type": "changed", "text": "Rediseño visual completo usando el Sistema de Diseño Uber (paleta blanco/negro, botones pill)" },
+        { "type": "changed", "text": "Restaurada la lógica del Dashboard en la ruta raíz (/)" },
+        { "type": "changed", "text": "Componentes Button, Input y Card refactorizados al nuevo diseño premium" }
+      ]
+    },
+    {
+      "version": "1.3.0",
+      "date": "2026-02-13",
+      "entries": [
+        { "type": "added", "text": "Gestión de Quota: Modal inteligente para límites 429 con consejos accionables" },
+        { "type": "added", "text": "Selector de Modelo: Dropdown para cambiar entre Gemini 2.0 Flash, 1.5 Pro y Lite" },
+        { "type": "added", "text": "Visibilidad de API Key: Toggle para mostrar/ocultar con preview enmascarado" },
+        { "type": "added", "text": "Persistencia del Master CSV en localStorage para evitar pérdida de datos" },
+        { "type": "added", "text": "Transparencia de errores: Backend muestra API key enmascarada y origen en errores 429/500" }
+      ]
+    },
+    {
+      "version": "1.2.1",
+      "date": "2026-02-12",
+      "entries": [
+        { "type": "fixed", "text": "Conteo de productos corregido usando uniqueHandles.size" },
+        { "type": "fixed", "text": "Errores de mapeo en Metafields (Ocasión, Estación, Aroma)" },
+        { "type": "fixed", "text": "Errores de linting eliminados que bloqueaban el build" },
+        { "type": "fixed", "text": "Migración exitosa a Netlify para mayor estabilidad" }
+      ]
+    },
+    {
+      "version": "1.2.0",
+      "date": "2026-02-12",
+      "entries": [
+        { "type": "added", "text": "Cumplimiento final de Shopify: lógica de fuzzy matching para Unit Price" },
+        { "type": "fixed", "text": "Formato de Unit Price con precisión decimal para requisitos EU de Shopify" },
+        { "type": "fixed", "text": "Sanitización de Barcode: eliminación automática de comillas simples de Excel" },
+        { "type": "fixed", "text": "Colisión de mapeo de columnas por coincidencia difusa corregida" },
+        { "type": "fixed", "text": "Conteo de productos usando Handles únicos (621) en lugar de Barcodes (543)" }
+      ]
+    },
+    {
+      "version": "1.1.0",
+      "date": "2026-02-11",
+      "entries": [
+        { "type": "added", "text": "Modo de Revisión Asistida: exportación selectiva (solo productos 'Listos')" },
+        { "type": "added", "text": "Diálogo de Revisión de Producto con generación AI individual" },
+        { "type": "added", "text": "Fallback de Modelo: cambio automático entre Gemini 2.5 Flash y 2.0 Flash" },
+        { "type": "added", "text": "Indicadores de Estado: badges visuales (Listo, Error, Modelo AI)" },
+        { "type": "removed", "text": "Generación AI masiva eliminada para optimizar quota y calidad" }
+      ]
+    },
+    {
+      "version": "1.0.0",
+      "date": "2026-02-10",
+      "entries": [
+        { "type": "added", "text": "Release Inicial: funcionalidad core de importación/exportación CSV para Shopify" },
+        { "type": "added", "text": "Filtro Anti-duplicados: lógica de skip basada en códigos de barras" },
+        { "type": "added", "text": "Calculadora de Precio Unitario EU: extracción automática de medidas" },
+        { "type": "added", "text": "Integración Gemini AI: enriquecimiento de títulos, descripciones y metafields" },
+        { "type": "added", "text": "Dashboard Responsivo con zonas drag-and-drop para archivos" }
+      ]
+    }
+  ]
+}

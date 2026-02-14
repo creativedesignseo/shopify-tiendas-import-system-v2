@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.5.0] - 2026-02-14
+### Added
+- **Página de Changelog Visual**: Nueva ruta `/changelog` con historial completo de versiones en diseño timeline.
+- **Badge de Versión**: Indicador `v1.5.0` visible en el header del dashboard con enlace al changelog.
+- **Utilidad Centralizada `sanitizeBarcode()`**: Función única para limpieza de códigos de barras usada en todo el sistema.
+
+### Fixed
+- **Detección de Duplicados**: Corregido el fallo donde barcodes con comilla simple de Excel (`'`) no coincidían con los del archivo nuevo.
+
 ## [1.4.0] - 2026-02-13
 ### Changed
 - **Visual Overhaul**: Complete redesign using **Uber's Design System** (Black/White palette, Pill buttons, Clean aesthetics).
