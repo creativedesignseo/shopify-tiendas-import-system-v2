@@ -97,7 +97,7 @@ export function ProductsTable({
                   type="checkbox"
                   checked={product.isChecked}
                   onChange={(e) => onUpdateProduct(product.id, "isChecked", e.target.checked)}
-                  className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-600 cursor-pointer"
+                  className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-0 focus:border-blue-600 cursor-pointer"
                 />
               </TableCell>
               <TableCell className="text-center">
