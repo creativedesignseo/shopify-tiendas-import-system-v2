@@ -15,24 +15,6 @@ export interface CatalogData {
   totalProducts: number
 }
 
-// Function to normalize category from tags
-function extractCategory(tags: string): string {
-  const normalizedTags = tags.toLowerCase()
-  if (normalizedTags.includes("rings") || normalizedTags.includes("anillos")) return "Anillos (Rings)"
-  if (normalizedTags.includes("necklaces") || normalizedTags.includes("collares")) return "Collares (Necklaces)"
-  if (normalizedTags.includes("bracelets") || normalizedTags.includes("pulseras")) return "Pulseras (Bracelets)"
-  if (normalizedTags.includes("earrings") || normalizedTags.includes("pendientes")) return "Pendientes (Earrings)"
-  if (normalizedTags.includes("anklets") || normalizedTags.includes("tobilleras")) return "Tobilleras (Anklets)"
-  
-  // Custom Category logic "Category: Example"
-  const match = tags.match(/category:\s*([^,]+)/i)
-  if (match && match[1]) {
-    return match[1].trim()
-  }
-
-  return "Otros (Other)"
-}
-
 export function parseWholesaleCSV(file: File, onProgress: (pct: number) => void, abortSignal?: AbortSignal): Promise<CatalogData> {
   return new Promise((resolve, reject) => {
     Papa.parse(file, {
@@ -47,51 +29,69 @@ export function parseWholesaleCSV(file: File, onProgress: (pct: number) => void,
           // Fallback mapping for column names based on exact Shopify export or Spanish export
           const getVal = (row: any, keys: string[]) => {
             for (const key of keys) {
-              if (row[key] !== undefined && row[key] !== null) return row[key]
+              if (row[key] !== undefined && row[key] !== null) {
+                  return String(row[key]).trim()
+              }
             }
             return ""
           }
+          
+          let currentHandle = ""
+          let currentTitle = ""
+          let currentCategory = ""
+          let currentMainImage = ""
 
           results.data.forEach((row: any) => {
             if (abortSignal?.aborted) throw new Error("Lectura del archivo cancelada por el usuario.")
             const handle = getVal(row, ["Handle"])
             if (!handle) return
 
-            // If we already have this product, we only care if it brings a better image
-            if (productsMap.has(handle)) {
-               const existing = productsMap.get(handle)!
-               const imgSrc = getVal(row, ["Image Src"])
-               if (imgSrc && !existing.imageUrl) {
-                  existing.imageUrl = imgSrc
-               }
-               return
+            // If this is the first row of a product, record its main details
+            const rowTitle = getVal(row, ["Title", "Nombre"])
+            if (rowTitle) {
+              currentHandle = handle
+              currentTitle = rowTitle
+              const cat = getVal(row, ["Product Category", "Categoría de producto"])
+              currentCategory = cat ? cat : "Otros (Other)"
+              currentMainImage = getVal(row, ["Image Src", "Imagen"]) || ""
             }
 
-            // New product
-            const title = getVal(row, ["Title", "Nombre"])
-            const imgSrc = getVal(row, ["Image Src", "Imagen"])
-            const tags = getVal(row, ["Tags", "Etiquetas"])
+            // Only process variant rows (they must have a variant price)
             const priceStr = getVal(row, ["Variant Price", "Precio de la variante"])
+            if (!priceStr) return // Skips extra image rows that have no price
+
+            const option1 = getVal(row, ["Option1 Value", "Valor de la opción 1"])
             const sku = getVal(row, ["Variant SKU", "SKU de la variante"])
-            
-            // Only add if it has a title
-            if (!title) return
+            const rowImage = getVal(row, ["Image Src", "Imagen"])
+
+            // Strict rule: if there's no image at all, do not add to catalog
+            const finalImage = rowImage || currentMainImage
+            if (!finalImage) return
+
+            // Append Option1 Value to title if it's a real variant option (not "Default Title")
+            let finalTitle = currentTitle
+            if (option1 && option1.toLowerCase() !== "default title") {
+              finalTitle = `${currentTitle} - ${option1}`
+            }
 
             const originalPrice = parseFloat(priceStr) || 0
-            // Wholesale price is 35% of original (65% margin/discount conceptually based on user request "price0.35")
             const wholesalePrice = originalPrice * 0.35
 
-            const category = extractCategory(tags)
+            // Use SKU as unique key, or fallback to Handle + Option1
+            const uniqueKey = sku ? sku : `${handle}-${option1}`
 
-            productsMap.set(handle, {
-              handle,
-              title,
-              imageUrl: imgSrc,
-              originalPrice,
-              wholesalePrice: Number(wholesalePrice.toFixed(2)),
-              category,
-              sku
-            })
+            // Allow only one entry per variant (first one wins, avoiding duplicates)
+            if (!productsMap.has(uniqueKey)) {
+              productsMap.set(uniqueKey, {
+                handle,
+                title: finalTitle,
+                imageUrl: finalImage,
+                originalPrice,
+                wholesalePrice: Number(wholesalePrice.toFixed(2)),
+                category: currentCategory,
+                sku
+              })
+            }
           })
 
           onProgress(50)
