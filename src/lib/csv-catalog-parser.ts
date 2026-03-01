@@ -51,7 +51,12 @@ export function parseWholesaleCSV(file: File, onProgress: (pct: number) => void,
             if (rowTitle) {
               currentHandle = handle
               currentTitle = rowTitle
-              const cat = getVal(row, ["Product Category", "Categoría de producto"])
+              const catRaw = getVal(row, ["Product Category", "Categoría de producto"])
+              let cat = catRaw
+              if (catRaw && catRaw.includes(">")) {
+                  const parts = catRaw.split(">")
+                  cat = parts[parts.length - 1].trim()
+              }
               currentCategory = cat ? cat : "Otros (Other)"
               currentMainImage = getVal(row, ["Image Src", "Imagen"]) || ""
             }

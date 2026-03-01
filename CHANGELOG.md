@@ -5,7 +5,7 @@
 - **Cancelación PDF (AbortController)**: Botón para interrumpir la generación del PDF en el frontend para evitar cuelgues de interfaz por exceso de carga.
 
 ### Changed
-- **Lógica de Categorización CSV**: Actualizado el generador del catálogo PDF para utilizar estrictamente la columna `Product Category` (Categoría de producto) en lugar de las etiquetas (`Tags`).
+- **Lógica de Categorización CSV**: Actualizado el generador del catálogo PDF para utilizar estrictamente la última jerarquía de la columna `Product Category` (por ejemplo, extraerá "RINGS" de "APPAREL & ACCESSORIES > JEWELRY > RINGS").
 - **Soporte para Variantes (Catálogo)**: Modificado el agrupador de CSV para que los productos con el mismo `Handle` pero distinto `Option1 Value` (ej. colores) se traten como ítems separados en el PDF, adjuntando el valor de la opción al título del producto.
 - **Filtro de Imágenes (Catálogo)**: Implementada regla estricta que excluye del PDF cualquier variante que no posea imagen propia ni herede la imagen principal del producto.
 
