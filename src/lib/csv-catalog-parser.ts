@@ -15,7 +15,7 @@ export interface CatalogData {
   totalProducts: number
 }
 
-export function parseWholesaleCSV(file: File, onProgress: (pct: number) => void, abortSignal?: AbortSignal): Promise<CatalogData> {
+export function parseWholesaleCSV(file: File, priceMultiplier: number, onProgress: (pct: number) => void, abortSignal?: AbortSignal): Promise<CatalogData> {
   return new Promise((resolve, reject) => {
     Papa.parse(file, {
       header: true,
@@ -80,7 +80,7 @@ export function parseWholesaleCSV(file: File, onProgress: (pct: number) => void,
             }
 
             const originalPrice = parseFloat(priceStr) || 0
-            const wholesalePrice = originalPrice * 0.35
+            const wholesalePrice = originalPrice * priceMultiplier
 
             // Use SKU as unique key, or fallback to Handle + Option1
             const uniqueKey = sku ? sku : `${handle}-${option1}`

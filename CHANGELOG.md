@@ -1,5 +1,6 @@
 ## [1.6.0] - 2026-03-01
 ### Added
+- **Descuento Mayorista Dinámico**: Añadida una nueva interfaz con slider (barra deslizable) en la vista `/mayorista` que permite establecer visualmente el porcentaje exacto de descuento que se aplicará sobre el precio al detal para calcular el precio mayorista del PDF (por defecto 65%).
 - **Catálogo Mayorista PDF**: Nueva ruta `/mayorista` que permite generar un catálogo en PDF en formato listado procesando un CSV de Shopify.
 - **Formato Listado y Branding Piro**: El catálogo PDF tiene un diseño tipo lista que prioriza contener más productos por hoja e incluye logotipo 15x15 e información de contacto y dirección de Piro Jewelry en el encabezado.
 - **Cancelación PDF (AbortController)**: Botón para interrumpir la generación del PDF en el frontend para evitar cuelgues de interfaz por exceso de carga.

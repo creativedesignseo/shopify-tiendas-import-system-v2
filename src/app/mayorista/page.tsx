@@ -14,6 +14,7 @@ export default function MayoristaPage() {
   const [progress, setProgress] = React.useState(0)
   const [statusText, setStatusText] = React.useState("")
   const [error, setError] = React.useState<string | null>(null)
+  const [discountRate, setDiscountRate] = React.useState(65)
   
   const abortControllerRef = React.useRef<AbortController | null>(null)
 
@@ -35,9 +36,14 @@ export default function MayoristaPage() {
       setStatusText("Leyendo CSV y agrupando productos...")
 
       // 1. Parsing and grouped
-      const catalogData = await parseWholesaleCSV(file, (pct) => {
-         setProgress(Math.min(pct, 30))
-      }, signal)
+      const catalogData = await parseWholesaleCSV(
+        file, 
+        (100 - discountRate) / 100, 
+        (pct: number) => {
+           setProgress(Math.min(pct, 30))
+        }, 
+        signal
+      )
 
       if (catalogData.totalProducts === 0) {
          throw new Error("No se encontraron productos con formato válido en el CSV.")
@@ -81,10 +87,41 @@ export default function MayoristaPage() {
                Sube la Colección Completa
             </CardTitle>
             <CardDescription>
-              Arrastra aquí tu "products_export.csv" de Shopify. El sistema calculará el precio mayorista (35%) y estructurará el PDF por categorías.
+              Ajusta el porcentaje de descuento y arrastra aquí tu "products_export.csv" de Shopify.
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-6">
+             <div className="space-y-2">
+               <label htmlFor="discount" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                 Descuento Mayorista (%)
+               </label>
+               <div className="flex items-center gap-4">
+                 <input 
+                   id="discount"
+                   type="range" 
+                   min="0" 
+                   max="100" 
+                   value={discountRate}
+                   onChange={(e) => setDiscountRate(Number(e.target.value))}
+                   className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                 />
+                 <div className="flex items-center gap-1 w-20">
+                   <input 
+                     type="number" 
+                     min="0"
+                     max="100"
+                     value={discountRate}
+                     onChange={(e) => setDiscountRate(Number(e.target.value))}
+                     className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                   />
+                   <span className="text-sm text-gray-500 font-medium">%</span>
+                 </div>
+               </div>
+               <p className="text-xs text-muted-foreground">
+                 El precio final será el {100 - discountRate}% del precio original de venta al público.
+               </p>
+             </div>
+
              <FileDropzone 
                 onFileSelect={handleFileSelect} 
                 accept=".csv"
