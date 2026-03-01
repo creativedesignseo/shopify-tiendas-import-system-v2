@@ -1,6 +1,15 @@
 {
-  "current": "1.5.0",
+  "current": "1.6.0",
   "releases": [
+    {
+      "version": "1.6.0",
+      "date": "2026-02-14",
+      "entries": [
+        { "type": "added", "text": "Detección Inteligente de Duplicados: Coincidencia secundaria por Título normalizado" },
+        { "type": "added", "text": "Reporte detallado de duplicados con columna 'Razón' (Barcode vs Título)" },
+        { "type": "changed", "text": "UI: Estilo 'Single Border' implementado en todos los inputs para mayor limpieza visual" }
+      ]
+    },
     {
       "version": "1.5.0",
       "date": "2026-02-14",

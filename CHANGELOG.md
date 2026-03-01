@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.6.0] - 2026-03-01
+### Added
+- **Catálogo Mayorista PDF**: Nueva ruta `/mayorista` que permite generar un catálogo en PDF en formato listado procesando un CSV de Shopify.
+- **Formato Listado y Branding Piro**: El catálogo PDF tiene un diseño tipo lista que prioriza contener más productos por hoja e incluye logotipo 15x15 e información de contacto y dirección de Piro Jewelry en el encabezado.
+- **Cancelación PDF (AbortController)**: Botón para interrumpir la generación del PDF en el frontend para evitar cuelgues de interfaz por exceso de carga.
+
 ## [1.5.0] - 2026-02-14
 ### Added
 - **Página de Changelog Visual**: Nueva ruta `/changelog` con historial completo de versiones en diseño timeline.
