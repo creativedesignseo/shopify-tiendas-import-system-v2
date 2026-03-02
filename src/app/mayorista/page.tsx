@@ -336,19 +336,25 @@ export default function MayoristaPage() {
 
                   <div className="flex-grow overflow-y-auto max-h-[300px] pr-2 space-y-2 custom-scrollbar">
                     {availableCategories.map(cat => (
-                      <div key={cat} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg hover:bg-blue-50/50 transition-colors border border-transparent hover:border-blue-100 cursor-pointer" onClick={() => toggleCategory(cat)}>
+                      <div key={cat} className="relative flex items-center space-x-3 p-3 bg-gray-50 rounded-lg hover:bg-blue-50/50 transition-colors border border-transparent hover:border-blue-100 focus-within:ring-2 focus-within:ring-blue-100">
                         <Checkbox 
                           id={`cat-${cat}`} 
                           checked={selectedCategories.includes(cat)}
                           onCheckedChange={() => toggleCategory(cat)}
-                          className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
+                          className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600 z-10"
                         />
-                        <div className="grid gap-1.5 leading-none cursor-pointer flex-grow">
-                          <label htmlFor={`cat-${cat}`} className="text-sm font-medium leading-none text-gray-700 cursor-pointer">
+                        <label 
+                           htmlFor={`cat-${cat}`} 
+                           className="absolute inset-0 w-full h-full cursor-pointer rounded-lg z-0"
+                        >
+                           <span className="sr-only">Seleccionar categoría {cat}</span>
+                        </label>
+                        <div className="grid gap-1.5 leading-none flex-grow pointer-events-none z-10">
+                          <span className="text-sm font-medium leading-none text-gray-700">
                             {cat}
-                          </label>
+                          </span>
                         </div>
-                        <span className="text-xs font-bold text-gray-400 bg-gray-200 px-2 py-0.5 rounded-full">
+                        <span className="text-xs font-bold text-gray-400 bg-gray-200 px-2 py-0.5 rounded-full pointer-events-none z-10">
                           {parsedData.categories[cat].length}
                         </span>
                       </div>
