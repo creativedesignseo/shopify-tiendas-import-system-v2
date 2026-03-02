@@ -1,13 +1,14 @@
 ## [1.6.0] - 2026-03-01
 ### Added
+- **Formato Dual de PDF**: Añadido selector de formato para el catálogo generado. Ahora los usuarios pueden elegir entre formato **Móvil (Proporción 9:16 vertical)** para lectura en celulares o **Escritorio (A4 clásico)** para lectura cómoda en pantallas grandes o impresión física.
 - **Índice Interactivo en PDF**: La primera hoja del catálogo ahora se reserva para imprimir una tabla de contenidos ("Índice") interactiva. Al hacer clic en el nombre de una categoría o página, el PDF saltará automáticamente a la sección correspondiente. 
-- **Descuento Mayorista Dinámico**: Añadida una nueva interfaz con slider (barra deslizable) en la vista `/mayorista` que permite establecer visualmente el porcentaje exacto de descuento que se aplicará sobre el precio al detal para calcular el precio mayorista del PDF (por defecto 65%).
+- **Descuento Mayorista Dinámico (UI Rediseñada)**: Añadida y mejorada una interfaz gráfica interactiva en la ruta `/mayorista` que permite establecer el descuento deseado a través de un slider minimalista de gran tamaño (por defecto 65%). Muestra un panel informativo del multiplicador de precios para mayor claridad.
 - **Catálogo Mayorista PDF**: Nueva ruta `/mayorista` que permite generar un catálogo en PDF en formato listado procesando un CSV de Shopify.
 - **Formato Listado y Branding Piro**: El catálogo PDF tiene un diseño tipo lista que prioriza contener más productos por hoja e incluye logotipo 15x15 e información de contacto y dirección de Piro Jewelry en el encabezado.
 - **Cancelación PDF (AbortController)**: Botón para interrumpir la generación del PDF en el frontend para evitar cuelgues de interfaz por exceso de carga.
 
 ### Changed
-- **Diseño Mobile-First (PDF)**: Reestructuradas las proporciones del PDF generado de "A4" a un tamaño tipo celular con ratio 9:16 vertical. Fuentes incrementadas en tamaño general y en los precios, reducidos los márgenes laterales y reajustado el flujo del texto para ser altamente legible en teléfonos inteligentes sin requerir zoom/pellizcos.
+- **Motor Multiplataforma (PDF)**: Refactorizado `pdf-generator.ts` para aceptar y computar dinámicamente opciones de layout (márgenes, tamaños de iconos, fuentes, proporciones, anchos de celdas) según el objetivo final, garantizando legibilidad total sin pellizcos/zooms en la versión celular y aprovechando al máximo el espacio en la versión de escritorio.
 - **Lógica de Categorización CSV**: Actualizado el generador del catálogo PDF para utilizar estrictamente la última jerarquía de la columna `Product Category` (por ejemplo, extraerá "RINGS" de "APPAREL & ACCESSORIES > JEWELRY > RINGS").
 - **Soporte para Variantes (Catálogo)**: Modificado el agrupador de CSV para que los productos con el mismo `Handle` pero distinto `Option1 Value` (ej. colores) se traten como ítems separados en el PDF, adjuntando el valor de la opción al título del producto.
 - **Filtro de Imágenes (Catálogo)**: Implementada regla estricta que excluye del PDF cualquier variante que no posea imagen propia ni herede la imagen principal del producto.
