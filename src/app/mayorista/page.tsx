@@ -7,7 +7,7 @@ import { generateWholesalePDF, PdfFormat } from "@/lib/pdf-generator"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
-import { Checkbox } from "@/components/ui/checkbox"
+import { Switch } from "@/components/ui/switch"
 import { FileText, Download, Loader2, AlertCircle, Smartphone, Monitor, Layers, CloudDownload } from "lucide-react"
 
 export default function MayoristaPage() {
@@ -337,11 +337,11 @@ export default function MayoristaPage() {
                   <div className="flex-grow overflow-y-auto max-h-[300px] pr-2 space-y-2 custom-scrollbar">
                     {availableCategories.map(cat => (
                       <div key={cat} className="relative flex items-center space-x-3 p-3 bg-gray-50 rounded-lg hover:bg-blue-50/50 transition-colors border border-transparent hover:border-blue-100 focus-within:ring-2 focus-within:ring-blue-100">
-                        <Checkbox 
+                        <Switch 
                           id={`cat-${cat}`} 
                           checked={selectedCategories.includes(cat)}
                           onCheckedChange={() => toggleCategory(cat)}
-                          className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600 z-10"
+                          className="z-10"
                         />
                         <label 
                            htmlFor={`cat-${cat}`} 

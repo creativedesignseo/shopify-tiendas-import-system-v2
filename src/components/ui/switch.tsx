@@ -1,0 +1,37 @@
+"use client"
+
+import * as React from "react"
+import * as SwitchPrimitives from "@radix-ui/react-switch"
+
+import { cn } from "@/lib/utils"
+
+const Switch = React.forwardRef<
+  React.ElementRef<typeof SwitchPrimitives.Root>,
+  React.ComponentPropsWithoutRef<typeof SwitchPrimitives.Root>
+>(({ className, ...props }, ref) => (
+  <SwitchPrimitives.Root
+    className={cn(
+      "peer inline-flex h-7 w-12 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50",
+      /* Custom iOS/Pill style colors */
+      "data-[state=checked]:bg-[#4ade80] data-[state=unchecked]:bg-[#ff4d6d]", 
+      className
+    )}
+    {...props}
+    ref={ref}
+  >
+    <SwitchPrimitives.Thumb
+      className={cn(
+        "pointer-events-none block h-5 w-5 rounded-full bg-white shadow-lg ring-0 transition-transform",
+        /* Transform for positioning */
+        "data-[state=checked]:translate-x-6 data-[state=unchecked]:translate-x-0",
+        /* Unchecked style: circular with a hole */
+        "data-[state=unchecked]:scale-90 data-[state=unchecked]:border-[5px] data-[state=unchecked]:border-[#ff4d6d]",
+        /* Checked style: pill shaped */
+        "data-[state=checked]:h-4 data-[state=checked]:w-2.5 data-[state=checked]:rounded-full data-[state=checked]:!-translate-x-1 data-[state=checked]:ml-auto data-[state=checked]:border-none text-transparent"
+      )}
+    />
+  </SwitchPrimitives.Root>
+))
+Switch.displayName = SwitchPrimitives.Root.displayName
+
+export { Switch }
