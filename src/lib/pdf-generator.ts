@@ -303,27 +303,41 @@ export async function generateWholesalePDF(
      const titleStr = tocItem.title
      const pageStr = `Pág. ${tocItem.pageNumber}`
      
-     // Calculate dot placement
-     const titleWidth = doc.getTextWidth(titleStr)
-     const dotWidth = doc.getTextWidth(".")
-     const pageStrWidth = doc.getTextWidth(pageStr)
+     if (format === "mobile") {
+        // MOBILE: Draw Category on the left, Page Number on the right, sutil divider
+        doc.text(titleStr, margin, tocY)
+        doc.setFont("helvetica", "normal")
+        doc.setFontSize(PDF_OPTIONS.FONT_TOC_ITEM - 1)
+        doc.text(pageStr, pageWidth - margin, tocY, { align: "right" })
+        
+        // Add a sutil dot-line manually under or besides for visual structure
+        doc.setDrawColor(220, 220, 240)
+        doc.setLineWidth(0.1)
+        const textWidth = doc.getTextWidth(titleStr)
+        const pageTextWidth = doc.getTextWidth(pageStr)
+        doc.line(margin + textWidth + 2, tocY - 1, pageWidth - margin - pageTextWidth - 2, tocY - 1)
+        
+        // Reset for next
+        doc.setFontSize(PDF_OPTIONS.FONT_TOC_ITEM)
+     } else {
+        // DESKTOP: Traditional Dots calculation
+        const titleWidth = doc.getTextWidth(titleStr)
+        const dotWidth = doc.getTextWidth(".")
+        const pageStrWidth = doc.getTextWidth(pageStr)
+        
+        const dotSpace = (pageWidth - (margin * 2) - titleWidth - pageStrWidth) - 4
+        const numDots = Math.floor(dotSpace / dotWidth)
+        
+        let dots = ""
+        for (let i=0; i < numDots; i++) dots += "."
+        const fullLine = `${titleStr} ${dots} ${pageStr}`
+        doc.text(fullLine, margin, tocY)
+     }
      
-     const dotSpace = (pageWidth - (margin * 2) - titleWidth - pageStrWidth)
-     const numDots = Math.floor(dotSpace / dotWidth) - 2
-     
-     // Create a string of dots (....... )
-     let dots = ""
-     for (let i=0; i < numDots; i++) dots += "."
-
-     const fullLine = `${titleStr} ${dots} ${pageStr}`
-     
-     // Draw the title (made interactive)
-     doc.textWithLink(fullLine, margin, tocY, { pageNumber: tocItem.pageNumber })
+     // Make the entire area interactive
+     doc.link(margin, tocY - 5, pageWidth - (margin * 2), 7, { pageNumber: tocItem.pageNumber })
      
      tocY += 10
-     
-     // If the index gets too long for the first page, we add another page after it
-     // But usually there aren't that many product categories.
   }
 
   onProgress(98, "Añadiendo números de página...")
