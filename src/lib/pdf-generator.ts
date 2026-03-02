@@ -360,6 +360,18 @@ export async function generateWholesalePDF(
 
   onProgress(100, "¡Catálogo Listo!")
 
+  // Generate dynamic filename
+  const now = new Date()
+  const day = String(now.getDate()).padStart(2, "0")
+  const month = String(now.getMonth() + 1).padStart(2, "0")
+  const year = now.getFullYear()
+  const dateStr = `${day}-${month}-${year}`
+  
+  // 5 random characters
+  const uniqueId = Math.random().toString(36).substring(2, 7).toUpperCase()
+  
+  const filename = `wholesale-${format}-${dateStr}-${uniqueId}.pdf`
+
   // Save the PDF
-  doc.save("wholesale-catalog.pdf")
+  doc.save(filename)
 }
