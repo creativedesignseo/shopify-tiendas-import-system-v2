@@ -1,3 +1,5 @@
+"use client"
+
 import * as React from "react"
 import { FileDropzone } from "@/components/file-dropzone"
 import { parseWholesaleCSV, CatalogData } from "@/lib/csv-catalog-parser"
