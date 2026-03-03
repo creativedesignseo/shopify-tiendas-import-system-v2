@@ -1,3 +1,11 @@
+## [1.7.0] - 2026-03-03
+### Added
+- **Sistema de Checkpoint "El Avión"**: Respaldo automático en la nube (Supabase) cada 3 segundos durante el procesamiento de productos. Si se cierra la pestaña, se va la luz o se desconecta el internet, el progreso se preserva.
+- **Recuperación Inteligente de Sesión**: Al reabrir la app, detecta sesiones interrumpidas y muestra un diálogo con nombre del archivo, fecha, barra de progreso y opción de "Continuar Vuelo ✈️".
+- **Barra de Progreso Persistente**: Indicador siempre visible con estado de guardado en tiempo real, contadores completados/errores, y botón de descarga parcial.
+- **Descarga de CSV Parcial**: Permite exportar solo los productos ya completados sin esperar a terminar todos.
+- **Tabla `import_sessions`** en Supabase para rastrear cada archivo importado con contadores de progreso.
+
 ## [1.6.0] - 2026-03-01
 ### Added
 - **Formato Dual de PDF**: Añadido selector de formato para el catálogo generado. Ahora los usuarios pueden elegir entre formato **Móvil (Proporción 9:16 vertical)** para lectura en celulares o **Escritorio (A4 clásico)** para lectura cómoda en pantallas grandes o impresión física.
