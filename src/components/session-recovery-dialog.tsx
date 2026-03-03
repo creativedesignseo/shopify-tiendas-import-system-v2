@@ -109,80 +109,82 @@ export function SessionRecoveryDialog({
               </Badge>
             </div>
 
-            {/* Progress Bar */}
-            <div className="space-y-1.5">
-              <div className="flex items-center justify-between text-xs">
-                <span className="text-[#8C8C8C]">Progreso</span>
-                <span className="font-semibold text-[#1A1A1A]">{progressPercent}%</span>
-              </div>
-              <Progress value={progressPercent} className="h-2.5" />
+            {/* Progress Bar Header */}
+            <div className="flex items-center justify-between text-xs mb-1">
+              <span className="text-[#8C8C8C] font-semibold">Progreso</span>
+              <span className="font-bold text-[#0F0F0F] text-sm">{progressPercent}%</span>
+            </div>
+            
+            {/* SaaS Progress Bar */}
+            <div className="relative h-6 w-full bg-[#EBEBEB] rounded-full overflow-hidden">
+               <div 
+                 className="absolute top-0 left-0 h-full bg-[#D6F45B] rounded-full transition-all duration-1000 ease-in-out" 
+                 style={{ width: `${progressPercent}%` }} 
+               />
             </div>
 
-            {/* Stats */}
-            <div className="grid grid-cols-3 gap-2 pt-1">
-              <div className="flex items-center gap-1.5 bg-green-50 rounded-lg px-2.5 py-1.5 border border-green-100">
-                <Check className="h-3.5 w-3.5 text-green-600" />
-                <div>
-                  <p className="text-xs font-bold text-green-700">{completed}</p>
-                  <p className="text-[10px] text-green-600">Completados</p>
+            {/* Stats Pills */}
+            <div className="grid grid-cols-3 gap-3 pt-3">
+              <div className="flex flex-col justify-center gap-1 bg-[#F5F6F7] rounded-3xl px-4 py-3 border-2 border-transparent">
+                <div className="flex items-center gap-1.5">
+                  <Check className="h-4 w-4 text-[#0F0F0F] stroke-[3]" />
+                  <span className="text-lg font-bold text-[#0F0F0F]">{completed}</span>
                 </div>
+                <p className="text-[10px] font-bold text-[#5C5C5C] uppercase tracking-wider">Completados</p>
               </div>
-              <div className="flex items-center gap-1.5 bg-red-50 rounded-lg px-2.5 py-1.5 border border-red-100">
-                <AlertCircle className="h-3.5 w-3.5 text-red-500" />
-                <div>
-                  <p className="text-xs font-bold text-red-700">{errors}</p>
-                  <p className="text-[10px] text-red-600">Errores</p>
+              <div className="flex flex-col justify-center gap-1 bg-[#FFF0F0] rounded-3xl px-4 py-3 border-2 border-transparent">
+                <div className="flex items-center gap-1.5">
+                  <AlertCircle className="h-4 w-4 text-[#FF4D4D] stroke-[3]" />
+                  <span className="text-lg font-bold text-[#FF4D4D]">{errors}</span>
                 </div>
+                <p className="text-[10px] font-bold text-[#FF4D4D] uppercase tracking-wider">Errores</p>
               </div>
-              <div className="flex items-center gap-1.5 bg-slate-100 rounded-lg px-2.5 py-1.5 border border-slate-200">
-                <Loader2 className="h-3.5 w-3.5 text-slate-500" />
-                <div>
-                  <p className="text-xs font-bold text-slate-700">{pending}</p>
-                  <p className="text-[10px] text-slate-500">Pendientes</p>
+              <div className="flex flex-col justify-center gap-1 bg-[#F5F6F7] rounded-3xl px-4 py-3 border-2 border-[#EBEBEB]">
+                <div className="flex items-center gap-1.5">
+                  <Loader2 className="h-4 w-4 text-[#8C8C8C] stroke-[3]" />
+                  <span className="text-lg font-bold text-[#0F0F0F]">{pending}</span>
                 </div>
+                <p className="text-[10px] font-bold text-[#8C8C8C] uppercase tracking-wider">Pendientes</p>
               </div>
             </div>
           </div>
 
           {/* Message */}
-          <p className="text-sm text-[#8C8C8C] text-center">
-            Tu último proceso quedó en <strong>{completed} de {total}</strong> productos. 
+          <p className="text-sm text-[#8C8C8C] text-center mt-6">
+            Tu último proceso quedó en <strong className="text-[#0F0F0F]">{completed} de {total}</strong> productos. 
             ¿Quieres retomar donde lo dejaste?
           </p>
         </div>
 
-        {/* Actions */}
-        <DialogFooter className="px-6 py-4 bg-[#F5F6F7] border-t border-[#EBEBEB] gap-2 sm:gap-2">
+        {/* Actions - Thick SaaS Pills layout */}
+        <div className="px-6 py-5 bg-[#F5F6F7] border-t border-[#EBEBEB] flex flex-col sm:flex-row items-center justify-between gap-3">
           <Button
-            variant="ghost"
-            size="sm"
+            variant="outline"
+            className="w-full sm:flex-1 rounded-full border-2 border-[#FF4D4D] text-[#FF4D4D] hover:bg-[#FF4D4D] hover:text-white font-bold h-11 transition-all"
             onClick={onAbandon}
-            className="text-red-600 hover:text-red-700 hover:bg-red-50"
           >
-            <Trash2 className="mr-1.5 h-3.5 w-3.5" />
+            <Trash2 className="mr-2 h-4 w-4" />
             Abandonar
           </Button>
-          <div className="flex-1" />
-          {completed > 0 && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onDownloadPartial}
-              className="border-[#EBEBEB] text-[#1A1A1A] hover:bg-[#F5F6F7]"
-            >
-              <Download className="mr-1.5 h-3.5 w-3.5" />
-              CSV Parcial ({completed})
-            </Button>
-          )}
+
           <Button
-            size="sm"
-            onClick={onRestore}
-            className="bg-[#D6F45B] hover:brightness-95 text-[#0F0F0F] shadow-md px-5 font-semibold"
+            variant="outline"
+            disabled={completed === 0}
+            onClick={onDownloadPartial}
+            className="w-full sm:flex-1 rounded-full border-2 border-[#EBEBEB] text-[#0F0F0F] bg-white hover:bg-[#EBEBEB] font-bold h-11 transition-all"
           >
-            <RotateCcw className="mr-1.5 h-3.5 w-3.5" />
+            <Download className="h-4 w-4 mr-2" />
+            CSV Parcial ({completed})
+          </Button>
+
+          <Button
+            onClick={onRestore}
+            className="w-full sm:flex-1 rounded-full bg-[#D6F45B] hover:bg-[#c4df53] text-[#0F0F0F] font-bold h-11 shadow-sm transition-transform active:scale-95"
+          >
+            <RotateCcw className="h-4 w-4 mr-2" />
             Restaurar Sesión
           </Button>
-        </DialogFooter>
+        </div>
       </DialogContent>
     </Dialog>
   )
