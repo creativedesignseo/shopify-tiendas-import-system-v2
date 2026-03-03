@@ -11,8 +11,8 @@ const Switch = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <SwitchPrimitives.Root
     className={cn(
-      "peer inline-flex h-7 w-12 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50",
-      /* Custom iOS/Pill style colors */
+      "peer inline-flex h-[24px] w-[44px] shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50",
+      /* Clean SaaS colors */
       "data-[state=checked]:bg-[#D6F45B] data-[state=unchecked]:bg-[#EBEBEB]", 
       className
     )}
@@ -22,12 +22,8 @@ const Switch = React.forwardRef<
     <SwitchPrimitives.Thumb
       className={cn(
         "pointer-events-none block h-5 w-5 rounded-full bg-white shadow-lg ring-0 transition-transform",
-        /* Transform for positioning */
-        "data-[state=checked]:translate-x-6 data-[state=unchecked]:translate-x-0",
-        /* Unchecked style: circular with a hole */
-        "data-[state=unchecked]:scale-90 data-[state=unchecked]:border-[5px] data-[state=unchecked]:border-[#EBEBEB]",
-        /* Checked style: pill shaped */
-        "data-[state=checked]:h-4 data-[state=checked]:w-2.5 data-[state=checked]:rounded-full data-[state=checked]:!-translate-x-1 data-[state=checked]:ml-auto data-[state=checked]:border-none text-transparent"
+        /* Transform for standard positioning */
+        "data-[state=checked]:translate-x-5 data-[state=unchecked]:translate-x-0"
       )}
     />
   </SwitchPrimitives.Root>

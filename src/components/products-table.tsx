@@ -62,7 +62,7 @@ export function ProductsTable({
         <Table className="min-w-[900px] table-fixed">
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[45px]">
+              <TableHead className="w-[60px] text-center">
                 <Switch 
                   checked={products.length > 0 && products.every(p => p.isChecked)}
                   onCheckedChange={(checked) => {
@@ -71,7 +71,7 @@ export function ProductsTable({
                   title="Seleccionar todo"
                 />
               </TableHead>
-              <TableHead className="w-[85px] text-center">Estado</TableHead>
+              <TableHead className="w-[100px] text-center">Estado</TableHead>
               <TableHead className="w-auto">Título</TableHead>
               <TableHead className="w-[110px]">Marca</TableHead>
               <TableHead className="w-[100px]">Precio</TableHead>
@@ -90,7 +90,7 @@ export function ProductsTable({
                 product.isChecked ? "hover:bg-[#F5F6F7]" : "bg-[#F5F6F7]/50 grayscale-[0.5] opacity-80"
               )}
             >
-              <TableCell>
+              <TableCell className="text-center">
                 <Switch 
                   checked={product.isChecked}
                   onCheckedChange={(checked) => onUpdateProduct(product.id, "isChecked", checked)}
@@ -98,31 +98,31 @@ export function ProductsTable({
               </TableCell>
               <TableCell className="text-center p-2">
                 {product.status === "pending" && (
-                  <Badge variant="secondary" className="bg-red-50 text-red-600 border border-red-200 shadow-sm font-bold text-[10px] px-2 whitespace-nowrap">
+                  <Badge variant="secondary" className="bg-[#EBEBEB] text-[#5C5C5C] hover:bg-[#EBEBEB] rounded-full font-bold text-[10px] px-3 py-1 whitespace-nowrap shadow-none border-none">
                     En cola
                   </Badge>
                 )}
                 {product.status === "generating" && (
-                  <Badge variant="secondary" className="bg-[#D6F45B]/10 text-[#0F0F0F] border border-[#D6F45B]/30 shadow-sm font-bold text-[10px] px-2 whitespace-nowrap">
+                  <Badge variant="secondary" className="bg-white text-[#0F0F0F] rounded-full font-bold text-[10px] px-3 py-1 whitespace-nowrap shadow-sm border-2 border-[#D6F45B]">
                     <Loader2 className="h-3 w-3 animate-spin mr-1 inline" /> Proc.
                   </Badge>
                 )}
                 {product.status === "complete" && (
                   <Badge 
                     variant="secondary" 
-                    className="bg-green-50 text-green-600 border border-green-200 shadow-sm font-bold text-[10px] px-2 whitespace-nowrap cursor-help"
+                    className="bg-[#D6F45B] text-[#0F0F0F] hover:bg-[#D6F45B] rounded-full font-bold text-[10px] px-3 py-1 whitespace-nowrap shadow-sm border-none cursor-help transition-transform hover:scale-105"
                     title={product.modelUsed ? `Generado con ${product.modelUsed}` : 'Generación lista'}
                   >
-                    <Check className="h-3 w-3 mr-1 inline" /> Listo
+                    <Check className="h-3 w-3 mr-1 inline stroke-[3]" /> Listo
                   </Badge>
                 )}
                 {product.status === "error" && (
                   <Badge 
                     variant="secondary" 
-                    className="bg-red-50 text-red-600 border border-red-200 shadow-sm font-bold text-[10px] px-2 whitespace-nowrap cursor-help"
+                    className="bg-[#FF4D4D] text-white hover:bg-[#FF4D4D] rounded-full font-bold text-[10px] px-3 py-1 whitespace-nowrap shadow-sm border-none cursor-help"
                     title={product.errorDetails || 'Error al procesar'}
                   >
-                    <AlertCircle className="h-3 w-3 mr-1 inline" /> Error
+                    <AlertCircle className="h-3 w-3 mr-1 inline stroke-[3]" /> Error
                   </Badge>
                 )}
               </TableCell>
@@ -320,23 +320,23 @@ export function ProductsTable({
                       className="mr-1"
                     />
                     {product.status === "complete" && (
-                      <Badge variant="secondary" className="bg-green-50 text-green-600 border border-green-200 font-bold text-[10px] px-2 h-5 cursor-help" title={product.modelUsed ? `Generado con ${product.modelUsed}` : 'Listo'}>
-                        <Check className="w-3 h-3 mr-1" /> Listo
+                      <Badge variant="secondary" className="bg-[#D6F45B] text-[#0F0F0F] rounded-full font-bold text-[10px] px-3 py-1 h-6 cursor-help border-none shadow-sm" title={product.modelUsed ? `Generado con ${product.modelUsed}` : 'Listo'}>
+                        <Check className="w-3 h-3 mr-1 stroke-[3]" /> Listo
                       </Badge>
                     )}
                     {product.status === "pending" && (
-                      <Badge variant="secondary" className="bg-red-50 text-red-600 border border-red-200 font-bold text-[10px] px-2 h-5">
+                      <Badge variant="secondary" className="bg-[#EBEBEB] text-[#5C5C5C] rounded-full font-bold text-[10px] px-3 py-1 h-6 border-none shadow-none">
                         En cola
                       </Badge>
                     )}
                     {product.status === "generating" && (
-                      <Badge variant="secondary" className="bg-[#D6F45B]/10 text-[#0F0F0F] border border-[#D6F45B]/30 font-bold text-[10px] px-2 h-5">
+                      <Badge variant="secondary" className="bg-white text-[#0F0F0F] border-2 border-[#D6F45B] rounded-full font-bold text-[10px] px-3 py-1 h-6 shadow-sm">
                         <Loader2 className="h-3 w-3 animate-spin mr-1 inline" /> Proc.
                       </Badge>
                     )}
                     {product.status === "error" && (
-                      <Badge variant="secondary" className="bg-red-50 text-red-600 border border-red-200 font-bold text-[10px] px-2 h-5 cursor-help" title={product.errorDetails || 'Error al procesar'}>
-                         <AlertCircle className="h-3 w-3 mr-1 inline" /> Error
+                      <Badge variant="secondary" className="bg-[#FF4D4D] text-white rounded-full font-bold text-[10px] px-3 py-1 h-6 cursor-help border-none shadow-sm" title={product.errorDetails || 'Error al procesar'}>
+                         <AlertCircle className="h-3 w-3 mr-1 inline stroke-[3]" /> Error
                       </Badge>
                     )}
                     <span className="text-xs text-[#8C8C8C]">{product.vendor}</span>
