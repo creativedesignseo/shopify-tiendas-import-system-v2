@@ -146,8 +146,8 @@ export function ProductReviewDialog({
   return (
     <>
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-6xl max-h-[95vh] flex flex-col p-0 gap-0">
-        <DialogHeader className="p-6 border-b">
+      <DialogContent className="max-w-6xl max-h-[95vh] flex flex-col p-0 gap-0 rounded-3xl overflow-hidden">
+        <DialogHeader className="p-6 border-b border-[#EBEBEB]">
            <div className="flex justify-between items-start">
               <div>
                 <DialogTitle className="text-xl flex flex-wrap items-center gap-2">
@@ -158,7 +158,7 @@ export function ProductReviewDialog({
                          <Check className="w-3 h-3 mr-1"/> Listo
                        </Badge>
                        {product.modelUsed && (
-                         <Badge variant="outline" className="text-[10px] bg-blue-50 text-blue-700 border-blue-200">
+                          <Badge variant="outline" className="text-[10px] bg-[#F5F6F7] text-[#1A1A1A] border-[#EBEBEB]">
                            {product.modelUsed
                               .replace("models/", "")
                               .replace("gemini-", "Gemini ")
@@ -178,7 +178,7 @@ export function ProductReviewDialog({
               <Button 
                 onClick={handleGenerate} 
                 disabled={isGenerating || !masterData}
-                className="bg-black hover:bg-black/80 text-white shadow-md rounded-full px-6"
+                className="bg-[#D6F45B] hover:brightness-95 text-[#0F0F0F] shadow-md rounded-full px-6 font-semibold"
               >
                 {isGenerating ? (
                   <>
@@ -196,7 +196,7 @@ export function ProductReviewDialog({
 
         <div className="flex-1 overflow-hidden flex flex-col md:flex-row">
            {/* LEFT COLUMN: Data & Images */}
-           <ScrollArea className="w-full md:w-[35%] border-b md:border-b-0 md:border-r bg-muted/10 p-6 h-[400px] md:h-auto">
+           <ScrollArea className="w-full md:w-[35%] border-b md:border-b-0 md:border-r border-[#EBEBEB] bg-[#F5F6F7]/50 p-6 h-[400px] md:h-auto">
               <div className="space-y-6">
                  
                  {/* Images Section */}

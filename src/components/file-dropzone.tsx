@@ -76,11 +76,11 @@ export function FileDropzone({
       onDragOver={handleDragOver}
       onDrop={handleDrop}
       className={cn(
-        "group flex flex-col items-center justify-center rounded-lg border-2 border-dashed px-6 py-10 transition-all duration-300 ease-in-out",
+        "group flex flex-col items-center justify-center rounded-3xl border-2 border-dashed px-6 py-12 transition-all duration-300 ease-in-out bg-white",
         isDragActive
-          ? "border-primary bg-primary/10 shadow-inner"
-          : "border-muted-foreground/25 hover:border-primary/50 hover:bg-accent/5 hover:shadow-md",
-        disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer active:scale-[0.98]",
+          ? "border-[#D6F45B] bg-[#D6F45B]/5 shadow-[0_0_0_4px_rgba(214,244,91,0.15)]"
+          : "border-[#EBEBEB] hover:border-[#D6F45B]/50 hover:shadow-[0_10px_30px_rgba(0,0,0,0.05)]",
+        disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer active:scale-[0.99]",
         className
       )}
       {...props}
@@ -93,9 +93,11 @@ export function FileDropzone({
         onChange={handleChange}
         disabled={disabled}
       />
-      <div className="flex flex-col items-center justify-center gap-2 text-center text-muted-foreground transition-all duration-300 group-hover:text-primary">
-        <UploadCloud className="h-10 w-10 transition-all duration-300 group-hover:scale-110 group-hover:-translate-y-1 group-hover:rotate-3" />
-        <div className="text-lg font-semibold tracking-tight leading-none mt-1">{label}</div>
+      <div className="flex flex-col items-center justify-center gap-3 text-center text-[#8C8C8C] transition-all duration-300 group-hover:text-[#1A1A1A]">
+        <div className="rounded-2xl bg-[#F5F6F7] p-4 transition-all duration-300 group-hover:bg-[#D6F45B]/10 group-hover:scale-110">
+          <UploadCloud className="h-8 w-8 transition-all duration-300" />
+        </div>
+        <div className="text-base font-semibold tracking-tight leading-none">{label}</div>
         <div className="text-xs font-medium opacity-60 group-hover:opacity-100">{description}</div>
       </div>
     </div>

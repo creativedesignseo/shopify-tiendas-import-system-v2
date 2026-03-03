@@ -62,9 +62,9 @@ export function SessionRecoveryDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[520px] p-0 gap-0 overflow-hidden">
+      <DialogContent className="sm:max-w-[520px] p-0 gap-0 overflow-hidden rounded-3xl">
         {/* Header with gradient */}
-        <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 px-6 py-5 text-white">
+        <div className="bg-gradient-to-r from-[#0F0F0F] via-[#1A1A1A] to-[#0F0F0F] px-6 py-5 text-white">
           <div className="flex items-center gap-3 mb-1">
             <div className="bg-white/20 rounded-full p-2">
               <RotateCcw className="h-5 w-5" />
@@ -83,7 +83,7 @@ export function SessionRecoveryDialog({
         {/* Session Info Card */}
         <div className="px-6 py-5 space-y-4">
           {/* File Info */}
-          <div className="bg-slate-50 rounded-xl border p-4 space-y-3">
+          <div className="bg-[#F5F6F7] rounded-2xl border border-[#EBEBEB] p-4 space-y-3">
             <div className="flex items-start justify-between gap-3">
               <div className="flex items-center gap-2.5 flex-1 min-w-0">
                 <FileSpreadsheet className="h-5 w-5 text-blue-600 shrink-0" />
@@ -95,7 +95,7 @@ export function SessionRecoveryDialog({
                     <Clock className="h-3 w-3" />
                     <span>{formatDate(session.created_at)}</span>
                     <span className="text-muted-foreground/50">•</span>
-                    <span className="text-blue-600 font-medium">
+                    <span className="text-[#D6F45B] font-medium">
                       Última actividad {formatRelativeTime(session.updated_at)}
                     </span>
                   </div>
@@ -113,7 +113,7 @@ export function SessionRecoveryDialog({
             <div className="space-y-1.5">
               <div className="flex items-center justify-between text-xs">
                 <span className="text-muted-foreground">Progreso</span>
-                <span className="font-semibold text-blue-700">{progressPercent}%</span>
+                <span className="font-semibold text-[#1A1A1A]">{progressPercent}%</span>
               </div>
               <Progress value={progressPercent} className="h-2.5" />
             </div>
@@ -152,7 +152,7 @@ export function SessionRecoveryDialog({
         </div>
 
         {/* Actions */}
-        <DialogFooter className="px-6 py-4 bg-slate-50/80 border-t gap-2 sm:gap-2">
+        <DialogFooter className="px-6 py-4 bg-[#F5F6F7] border-t border-[#EBEBEB] gap-2 sm:gap-2">
           <Button
             variant="ghost"
             size="sm"
@@ -168,7 +168,7 @@ export function SessionRecoveryDialog({
               variant="outline"
               size="sm"
               onClick={onDownloadPartial}
-              className="border-blue-200 text-blue-700 hover:bg-blue-50"
+              className="border-[#EBEBEB] text-[#1A1A1A] hover:bg-[#F5F6F7]"
             >
               <Download className="mr-1.5 h-3.5 w-3.5" />
               CSV Parcial ({completed})
@@ -177,7 +177,7 @@ export function SessionRecoveryDialog({
           <Button
             size="sm"
             onClick={onRestore}
-            className="bg-blue-600 hover:bg-blue-700 text-white shadow-md px-5"
+            className="bg-[#D6F45B] hover:brightness-95 text-[#0F0F0F] shadow-md px-5 font-semibold"
           >
             <RotateCcw className="mr-1.5 h-3.5 w-3.5" />
             Restaurar Sesión

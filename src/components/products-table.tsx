@@ -42,7 +42,7 @@ export function ProductsTable({
   
   if (products.length === 0) {
     return (
-      <div className="text-center py-10 text-muted-foreground border rounded-lg bg-muted/20">
+      <div className="text-center py-10 text-[#8C8C8C] rounded-2xl bg-[#F5F6F7]">
         No se han cargado productos. Importa un archivo para comenzar.
       </div>
     )
@@ -52,12 +52,12 @@ export function ProductsTable({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-2 text-xs text-muted-foreground bg-blue-50/50 p-2 rounded-md border border-blue-100">
+      <div className="flex items-center gap-2 text-xs text-[#1A1A1A] bg-[#D6F45B]/10 p-3 rounded-xl border border-[#D6F45B]/20">
         <Check className="h-3 w-3 text-green-500" />
         Solo los productos <b>marcados</b> con el checkbox serán incluidos en el archivo de exportación.
       </div>
       {/* Desktop/Tablet Table View */}
-      <div className="hidden md:block border rounded-md overflow-x-auto">
+      <div className="hidden md:block rounded-2xl border border-[#EBEBEB] overflow-x-auto">
         <Table className="min-w-[900px] table-fixed">
           <TableHeader>
             <TableRow>
@@ -69,7 +69,7 @@ export function ProductsTable({
                     const checked = e.target.checked;
                     products.forEach(p => onUpdateProduct(p.id, "isChecked", checked));
                   }}
-                  className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-600 cursor-pointer"
+                  className="h-4 w-4 rounded border-[#EBEBEB] text-[#D6F45B] focus:ring-[#D6F45B] cursor-pointer accent-[#D6F45B]"
                   title="Seleccionar todo"
                 />
               </TableHead>
@@ -89,7 +89,7 @@ export function ProductsTable({
               key={product.id} 
               className={cn(
                 "transition-colors group/row",
-                product.isChecked ? "hover:bg-accent/40" : "bg-muted/30 grayscale-[0.5] opacity-80"
+                product.isChecked ? "hover:bg-[#F5F6F7]" : "bg-[#F5F6F7]/50 grayscale-[0.5] opacity-80"
               )}
             >
               <TableCell>
@@ -97,7 +97,7 @@ export function ProductsTable({
                   type="checkbox"
                   checked={product.isChecked}
                   onChange={(e) => onUpdateProduct(product.id, "isChecked", e.target.checked)}
-                  className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-0 focus:border-blue-600 cursor-pointer"
+                  className="h-4 w-4 rounded border-[#EBEBEB] text-[#D6F45B] focus:ring-0 cursor-pointer accent-[#D6F45B]"
                 />
               </TableCell>
               <TableCell className="text-center">

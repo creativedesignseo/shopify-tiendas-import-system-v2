@@ -53,15 +53,15 @@ export function FlightProgressBar({
   const allDone = completed + errors === total
 
   return (
-    <div className="bg-white border rounded-xl shadow-sm px-4 py-3 space-y-2">
+    <div className="bg-white rounded-3xl shadow-[0_10px_30px_rgba(0,0,0,0.05)] px-5 py-3.5 space-y-2">
       {/* Top Row */}
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-2.5 min-w-0">
-          <div className={`rounded-full p-1.5 ${allDone ? 'bg-green-100' : 'bg-blue-100'}`}>
+          <div className={`rounded-full p-1.5 ${allDone ? 'bg-green-100' : 'bg-[#D6F45B]/20'}`}>
             {allDone ? (
               <Check className="h-3.5 w-3.5 text-green-600" />
             ) : (
-              <Loader2 className="h-3.5 w-3.5 text-blue-600 animate-spin" />
+              <Loader2 className="h-3.5 w-3.5 text-[#0F0F0F] animate-spin" />
             )}
           </div>
           <div className="flex items-center gap-2 text-sm min-w-0">
@@ -69,7 +69,7 @@ export function FlightProgressBar({
               {session.file_name}
             </span>
             <span className="text-muted-foreground">•</span>
-            <span className="font-medium text-blue-700">{progressPercent}%</span>
+            <span className="font-medium text-[#1A1A1A]">{progressPercent}%</span>
           </div>
         </div>
 
@@ -78,8 +78,8 @@ export function FlightProgressBar({
           <div className="flex items-center gap-1 text-xs text-muted-foreground">
             {isSaving ? (
               <>
-                <Save className="h-3 w-3 animate-pulse text-blue-500" />
-                <span className="text-blue-600">Guardando...</span>
+                <Save className="h-3 w-3 animate-pulse text-[#D6F45B]" />
+                <span className="text-[#1A1A1A]">Guardando...</span>
               </>
             ) : (
               <>
@@ -95,7 +95,7 @@ export function FlightProgressBar({
               variant="outline"
               size="sm"
               onClick={onDownloadPartial}
-              className="h-7 px-2.5 text-xs border-blue-200 text-blue-700 hover:bg-blue-50"
+              className="h-7 px-2.5 text-xs border-[#EBEBEB] text-[#1A1A1A] hover:bg-[#F5F6F7] rounded-full"
             >
               <Download className="mr-1 h-3 w-3" />
               CSV ({completed})

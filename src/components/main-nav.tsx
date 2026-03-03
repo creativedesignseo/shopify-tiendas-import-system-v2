@@ -9,14 +9,16 @@ export function MainNav() {
   const pathname = usePathname()
 
   return (
-    <div className="border-b bg-white">
+    <div className="bg-[#0F0F0F]">
       <div className="container mx-auto px-8">
-        <div className="flex h-14 items-center gap-6">
+        <div className="flex h-14 items-center gap-8">
           <Link 
             href="/" 
             className={cn(
-              "flex items-center gap-2 text-sm font-medium transition-colors hover:text-primary",
-              pathname === "/" ? "text-primary border-b-2 border-primary" : "text-muted-foreground"
+              "flex items-center gap-2 text-sm font-medium transition-all duration-250",
+              pathname === "/" 
+                ? "text-[#D6F45B]" 
+                : "text-white/60 hover:text-white"
             )}
           >
             <Sparkles className="h-4 w-4" />
@@ -25,8 +27,10 @@ export function MainNav() {
           <Link 
             href="/mayorista" 
             className={cn(
-              "flex items-center gap-2 text-sm font-medium transition-colors hover:text-primary",
-              pathname === "/mayorista" ? "text-primary border-b-2 border-primary" : "text-muted-foreground"
+              "flex items-center gap-2 text-sm font-medium transition-all duration-250",
+              pathname === "/mayorista" 
+                ? "text-[#D6F45B]" 
+                : "text-white/60 hover:text-white"
             )}
           >
             <FileText className="h-4 w-4" />

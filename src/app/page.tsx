@@ -317,19 +317,19 @@ Cabeceras Requeridas (Aceptamos variaciones):
   }
 
   return (
-    <main className="container mx-auto p-8 space-y-8 min-h-screen bg-gray-50">
+    <main className="container mx-auto p-8 space-y-8 min-h-screen">
       <div className="flex flex-wrap justify-between items-center gap-4">
         <div>
            <div className="flex items-center gap-3">
-             <h1 className="text-3xl font-bold tracking-tight">Arquitecto de Importación Shopify</h1>
+             <h1 className="text-3xl font-bold tracking-tight text-[#1A1A1A]">Arquitecto de Importación Shopify</h1>
              <Link
                href="/changelog"
-               className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[var(--foreground)] text-[var(--background)] hover:opacity-80 transition-opacity no-underline"
+               className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-[#D6F45B] text-[#0F0F0F] hover:brightness-95 transition-all no-underline"
              >
                v{versionData.current}
              </Link>
            </div>
-           <p className="text-muted-foreground">Filtro de duplicados, precios UE y enriquecimiento con IA.</p>
+           <p className="text-[#8C8C8C]">Filtro de duplicados, precios UE y enriquecimiento con IA.</p>
         </div>
         <div className="flex flex-wrap gap-2 items-center">
             <SettingsDialog />
@@ -354,11 +354,11 @@ Cabeceras Requeridas (Aceptamos variaciones):
       </div>
 
       {products.some(p => p.status === "pending" || p.status === "error") && (
-        <div className="bg-blue-50 border-l-4 border-blue-400 p-4 rounded shadow-sm">
+        <div className="bg-[#0F0F0F] rounded-2xl px-5 py-4 shadow-[0_10px_30px_rgba(0,0,0,0.1)]">
           <div className="flex items-center">
-            <AlertTriangle className="h-5 w-5 text-blue-500 mr-3" />
-            <p className="text-sm text-blue-700">
-              Utiliza el botón <strong>&quot;Revisar / IA&quot;</strong> en cada producto para generar su contenido uno por uno. Solo los productos con el check verde se exportarán.
+            <AlertTriangle className="h-5 w-5 text-[#D6F45B] mr-3" />
+            <p className="text-sm text-white/80">
+              Utiliza el botón <strong className="text-white">&quot;Revisar / IA&quot;</strong> en cada producto para generar su contenido uno por uno. Solo los productos con el check verde se exportarán.
             </p>
           </div>
         </div>
@@ -378,8 +378,8 @@ Cabeceras Requeridas (Aceptamos variaciones):
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Zona Archivo Maestro */}
         <Card className={cn(
-          "transition-all duration-300 hover:shadow-lg",
-          masterData ? "border-green-500 bg-green-50/10 shadow-sm" : "hover:border-primary/30"
+          "transition-all duration-300",
+          masterData ? "ring-2 ring-[#D6F45B]/50" : ""
         )}>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -404,8 +404,8 @@ Cabeceras Requeridas (Aceptamos variaciones):
 
         {/* Zona Nuevos Productos */}
         <Card className={cn(
-          "transition-all duration-300 hover:shadow-lg", 
-          !masterData ? "opacity-50 cursor-not-allowed" : "hover:border-primary/30"
+          "transition-all duration-300", 
+          !masterData ? "opacity-50 cursor-not-allowed" : ""
         )}>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -430,10 +430,10 @@ Cabeceras Requeridas (Aceptamos variaciones):
       {/* Acciones y Progreso */}
       {products.length > 0 && (
         <Card>
-            <CardHeader className="pb-3 border-b bg-muted/20">
+            <CardHeader className="pb-3 border-b border-[#EBEBEB] bg-[#F5F6F7]/50 rounded-t-3xl">
               <div className="flex justify-between items-center">
                  <CardTitle className="text-lg">Zona de Preparación ({products.length} productos cargados)</CardTitle>
-                 <div className="text-xs text-muted-foreground bg-white px-3 py-1 rounded-full border shadow-sm">
+                 <div className="text-xs text-[#0F0F0F] bg-[#D6F45B] px-3 py-1 rounded-full font-semibold">
                     Modo Revisión Asistida Activo
                  </div>
               </div>
@@ -451,7 +451,7 @@ Cabeceras Requeridas (Aceptamos variaciones):
       
       {/* Dialogo de Duplicados */}
       <Dialog open={showSkippedDialog} onOpenChange={setShowSkippedDialog}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl rounded-3xl">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-amber-600">
                <AlertTriangle className="h-5 w-5" /> 
@@ -461,7 +461,7 @@ Cabeceras Requeridas (Aceptamos variaciones):
               Los siguientes productos ya existen en el Maestro y <b>NO</b> se importarán.
             </DialogDescription>
           </DialogHeader>
-          <div className="border rounded-md max-h-[400px] overflow-y-auto">
+          <div className="rounded-2xl border border-[#EBEBEB] max-h-[400px] overflow-y-auto">
             <Table>
               <TableHeader>
                 <TableRow>
