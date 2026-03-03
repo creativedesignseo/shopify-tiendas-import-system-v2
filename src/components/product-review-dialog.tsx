@@ -11,7 +11,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ProcessedProduct } from "@/lib/product-processor"
 import { MasterData } from "@/lib/csv-parser"
-import { Loader2, Sparkles, Search, ExternalLink, Check, Image as ImageIcon, FileText, TriangleAlert, X, Plus } from "lucide-react"
+import { Loader2, Sparkles, Search, ExternalLink, Check, Image as ImageIcon, FileText, TriangleAlert, X, Plus, GripVertical } from "lucide-react"
 
 interface ProductReviewDialogProps {
   product: ProcessedProduct
@@ -33,6 +33,7 @@ export function ProductReviewDialog({
   const [showQuotaError, setShowQuotaError] = React.useState(false)
   const [quotaErrorMessage, setQuotaErrorMessage] = React.useState("")
   const [errorMetadata, setErrorMetadata] = React.useState<{masked_key?: string, key_source?: string, provider?: string} | null>(null)
+  const [draggedIdx, setDraggedIdx] = React.useState<number | null>(null)
 
   const handleGenerate = async () => {
     if (!masterData) return
@@ -210,10 +211,33 @@ export function ProductReviewDialog({
                        {(product.images.length > 0 ? product.images : [""]).map((imgUrl, idx) => (
                          <div 
                            key={idx} 
-                           className={`flex items-center gap-3 px-3 py-2.5 bg-white hover:bg-[#F5F6F7]/50 transition-colors ${
+                           draggable
+                           onDragStart={(e) => {
+                             setDraggedIdx(idx)
+                             e.dataTransfer.effectAllowed = "move"
+                           }}
+                           onDragOver={(e) => {
+                             e.preventDefault()
+                             e.dataTransfer.dropEffect = "move"
+                           }}
+                           onDrop={(e) => {
+                             e.preventDefault()
+                             if (draggedIdx === null || draggedIdx === idx) return
+                             // Guarantee we have an array to work with even if empty
+                             const newImgs = product.images.length > 0 ? [...product.images] : ["", "", ""]
+                             const [draggedImg] = newImgs.splice(draggedIdx, 1)
+                             newImgs.splice(idx, 0, draggedImg)
+                             onUpdate(product.id, "images", newImgs)
+                             setDraggedIdx(null)
+                           }}
+                           onDragEnd={() => setDraggedIdx(null)}
+                           className={`flex items-center gap-3 px-3 py-2.5 bg-white transition-all ${
                              idx > 0 ? "border-t border-[#EBEBEB]" : ""
-                           }`}
+                           } ${draggedIdx === idx ? "opacity-50 scale-[0.98]" : "hover:bg-[#F5F6F7]/50"}`}
                          >
+                            <div className="shrink-0 cursor-grab active:cursor-grabbing text-[#D1D5DB] hover:text-[#8C8C8C] transition-colors" title="Arrastrar para reordenar">
+                              <GripVertical className="h-4 w-4" />
+                            </div>
                             {/* Thumbnail */}
                             <div className="shrink-0">
                               {imgUrl ? (
