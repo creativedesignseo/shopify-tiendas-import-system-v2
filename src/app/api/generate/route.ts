@@ -52,7 +52,7 @@ export async function POST(req: Request) {
       ## PRODUCT TO WRITE ABOUT (THIS is the product you must describe)
       - Product Name: "${product.Nombre}"
       - Brand: "${product.Marca}"
-      - Size: ${product.Tamaño || "N/A"}
+      - Size: ${product.Tamaño || "Not specified - try to detect from product name (e.g. '100ml', 'EDP 50ml')"}
       
       ## HTML STRUCTURE REFERENCE
       Below is an example HTML structure from another product. Use ONLY the HTML tags/structure as a formatting guide.
@@ -76,6 +76,7 @@ export async function POST(req: Request) {
       5. **tags**: CRITICAL: The FIRST tag MUST ALWAYS be the brand name "${product.Marca}". Then add 4-7 more relevant tags. Example: "${product.Marca}, perfume, oriental, amaderado". NEVER omit the brand as first tag.
       6. **metafields**: Object with keys: acorde, genero, notas_salida, ocasion, estacion, aroma, sexo_objetivo.
       7. **image_url**: Leave as empty string "".
+      8. **size_ml**: The size in milliliters as a NUMBER (e.g. 100, 50, 200). If size was provided above, extract the number. If not provided, try to detect from the product name. If truly unknown, use 0.
       
       ## OUTPUT FORMAT
       Respond with valid JSON only. No markdown wrapping. Use this exact schema:
@@ -86,6 +87,7 @@ export async function POST(req: Request) {
         "seo_description": "string",
         "tags": "string",
         "image_url": "",
+        "size_ml": 100,
         "metafields": {
           "acorde": "string",
           "genero": "string", 

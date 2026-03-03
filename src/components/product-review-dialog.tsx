@@ -83,6 +83,9 @@ export function ProductReviewDialog({
       const hasExistingImages = product.images.some(img => img && img.trim() !== "")
       const aiImages = aiData.image_url ? [aiData.image_url] : []
       
+      // If CSV had no size but AI detected it, use AI's suggestion
+      const aiSize = aiData.size_ml ? `${aiData.size_ml} ml` : ""
+      
       onUpdate(product.id, {
         status: "complete",
         generatedTitle: aiData.title || product.generatedTitle || product.title,
@@ -90,6 +93,8 @@ export function ProductReviewDialog({
         seoTitle: aiData.seo_title || product.seoTitle || "",
         seoDescription: aiData.seo_description || product.seoDescription || "",
         tags: product.tags || aiData.tags || "",
+        // Only set size from AI if user hasn't manually set it
+        size: product.size || aiSize,
         // Only set images from AI if user hasn't manually added any
         images: hasExistingImages ? product.images : (aiImages.length > 0 ? aiImages : product.images),
         metafields: {
@@ -167,7 +172,7 @@ export function ProductReviewDialog({
                    )}
                 </DialogTitle>
                 <DialogDescription className="mt-1">
-                   {product.vendor} • {product.size} • {product.barcode}
+                   {product.vendor} • {product.size || "Sin tamaño"} • {product.barcode}
                 </DialogDescription>
               </div>
               <Button 
@@ -302,12 +307,21 @@ export function ProductReviewDialog({
                              className="h-8 font-medium"
                           />
                        </div>
-                       <div className="grid grid-cols-2 gap-2">
+                       <div className="grid grid-cols-3 gap-2">
                           <div className="space-y-1">
                              <Label className="text-xs">Precio</Label>
                              <Input 
                                 value={product.price}
                                 onChange={(e) => onUpdate(product.id, "price", e.target.value)}
+                                className="h-8"
+                             />
+                          </div>
+                          <div className="space-y-1">
+                             <Label className="text-xs">Tamaño (ml)</Label>
+                             <Input 
+                                value={product.size}
+                                onChange={(e) => onUpdate(product.id, "size", e.target.value)}
+                                placeholder="Ej: 100 ml"
                                 className="h-8"
                              />
                           </div>
