@@ -72,7 +72,7 @@ export const BackupService = {
           status: 'in_progress',
         })
         .select()
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
       console.log('✈️ New flight session created:', data.id);
@@ -94,12 +94,10 @@ export const BackupService = {
         .eq('status', 'in_progress')
         .order('updated_at', { ascending: false })
         .limit(1)
-        .single();
+        .maybeSingle();
 
-      if (sessionError) {
-        if (sessionError.code === 'PGRST116') return null; // No rows
-        throw sessionError;
-      }
+      if (sessionError) throw sessionError;
+      if (!session) return null; // No active session
 
       // 2. Find the associated backup
       const { data: backup, error: backupError } = await supabase
@@ -108,7 +106,7 @@ export const BackupService = {
         .eq('session_id', deviceId)
         .order('updated_at', { ascending: false })
         .limit(1)
-        .single();
+        .maybeSingle();
 
       if (backupError && backupError.code !== 'PGRST116') {
         throw backupError;
@@ -197,7 +195,7 @@ export const BackupService = {
         .from('backups')
         .select('id')
         .eq('session_id', deviceId)
-        .single();
+        .maybeSingle();
 
       if (existing) {
         await supabase
@@ -252,7 +250,7 @@ export const BackupService = {
         .from('backups')
         .select('id')
         .eq('session_id', sessionId)
-        .single();
+        .maybeSingle();
 
       if (existing) {
         await supabase
@@ -283,7 +281,7 @@ export const BackupService = {
         .from('backups')
         .select('*')
         .eq('session_id', sessionId)
-        .single();
+        .maybeSingle();
 
       if (error) {
         if (error.code === 'PGRST116') return null;
