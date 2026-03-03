@@ -1,5 +1,12 @@
+## [1.8.0] - 2026-03-03
+### Changed
+- **SaaS Dashboard Redesign**: Complete visual overhaul of the entire application to match a modern, premium SaaS aesthetic. Implemented a card-based layout with large rounded corners (3xl), soft shadows, generous white space, and a high-contrast lime green secondary accent (`#D6F45B`).
+- **Interactive Toggles**: Replaced all native HTML checkboxes with the fluid Shadcn `Switch` component, custom-colored with the new lime accent to prevent UI breakage and improve UX.
+- **Status Badges Refactor**: Completely redesigned the row status indicators in the `ProductsTable`. Replaced stacking plain text with bold, rounded-pill badges (Green for Complete, Red for Pending/Error) mimicking top-tier enterprise software.
+- **Tooltip Integration**: Moved verbose secondary information (like AI generation errors or specific Gemini models used) inside native hovering tooltips connected to the badges, fixing critical text-wrap layout bugs in the table view.
+- **Global Typography**: Switched the primary font engine from `Geist` to `Inter` to enforce the modern tech-forward dashboard look.
+
 ## [1.7.0] - 2026-03-03
-### Added
 - **Sistema de Checkpoint y Recuperación**: Respaldo automático en la nube (Supabase) cada 3 segundos durante el procesamiento de productos. Si se cierra la pestaña, se va la luz o se desconecta el internet, el progreso se preserva.
 - **Recuperación Inteligente de Sesión**: Al reabrir la app, detecta sesiones interrumpidas y muestra un diálogo con nombre del archivo, fecha, barra de progreso y opción de restaurar.
 - **Barra de Progreso Persistente**: Indicador siempre visible con estado de guardado en tiempo real, contadores completados/errores, y botón de descarga parcial.
