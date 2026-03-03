@@ -79,22 +79,27 @@ export function ProductReviewDialog({
             .replace(/{{aroma}}/g, aiData.metafields?.aroma || "N/A")
       }
 
+      // Build update preserving manually-edited fields
+      const hasExistingImages = product.images.some(img => img && img.trim() !== "")
+      const aiImages = aiData.image_url ? [aiData.image_url] : []
+      
       onUpdate(product.id, {
         status: "complete",
-        generatedTitle: aiData.title || product.title,
+        generatedTitle: aiData.title || product.generatedTitle || product.title,
         bodyHtml: finalBodyHtml,
-        seoTitle: aiData.seo_title || "",
-        seoDescription: aiData.seo_description || "",
-        tags: aiData.tags || "",
-        images: [aiData.image_url || product.images[0] || ""],
+        seoTitle: aiData.seo_title || product.seoTitle || "",
+        seoDescription: aiData.seo_description || product.seoDescription || "",
+        tags: product.tags || aiData.tags || "",
+        // Only set images from AI if user hasn't manually added any
+        images: hasExistingImages ? product.images : (aiImages.length > 0 ? aiImages : product.images),
         metafields: {
-           acorde: aiData.metafields?.acorde || "",
-           genero: aiData.metafields?.genero || "",
-           notas_salida: aiData.metafields?.notas_salida || "",
-           ocasion: aiData.metafields?.ocasion || "",
-           estacion: aiData.metafields?.estacion || "",
-           aroma: aiData.metafields?.aroma || "",
-           sexo_objetivo: aiData.metafields?.sexo_objetivo || "",
+           acorde: product.metafields.acorde || aiData.metafields?.acorde || "",
+           genero: product.metafields.genero || aiData.metafields?.genero || "",
+           notas_salida: product.metafields.notas_salida || aiData.metafields?.notas_salida || "",
+           ocasion: product.metafields.ocasion || aiData.metafields?.ocasion || "",
+           estacion: product.metafields.estacion || aiData.metafields?.estacion || "",
+           aroma: product.metafields.aroma || aiData.metafields?.aroma || "",
+           sexo_objetivo: product.metafields.sexo_objetivo || aiData.metafields?.sexo_objetivo || "",
         },
         modelUsed: aiData.model_used
       })
