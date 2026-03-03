@@ -13,7 +13,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { MasterData, parseMasterCSV } from "@/lib/csv-parser"
 import { ProcessedProduct, processNewProducts, SkippedProduct } from "@/lib/product-processor"
 import { generateCSV } from "@/lib/csv-exporter"
-import { Download, Trash2, FileSpreadsheet, UploadCloud, AlertTriangle } from "lucide-react"
+import { Download, Trash2, FileSpreadsheet, UploadCloud, AlertTriangle, CheckCircle2 } from "lucide-react"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { cn } from "@/lib/utils"
@@ -42,6 +42,10 @@ export default function Dashboard() {
   // Duplicate Dialog State
   const [skippedProducts, setSkippedProducts] = React.useState<SkippedProduct[]>([])
   const [showSkippedDialog, setShowSkippedDialog] = React.useState(false)
+
+  // Success Dialog State
+  const [successCount, setSuccessCount] = React.useState<number>(0)
+  const [showSuccessDialog, setShowSuccessDialog] = React.useState(false)
 
   // Session & Backup State
   const [deviceId, setDeviceId] = React.useState<string>("")
@@ -251,7 +255,8 @@ Cabeceras Requeridas (Aceptamos variaciones):
           }
 
           if (skipped.length === 0) {
-            alert(`✅ ¡Éxito! Se añadieron ${trulyNewProducts.length} productos nuevos.`);
+            setSuccessCount(trulyNewProducts.length);
+            setShowSuccessDialog(true);
           }
         } else if (skipped.length === 0) {
           alert(`ℹ️ Los productos de este archivo ya están en la lista.`);
@@ -483,6 +488,29 @@ Cabeceras Requeridas (Aceptamos variaciones):
           </div>
           <div className="flex justify-end">
              <Button onClick={() => setShowSkippedDialog(false)}>Entendido</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialogo de Éxito */}
+      <Dialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
+        <DialogContent className="max-w-md rounded-3xl border-[#EBEBEB] text-center p-8 sm:p-10 [&>button]:hidden">
+          <div className="flex flex-col items-center justify-center space-y-5">
+             <div className="h-20 w-20 rounded-full bg-[#D6F45B] flex items-center justify-center mb-2 shadow-lg shadow-[#D6F45B]/20">
+                <CheckCircle2 className="h-10 w-10 text-[#0F0F0F]" />
+             </div>
+             <DialogTitle className="text-3xl font-bold tracking-tight text-[#0F0F0F]">
+               ¡Éxito!
+             </DialogTitle>
+             <DialogDescription className="text-[#8C8C8C] text-lg font-medium max-w-[280px] mx-auto">
+               Se añadieron <strong className="text-[#0F0F0F] font-bold">{successCount}</strong> productos nuevos correctamente.
+             </DialogDescription>
+             <Button 
+               className="mt-6 w-full rounded-full bg-[#0F0F0F] text-[#D6F45B] hover:brightness-95 py-6 text-lg font-semibold shadow-md"
+               onClick={() => setShowSuccessDialog(false)}
+             >
+               Continuar
+             </Button>
           </div>
         </DialogContent>
       </Dialog>
