@@ -6,26 +6,26 @@ import { ArrowLeft, Plus, Wrench, RefreshCw, Trash2 } from "lucide-react"
 
 const typeConfig: Record<string, { label: string; icon: typeof Plus; color: string; bg: string }> = {
   added:   { label: "Añadido",  icon: Plus,      color: "text-emerald-700", bg: "bg-emerald-50 border-emerald-200" },
-  fixed:   { label: "Corregido", icon: Wrench,   color: "text-blue-700",    bg: "bg-blue-50 border-blue-200" },
-  changed: { label: "Cambiado", icon: RefreshCw, color: "text-amber-700",   bg: "bg-amber-50 border-amber-200" },
+  fixed:   { label: "Corregido", icon: Wrench,   color: "text-amber-700",   bg: "bg-amber-50 border-amber-200" },
+  changed: { label: "Cambiado", icon: RefreshCw, color: "text-sky-700",     bg: "bg-sky-50 border-sky-200" },
   removed: { label: "Eliminado", icon: Trash2,   color: "text-red-700",     bg: "bg-red-50 border-red-200" },
 }
 
 export default function ChangelogPage() {
   return (
-    <main className="min-h-screen bg-[var(--background)] text-[var(--foreground)]">
+    <main className="min-h-screen">
       {/* Header */}
-      <div className="border-b border-[var(--border)]">
+      <div className="border-b border-[#EBEBEB]">
         <div className="max-w-3xl mx-auto px-6 py-6 flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">Historial de Versiones</h1>
-            <p className="text-sm text-[var(--muted-foreground)] mt-1">
+            <h1 className="text-2xl font-bold tracking-tight text-[#1A1A1A]">Historial de Versiones</h1>
+            <p className="text-sm text-[#8C8C8C] mt-1">
               Todas las mejoras y correcciones de la aplicación
             </p>
           </div>
           <Link
             href="/"
-            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-full border border-[var(--border)] hover:bg-[var(--secondary)] transition-colors"
+            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-full border border-[#EBEBEB] text-[#1A1A1A] hover:bg-[#F5F6F7] transition-all duration-250"
           >
             <ArrowLeft className="h-4 w-4" />
             Dashboard
@@ -43,13 +43,13 @@ export default function ChangelogPage() {
                 <span className={`
                   inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold
                   ${idx === 0
-                    ? "bg-[var(--foreground)] text-[var(--background)]"
-                    : "bg-[var(--secondary)] text-[var(--foreground)]"
+                    ? "bg-[#D6F45B] text-[#0F0F0F]"
+                    : "bg-[#F5F6F7] text-[#1A1A1A]"
                   }
                 `}>
                   v{release.version}
                 </span>
-                <span className="text-sm text-[var(--muted-foreground)]">
+                <span className="text-sm text-[#8C8C8C]">
                   {new Date(release.date + "T00:00:00").toLocaleDateString("es-ES", {
                     year: "numeric",
                     month: "long",
@@ -71,14 +71,14 @@ export default function ChangelogPage() {
                   return (
                     <div
                       key={entryIdx}
-                      className={`flex items-start gap-3 px-4 py-3 rounded-xl border ${config.bg} transition-all`}
+                      className={`flex items-start gap-3 px-4 py-3 rounded-2xl border ${config.bg} transition-all`}
                     >
                       <Icon className={`h-4 w-4 mt-0.5 shrink-0 ${config.color}`} />
                       <div className="flex-1 min-w-0">
                         <span className={`text-xs font-semibold uppercase tracking-wide ${config.color}`}>
                           {config.label}
                         </span>
-                        <p className="text-sm mt-0.5 text-[var(--foreground)]">
+                        <p className="text-sm mt-0.5 text-[#1A1A1A]">
                           {entry.text}
                         </p>
                       </div>
@@ -89,14 +89,14 @@ export default function ChangelogPage() {
 
               {/* Divider (except last) */}
               {idx < versionData.releases.length - 1 && (
-                <div className="mt-10 border-t border-[var(--border)]" />
+                <div className="mt-10 border-t border-[#EBEBEB]" />
               )}
             </article>
           ))}
         </div>
 
         {/* Footer */}
-        <div className="mt-16 pb-10 text-center text-sm text-[var(--muted-foreground)]">
+        <div className="mt-16 pb-10 text-center text-sm text-[#8C8C8C]">
           <p>Shopify Import System — Construido con ❤️</p>
         </div>
       </div>

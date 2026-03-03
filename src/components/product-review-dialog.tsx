@@ -201,7 +201,7 @@ export function ProductReviewDialog({
                  
                  {/* Images Section */}
                  <div className="space-y-3">
-                    <Label className="text-xs font-semibold uppercase text-muted-foreground flex items-center gap-2">
+                    <Label className="text-xs font-semibold uppercase text-[#8C8C8C] flex items-center gap-2">
                        <ImageIcon className="w-3 h-3" /> Imágenes ({product.images.filter(Boolean).length}/3)
                     </Label>
                     
@@ -210,8 +210,8 @@ export function ProductReviewDialog({
                        {(product.images.length > 0 ? product.images : [""]).map((imgUrl, idx) => (
                          <div 
                            key={idx} 
-                           className={`flex items-center gap-3 px-3 py-2.5 bg-white hover:bg-muted/30 transition-colors ${
-                             idx > 0 ? "border-t border-[var(--border)]" : ""
+                           className={`flex items-center gap-3 px-3 py-2.5 bg-white hover:bg-[#F5F6F7]/50 transition-colors ${
+                             idx > 0 ? "border-t border-[#EBEBEB]" : ""
                            }`}
                          >
                             {/* Thumbnail */}
@@ -224,7 +224,7 @@ export function ProductReviewDialog({
                                   onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden') }}
                                 />
                               ) : null}
-                              <div className={`h-10 w-10 flex items-center justify-center rounded-md border border-dashed border-[var(--border)] bg-muted/30 text-muted-foreground ${imgUrl ? 'hidden' : ''}`}>
+                              <div className={`h-10 w-10 flex items-center justify-center rounded-md border border-dashed border-[#EBEBEB] bg-[#F5F6F7] text-[#8C8C8C] ${imgUrl ? 'hidden' : ''}`}>
                                 <ImageIcon className="w-4 h-4 opacity-30" />
                               </div>
                             </div>
@@ -238,24 +238,24 @@ export function ProductReviewDialog({
                                   onUpdate(product.id, "images", newImgs)
                                }}
                                placeholder={`URL Imagen ${idx + 1}`}
-                               className="h-8 text-xs flex-1 border-[var(--border)] focus-visible:ring-1"
+                               className="h-8 text-xs flex-1 border-[#EBEBEB] focus-visible:ring-[#D6F45B]"
                             />
 
                             {/* Action buttons */}
                             <div className="flex shrink-0 gap-0.5">
                               {imgUrl ? (
-                                <Button size="icon" variant="ghost" className="h-7 w-7 text-muted-foreground hover:text-foreground" onClick={() => window.open(imgUrl, '_blank')} title="Abrir imagen">
+                                <Button size="icon" variant="ghost" className="h-7 w-7 text-[#8C8C8C] hover:text-[#0F0F0F]" onClick={() => window.open(imgUrl, '_blank')} title="Abrir imagen">
                                    <ExternalLink className="w-3 h-3" />
                                 </Button>
                               ) : (
-                                <Button size="icon" variant="ghost" className="h-7 w-7 text-blue-600 hover:text-blue-700" onClick={handleImageSearch} title="Buscar en Google">
+                                <Button size="icon" variant="ghost" className="h-7 w-7 text-[#8C8C8C] hover:text-[#0F0F0F]" onClick={handleImageSearch} title="Buscar en Google">
                                    <Search className="w-3 h-3" />
                                 </Button>
                               )}
                               <Button 
                                 size="icon" 
                                 variant="ghost" 
-                                className="h-7 w-7 text-muted-foreground hover:text-red-600" 
+                                className="h-7 w-7 text-[#8C8C8C] hover:text-red-500" 
                                 onClick={() => {
                                   const newImgs = product.images.filter((_, i) => i !== idx)
                                   onUpdate(product.id, "images", newImgs.length > 0 ? newImgs : [""])
@@ -293,11 +293,11 @@ export function ProductReviewDialog({
                     </div>
                  </div>
 
-                 <div className="h-px bg-border" />
+                 <div className="h-px bg-[#EBEBEB]" />
 
                  {/* Basic Info */}
                  <div className="space-y-3">
-                    <Label className="text-xs font-semibold uppercase text-muted-foreground">Información Básica</Label>
+                    <Label className="text-xs font-semibold uppercase text-[#8C8C8C]">Información Básica</Label>
                     <div className="grid gap-2">
                        <div className="space-y-1">
                           <Label className="text-xs">Título Final</Label>
@@ -365,7 +365,7 @@ export function ProductReviewDialog({
                        <div className="grid grid-cols-2 gap-4">
                           {Object.entries(product.metafields).map(([key, val]) => (
                              <div key={key} className="space-y-1">
-                                <Label className="capitalize text-xs text-muted-foreground">{key.replace(/_/g, " ")}</Label>
+                                <Label className="capitalize text-xs text-[#8C8C8C]">{key.replace(/_/g, " ")}</Label>
                                 <Input 
                                    value={val as string}
                                    onChange={(e) => {
@@ -613,7 +613,7 @@ export function ProductReviewDialog({
                                </div>
                              </div>
                            ) : (
-                              <div className="flex flex-col items-center justify-center h-[400px] text-muted-foreground opacity-50">
+                              <div className="flex flex-col items-center justify-center h-[400px] text-[#8C8C8C] opacity-50">
                                  <FileText className="w-12 h-12 mb-2" />
                                  <p>Genera contenido con IA para ver la previsualización</p>
                               </div>
@@ -632,8 +632,8 @@ export function ProductReviewDialog({
 
                     <TabsContent value="seo" className="p-6 m-0 h-full">
                        <div className="max-w-2xl mx-auto space-y-6">
-                          <div className="space-y-2 p-4 border rounded-lg bg-white shadow-sm">
-                             <Label className="text-xs font-semibold text-blue-600 mb-2 block">Vista Previa en Google</Label>
+                          <div className="space-y-2 p-4 border border-[#EBEBEB] rounded-lg bg-white shadow-sm">
+                             <Label className="text-xs font-semibold text-[#D6F45B] mb-2 block">Vista Previa en Google</Label>
                              <div className="text-xl text-[#1a0dab] hover:underline cursor-pointer truncate">
                                 {product.seoTitle || product.generatedTitle}
                              </div>
@@ -649,7 +649,7 @@ export function ProductReviewDialog({
                              <div className="space-y-1">
                                 <div className="flex justify-between">
                                    <Label>Título SEO</Label>
-                                   <span className={`text-xs ${product.seoTitle.length > 60 ? 'text-red-500' : 'text-muted-foreground'}`}>
+                                   <span className={`text-xs ${product.seoTitle.length > 60 ? 'text-red-500' : 'text-[#8C8C8C]'}`}>
                                       {product.seoTitle.length} / 60
                                    </span>
                                 </div>
@@ -661,7 +661,7 @@ export function ProductReviewDialog({
                              <div className="space-y-1">
                                 <div className="flex justify-between">
                                    <Label>Descripción SEO</Label>
-                                   <span className={`text-xs ${product.seoDescription.length > 160 ? 'text-red-500' : 'text-muted-foreground'}`}>
+                                   <span className={`text-xs ${product.seoDescription.length > 160 ? 'text-red-500' : 'text-[#8C8C8C]'}`}>
                                       {product.seoDescription.length} / 160
                                    </span>
                                 </div>
@@ -679,12 +679,12 @@ export function ProductReviewDialog({
            </div>
         </div>
 
-        <DialogFooter className="p-4 border-t/60 bg-muted/20">
+        <DialogFooter className="p-4 border-t border-[#EBEBEB] bg-[#F5F6F7]/20">
            <div className="flex justify-between w-full items-center">
-              <div className="text-xs text-muted-foreground">
+              <div className="text-xs text-[#8C8C8C]">
                  {product.id}
               </div>
-               <Button onClick={() => onOpenChange(false)} className="bg-black text-white hover:bg-black/90 rounded-full px-8 shadow-lg">
+               <Button onClick={() => onOpenChange(false)} className="bg-black text-[#D6F45B] hover:bg-black/90 rounded-full px-8 shadow-lg">
                   Cerrar / Guardar Cambios
                </Button>
            </div>
@@ -704,7 +704,7 @@ export function ProductReviewDialog({
             El modelo de IA ha alcanzado su límite de uso gratuito.
           </DialogDescription>
         </DialogHeader>
-        <div className="py-4 text-sm text-muted-foreground">
+        <div className="py-4 text-sm text-[#8C8C8C]">
           {errorMetadata && (
              <div className="mb-4 bg-orange-50 border border-orange-200 rounded p-3 text-orange-800 text-xs">
                 <div className="flex justify-between items-center mb-1">

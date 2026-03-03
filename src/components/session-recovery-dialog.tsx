@@ -73,7 +73,7 @@ export function SessionRecoveryDialog({
               <DialogTitle className="text-lg text-white font-semibold">
                 Sesión Anterior Detectada
               </DialogTitle>
-              <DialogDescription className="text-blue-100 text-sm mt-0.5">
+              <DialogDescription className="text-[#D6F45B] 100 text-sm mt-0.5">
                 Encontramos una sesión de trabajo sin completar
               </DialogDescription>
             </div>
@@ -86,15 +86,15 @@ export function SessionRecoveryDialog({
           <div className="bg-[#F5F6F7] rounded-2xl border border-[#EBEBEB] p-4 space-y-3">
             <div className="flex items-start justify-between gap-3">
               <div className="flex items-center gap-2.5 flex-1 min-w-0">
-                <FileSpreadsheet className="h-5 w-5 text-blue-600 shrink-0" />
+                <FileSpreadsheet className="h-5 w-5 text-[#D6F45B] 600 shrink-0" />
                 <div className="min-w-0">
                   <p className="font-semibold text-sm truncate" title={session.file_name}>
                     {session.file_name}
                   </p>
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
+                  <div className="flex items-center gap-2 text-xs text-[#8C8C8C] mt-0.5">
                     <Clock className="h-3 w-3" />
                     <span>{formatDate(session.created_at)}</span>
-                    <span className="text-muted-foreground/50">•</span>
+                    <span className="text-[#8C8C8C]/50">•</span>
                     <span className="text-[#D6F45B] font-medium">
                       Última actividad {formatRelativeTime(session.updated_at)}
                     </span>
@@ -112,7 +112,7 @@ export function SessionRecoveryDialog({
             {/* Progress Bar */}
             <div className="space-y-1.5">
               <div className="flex items-center justify-between text-xs">
-                <span className="text-muted-foreground">Progreso</span>
+                <span className="text-[#8C8C8C]">Progreso</span>
                 <span className="font-semibold text-[#1A1A1A]">{progressPercent}%</span>
               </div>
               <Progress value={progressPercent} className="h-2.5" />
@@ -145,7 +145,7 @@ export function SessionRecoveryDialog({
           </div>
 
           {/* Message */}
-          <p className="text-sm text-muted-foreground text-center">
+          <p className="text-sm text-[#8C8C8C] text-center">
             Tu último proceso quedó en <strong>{completed} de {total}</strong> productos. 
             ¿Quieres retomar donde lo dejaste?
           </p>

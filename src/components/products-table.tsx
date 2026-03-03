@@ -102,18 +102,18 @@ export function ProductsTable({
               </TableCell>
               <TableCell className="text-center">
                 {product.status === "pending" && (
-                  <Badge variant="outline" className="text-muted-foreground whitespace-nowrap text-[10px] px-2">
+                  <Badge variant="outline" className="text-[#8C8C8C] whitespace-nowrap text-[10px] px-2">
                     En cola
                   </Badge>
                 )}
                 {product.status === "generating" && (
-                  <Loader2 className="h-4 w-4 animate-spin text-blue-500" />
+                  <Loader2 className="h-4 w-4 animate-spin text-[#D6F45B]" />
                 )}
                 {product.status === "complete" && (
                   <div className="flex flex-col items-center gap-1">
                      <Check className="h-4 w-4 text-green-500" />
                      {product.modelUsed && (
-                       <Badge variant="outline" className="text-[9px] h-4 px-1 py-0 border-blue-200 text-blue-700 bg-blue-50 cursor-help" title={`Generado con ${product.modelUsed}`}>
+                       <Badge variant="outline" className="text-[9px] h-4 px-1 py-0 border-[#D6F45B]/30 text-[#0F0F0F] bg-[#D6F45B]/10 cursor-help" title={`Generado con ${product.modelUsed}`}>
                          {product.modelUsed.replace("gemini-", "").replace("-flash", "")}
                        </Badge>
                      )}
@@ -138,21 +138,21 @@ export function ProductsTable({
                     onChange={(e) =>
                       onUpdateProduct(product.id, "generatedTitle", e.target.value)
                     }
-                    className="h-8 font-medium hover:border-blue-400 focus:border-blue-500 transition-colors"
+                    className="h-8 font-medium hover:border-[#D6F45B]/50 focus:border-[#D6F45B] transition-colors"
                     placeholder="Título del Producto"
                   />
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <div className="flex items-center gap-2 text-xs text-[#8C8C8C]">
                      <span className={product.seoTitle.length > 60 ? "text-red-500" : ""}>
                         SEO: {product.seoTitle.length}/60
                      </span>
                      <Input 
                         value={product.seoTitle}
                         onChange={(e) => onUpdateProduct(product.id, "seoTitle", e.target.value)}
-                        className="h-6 text-xs w-full hover:border-blue-400 focus:border-blue-500 transition-colors"
+                        className="h-6 text-xs w-full hover:border-[#D6F45B]/50 focus:border-[#D6F45B] transition-colors"
                         placeholder="Título SEO"
                      />
                   </div>
-                  <div className="flex items-center gap-2 text-[10px] text-muted-foreground italic">
+                  <div className="flex items-center gap-2 text-[10px] text-[#8C8C8C] italic">
                      <span>Nota:</span>
                      <Input 
                         value={product.observation || ""}
@@ -172,7 +172,7 @@ export function ProductsTable({
                   onChange={(e) =>
                     onUpdateProduct(product.id, "price", e.target.value)
                   }
-                  className="h-8 w-20 hover:border-blue-400 focus:border-blue-500 transition-colors"
+                  className="h-8 w-20 hover:border-[#D6F45B]/50 focus:border-[#D6F45B] transition-colors"
                 />
               </TableCell>
 
@@ -198,13 +198,13 @@ export function ProductsTable({
                       <img 
                         src={product.images[0]} 
                         alt={`Vista previa de ${product.title}`}
-                        className="h-16 w-16 rounded object-cover border cursor-pointer hover:scale-105 hover:border-blue-500 transition-all shadow-sm"
+                        className="h-16 w-16 rounded object-cover border cursor-pointer hover:scale-105 hover:border-[#D6F45B] transition-all shadow-sm"
                         onClick={() => window.open(`https://www.google.com/search?q=${encodeURIComponent(product.vendor + " " + product.title + " perfume bottle")}&tbm=isch`, '_blank')}
                         title="Buscar en Google"
                       />
                     ) : (
                       <div 
-                        className="h-16 w-16 rounded border bg-muted flex items-center justify-center text-[10px] text-muted-foreground cursor-pointer hover:bg-muted/80 transition-colors"
+                        className="h-16 w-16 rounded border bg-[#F5F6F7] flex items-center justify-center text-[10px] text-[#8C8C8C] cursor-pointer hover:bg-[#EBEBEB] transition-colors"
                         onClick={() => window.open(`https://www.google.com/search?q=${encodeURIComponent(product.vendor + " " + product.title + " perfume bottle")}&tbm=isch`, '_blank')}
                         title="Buscar en Google"
                       >
@@ -221,13 +221,13 @@ export function ProductsTable({
                             newImages[0] = e.target.value
                             onUpdateProduct(product.id, "images", newImages)
                           }}
-                          className="h-7 text-xs hover:border-blue-400 focus:border-blue-500 transition-colors flex-1"
+                          className="h-7 text-xs hover:border-[#D6F45B]/50 focus:border-[#D6F45B] transition-colors flex-1"
                           placeholder="URL Imagen 1 (Principal)"
                         />
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-7 w-7 text-muted-foreground hover:text-blue-600 cursor-pointer"
+                          className="h-7 w-7 text-[#8C8C8C] hover:text-[#0F0F0F] cursor-pointer"
                           title={product.images[0] ? "Abrir enlace" : "Buscar en Google"}
                           onClick={() => {
                             if (product.images[0]) {
@@ -250,13 +250,13 @@ export function ProductsTable({
                             newImages[1] = e.target.value
                             onUpdateProduct(product.id, "images", newImages)
                           }}
-                          className="h-7 text-xs hover:border-blue-400 focus:border-blue-500 transition-colors flex-1"
+                          className="h-7 text-xs hover:border-[#D6F45B]/50 focus:border-[#D6F45B] transition-colors flex-1"
                           placeholder="URL Imagen 2"
                         />
                          <Button
                           variant="ghost"
                           size="icon"
-                          className="h-7 w-7 text-muted-foreground hover:text-blue-600 cursor-pointer"
+                          className="h-7 w-7 text-[#8C8C8C] hover:text-[#0F0F0F] cursor-pointer"
                           title={product.images[1] ? "Abrir enlace" : "Buscar en Google"}
                           onClick={() => {
                              if (product.images[1]) {
@@ -280,7 +280,7 @@ export function ProductsTable({
                   onChange={(e) =>
                     onUpdateProduct(product.id, "tags", e.target.value)
                   }
-                  className="h-8 text-xs hover:border-blue-400 focus:border-blue-500 transition-colors"
+                  className="h-8 text-xs hover:border-[#D6F45B]/50 focus:border-[#D6F45B] transition-colors"
                   placeholder="Etiquetas..."
                 />
               </TableCell>
@@ -291,7 +291,7 @@ export function ProductsTable({
                     variant="outline" 
                     size="sm" 
                     onClick={() => setReviewProductId(product.id)}
-                    className="h-8 px-3 text-xs border-blue-200 hover:bg-blue-50 text-blue-700 pointer-events-auto cursor-pointer"
+                    className="h-8 px-3 text-xs border-[#EBEBEB] hover:bg-[#F5F6F7] text-[#1A1A1A] hover:border-[#D6F45B]/50 hover:text-[#1A1A1A] pointer-events-auto cursor-pointer"
                   >
                      <Settings2 className="mr-2 h-3 w-3" />
                      Revisar / IA
@@ -311,7 +311,7 @@ export function ProductsTable({
             key={product.id} 
             className={cn(
                "bg-white rounded-xl border shadow-sm p-4 space-y-4 transition-all",
-               !product.isChecked && "grayscale opacity-70 bg-gray-50 border-dashed"
+               !product.isChecked && "grayscale opacity-70 bg-[#F5F6F7] border-dashed"
             )}
           >
             {/* Header: Status + Selection + Title */}
@@ -322,7 +322,7 @@ export function ProductsTable({
                       type="checkbox"
                       checked={product.isChecked}
                       onChange={(e) => onUpdateProduct(product.id, "isChecked", e.target.checked)}
-                      className="h-5 w-5 rounded border-gray-300 text-blue-600 focus:ring-blue-600 cursor-pointer mr-1"
+                      className="h-5 w-5 rounded border-[#EBEBEB] text-[#D6F45B] focus:ring-[#D6F45B] cursor-pointer mr-1"
                     />
                     {product.status === "complete" ? (
                       <Badge variant="secondary" className="bg-green-100 text-green-700 text-[10px] px-2 h-5">
@@ -331,7 +331,7 @@ export function ProductsTable({
                     ) : (
                       <Badge variant="outline" className="text-[10px] h-5">En cola</Badge>
                     )}
-                    <span className="text-xs text-muted-foreground">{product.vendor}</span>
+                    <span className="text-xs text-[#8C8C8C]">{product.vendor}</span>
                  </div>
                  <h3 className="font-semibold text-sm leading-tight">{product.generatedTitle || product.title}</h3>
                </div>
@@ -339,9 +339,9 @@ export function ProductsTable({
                {/* Thumbnail */}
                <div className="shrink-0">
                   {product.images[0] ? (
-                    <img src={product.images[0]} className="h-16 w-16 rounded-lg object-cover border bg-gray-50" alt="" />
+                    <img src={product.images[0]} className="h-16 w-16 rounded-lg object-cover border bg-[#F5F6F7]" alt="" />
                   ) : (
-                    <div className="h-16 w-16 rounded-lg border bg-gray-100 flex items-center justify-center text-muted-foreground">
+                    <div className="h-16 w-16 rounded-lg border bg-[#EBEBEB] flex items-center justify-center text-[#8C8C8C]">
                       <ImageIcon className="w-6 h-6 opacity-30" />
                     </div>
                   )}
@@ -349,10 +349,10 @@ export function ProductsTable({
             </div>
 
             {/* Content: Inputs */}
-            <div className="space-y-3 pt-2 border-t border-border/50">
+            <div className="space-y-3 pt-2 border-t border-[#EBEBEB]">
                <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="text-[10px] font-medium text-muted-foreground uppercase">Precio</label>
+                    <label className="text-[10px] font-medium text-[#8C8C8C] uppercase">Precio</label>
                     <Input 
                       value={product.price}
                       onChange={(e) => onUpdateProduct(product.id, "price", e.target.value)}
@@ -360,8 +360,8 @@ export function ProductsTable({
                     />
                   </div>
                   <div>
-                    <label className="text-[10px] font-medium text-muted-foreground uppercase">Tamaño</label>
-                    <div className="h-9 flex items-center px-3 bg-muted/50 rounded-full text-sm mt-1 border">
+                    <label className="text-[10px] font-medium text-[#8C8C8C] uppercase">Tamaño</label>
+                    <div className="h-9 flex items-center px-3 bg-[#F5F6F7] rounded-full text-sm mt-1 border border-[#EBEBEB]">
                        {product.size}
                     </div>
                   </div>

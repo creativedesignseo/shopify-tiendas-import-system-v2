@@ -68,14 +68,14 @@ export function FlightProgressBar({
             <span className="font-semibold truncate max-w-[200px]" title={session.file_name}>
               {session.file_name}
             </span>
-            <span className="text-muted-foreground">•</span>
+            <span className="text-[#8C8C8C]">•</span>
             <span className="font-medium text-[#1A1A1A]">{progressPercent}%</span>
           </div>
         </div>
 
         <div className="flex items-center gap-2">
           {/* Save status */}
-          <div className="flex items-center gap-1 text-xs text-muted-foreground">
+          <div className="flex items-center gap-1 text-xs text-[#8C8C8C]">
             {isSaving ? (
               <>
                 <Save className="h-3 w-3 animate-pulse text-[#D6F45B]" />
@@ -118,7 +118,7 @@ export function FlightProgressBar({
               {errors}
             </Badge>
           )}
-          <span className="text-muted-foreground text-[10px]">
+          <span className="text-[#8C8C8C] text-[10px]">
             / {total}
           </span>
         </div>

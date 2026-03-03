@@ -475,7 +475,7 @@ Cabeceras Requeridas (Aceptamos variaciones):
                   <TableRow key={i}>
                     <TableCell className="font-medium">{p.name}</TableCell>
                     <TableCell className="font-mono text-xs">{p.barcode}</TableCell>
-                    <TableCell className="text-xs text-muted-foreground">{p.reason || "Duplicado"}</TableCell>
+                    <TableCell className="text-xs text-[#8C8C8C]">{p.reason || "Duplicado"}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
