@@ -71,7 +71,7 @@ export function ProductsTable({
                   title="Seleccionar todo"
                 />
               </TableHead>
-              <TableHead className="w-[75px] text-center">Estado</TableHead>
+              <TableHead className="w-[85px] text-center">Estado</TableHead>
               <TableHead className="w-auto">Título</TableHead>
               <TableHead className="w-[110px]">Marca</TableHead>
               <TableHead className="w-[100px]">Precio</TableHead>
@@ -96,34 +96,34 @@ export function ProductsTable({
                   onCheckedChange={(checked) => onUpdateProduct(product.id, "isChecked", checked)}
                 />
               </TableCell>
-              <TableCell className="text-center">
+              <TableCell className="text-center p-2">
                 {product.status === "pending" && (
-                  <Badge variant="outline" className="text-[#8C8C8C] whitespace-nowrap text-[10px] px-2">
+                  <Badge variant="secondary" className="bg-red-50 text-red-600 border border-red-200 shadow-sm font-bold text-[10px] px-2 whitespace-nowrap">
                     En cola
                   </Badge>
                 )}
                 {product.status === "generating" && (
-                  <Loader2 className="h-4 w-4 animate-spin text-[#D6F45B]" />
+                  <Badge variant="secondary" className="bg-[#D6F45B]/10 text-[#0F0F0F] border border-[#D6F45B]/30 shadow-sm font-bold text-[10px] px-2 whitespace-nowrap">
+                    <Loader2 className="h-3 w-3 animate-spin mr-1 inline" /> Proc.
+                  </Badge>
                 )}
                 {product.status === "complete" && (
-                  <div className="flex flex-col items-center gap-1">
-                     <Check className="h-4 w-4 text-green-500" />
-                     {product.modelUsed && (
-                       <Badge variant="outline" className="text-[9px] h-4 px-1 py-0 border-[#D6F45B]/30 text-[#0F0F0F] bg-[#D6F45B]/10 cursor-help" title={`Generado con ${product.modelUsed}`}>
-                         {product.modelUsed.replace("gemini-", "").replace("-flash", "")}
-                       </Badge>
-                     )}
-                  </div>
+                  <Badge 
+                    variant="secondary" 
+                    className="bg-green-50 text-green-600 border border-green-200 shadow-sm font-bold text-[10px] px-2 whitespace-nowrap cursor-help"
+                    title={product.modelUsed ? `Generado con ${product.modelUsed}` : 'Generación lista'}
+                  >
+                    <Check className="h-3 w-3 mr-1 inline" /> Listo
+                  </Badge>
                 )}
                 {product.status === "error" && (
-                  <div className="flex flex-col items-center cursor-help">
-                    <AlertCircle className="h-4 w-4 text-red-500" />
-                    {product.errorDetails && (
-                       <span className="text-[10px] text-red-400 mt-1 max-w-[100px] truncate" title={product.errorDetails}>
-                        Err
-                      </span>
-                    )}
-                  </div>
+                  <Badge 
+                    variant="secondary" 
+                    className="bg-red-50 text-red-600 border border-red-200 shadow-sm font-bold text-[10px] px-2 whitespace-nowrap cursor-help"
+                    title={product.errorDetails || 'Error al procesar'}
+                  >
+                    <AlertCircle className="h-3 w-3 mr-1 inline" /> Error
+                  </Badge>
                 )}
               </TableCell>
               
@@ -319,12 +319,25 @@ export function ProductsTable({
                       onCheckedChange={(checked) => onUpdateProduct(product.id, "isChecked", checked)}
                       className="mr-1"
                     />
-                    {product.status === "complete" ? (
-                      <Badge variant="secondary" className="bg-green-100 text-green-700 text-[10px] px-2 h-5">
+                    {product.status === "complete" && (
+                      <Badge variant="secondary" className="bg-green-50 text-green-600 border border-green-200 font-bold text-[10px] px-2 h-5 cursor-help" title={product.modelUsed ? `Generado con ${product.modelUsed}` : 'Listo'}>
                         <Check className="w-3 h-3 mr-1" /> Listo
                       </Badge>
-                    ) : (
-                      <Badge variant="outline" className="text-[10px] h-5">En cola</Badge>
+                    )}
+                    {product.status === "pending" && (
+                      <Badge variant="secondary" className="bg-red-50 text-red-600 border border-red-200 font-bold text-[10px] px-2 h-5">
+                        En cola
+                      </Badge>
+                    )}
+                    {product.status === "generating" && (
+                      <Badge variant="secondary" className="bg-[#D6F45B]/10 text-[#0F0F0F] border border-[#D6F45B]/30 font-bold text-[10px] px-2 h-5">
+                        <Loader2 className="h-3 w-3 animate-spin mr-1 inline" /> Proc.
+                      </Badge>
+                    )}
+                    {product.status === "error" && (
+                      <Badge variant="secondary" className="bg-red-50 text-red-600 border border-red-200 font-bold text-[10px] px-2 h-5 cursor-help" title={product.errorDetails || 'Error al procesar'}>
+                         <AlertCircle className="h-3 w-3 mr-1 inline" /> Error
+                      </Badge>
                     )}
                     <span className="text-xs text-[#8C8C8C]">{product.vendor}</span>
                  </div>
