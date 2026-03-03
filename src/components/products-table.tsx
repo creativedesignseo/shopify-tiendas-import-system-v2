@@ -19,6 +19,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { Textarea } from "@/components/ui/textarea"
+import { Switch } from "@/components/ui/switch"
 import { ProcessedProduct } from "@/lib/product-processor"
 import { Check, AlertCircle, Loader2, Settings2, ExternalLink, Search, Sparkles, Image as ImageIcon } from "lucide-react"
 import { MasterData } from "@/lib/csv-parser"
@@ -62,14 +63,11 @@ export function ProductsTable({
           <TableHeader>
             <TableRow>
               <TableHead className="w-[45px]">
-                <input 
-                  type="checkbox" 
+                <Switch 
                   checked={products.length > 0 && products.every(p => p.isChecked)}
-                  onChange={(e) => {
-                    const checked = e.target.checked;
+                  onCheckedChange={(checked) => {
                     products.forEach(p => onUpdateProduct(p.id, "isChecked", checked));
                   }}
-                  className="h-4 w-4 rounded border-[#EBEBEB] text-[#D6F45B] focus:ring-[#D6F45B] cursor-pointer accent-[#D6F45B]"
                   title="Seleccionar todo"
                 />
               </TableHead>
@@ -93,11 +91,9 @@ export function ProductsTable({
               )}
             >
               <TableCell>
-                <input 
-                  type="checkbox"
+                <Switch 
                   checked={product.isChecked}
-                  onChange={(e) => onUpdateProduct(product.id, "isChecked", e.target.checked)}
-                  className="h-4 w-4 rounded border-[#EBEBEB] text-[#D6F45B] focus:ring-0 cursor-pointer accent-[#D6F45B]"
+                  onCheckedChange={(checked) => onUpdateProduct(product.id, "isChecked", checked)}
                 />
               </TableCell>
               <TableCell className="text-center">
@@ -318,11 +314,10 @@ export function ProductsTable({
             <div className="flex justify-between items-start gap-3">
                <div className="flex-1 space-y-1">
                  <div className="flex items-center gap-2 mb-1">
-                    <input 
-                      type="checkbox"
+                    <Switch 
                       checked={product.isChecked}
-                      onChange={(e) => onUpdateProduct(product.id, "isChecked", e.target.checked)}
-                      className="h-5 w-5 rounded border-[#EBEBEB] text-[#D6F45B] focus:ring-[#D6F45B] cursor-pointer mr-1"
+                      onCheckedChange={(checked) => onUpdateProduct(product.id, "isChecked", checked)}
+                      className="mr-1"
                     />
                     {product.status === "complete" ? (
                       <Badge variant="secondary" className="bg-green-100 text-green-700 text-[10px] px-2 h-5">
