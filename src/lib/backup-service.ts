@@ -75,7 +75,7 @@ export const BackupService = {
         .maybeSingle();
 
       if (error) throw error;
-      console.log('✈️ New flight session created:', data.id);
+      console.log('📦 New import session created:', data.id);
       return data as ImportSession;
     } catch (error) {
       console.error('Error creating session:', error);
@@ -135,7 +135,7 @@ export const BackupService = {
           updated_at: new Date().toISOString(),
         })
         .eq('id', sessionId);
-      console.log('✅ Flight session completed:', sessionId);
+      console.log('✅ Import session completed:', sessionId);
     } catch (error) {
       console.error('Error completing session:', error);
     }
@@ -151,7 +151,7 @@ export const BackupService = {
           updated_at: new Date().toISOString(),
         })
         .eq('id', sessionId);
-      console.log('🗑️ Flight session abandoned:', sessionId);
+      console.log('🗑️ Import session abandoned:', sessionId);
     } catch (error) {
       console.error('Error abandoning session:', error);
     }

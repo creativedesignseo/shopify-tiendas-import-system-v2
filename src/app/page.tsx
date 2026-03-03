@@ -240,7 +240,7 @@ Cabeceras Requeridas (Aceptamos variaciones):
             )
             if (session) {
               setCurrentSession(session)
-              console.log('✈️ Flight session started:', session.id, 'for file:', file.name)
+              console.log('📦 Import session started:', session.id, 'for file:', file.name)
             }
           } else {
             // Session already active, just update the total count

@@ -5,9 +5,9 @@
       "version": "1.7.0",
       "date": "2026-03-03",
       "entries": [
-        { "type": "added", "text": "Sistema de Checkpoint 'El Avión': respaldo automático en la nube cada 3 segundos durante el procesamiento" },
+        { "type": "added", "text": "Sistema de Checkpoint y Recuperación: respaldo automático en la nube cada 3 segundos durante el procesamiento" },
         { "type": "added", "text": "Recuperación de Sesión: al reabrir la app, detecta y restaura trabajo interrumpido con progreso exacto" },
-        { "type": "added", "text": "Barra de Progreso de Vuelo: indicador persistente con estado de guardado en tiempo real" },
+        { "type": "added", "text": "Barra de Progreso de Sesión: indicador persistente con estado de guardado en tiempo real" },
         { "type": "added", "text": "Descarga de CSV Parcial: exporta los productos completados sin esperar a terminar todos" },
         { "type": "added", "text": "Tabla import_sessions en Supabase para rastrear cada archivo importado con contadores de progreso" }
       ]

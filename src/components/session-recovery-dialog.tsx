@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { ImportSession } from "@/lib/backup-service"
 import { ProcessedProduct } from "@/lib/product-processor"
-import { Plane, Download, Trash2, Clock, FileSpreadsheet, Check, AlertCircle, Loader2 } from "lucide-react"
+import { RotateCcw, Download, Trash2, Clock, FileSpreadsheet, Check, AlertCircle, Loader2 } from "lucide-react"
 
 interface SessionRecoveryDialogProps {
   open: boolean
@@ -67,11 +67,11 @@ export function SessionRecoveryDialog({
         <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 px-6 py-5 text-white">
           <div className="flex items-center gap-3 mb-1">
             <div className="bg-white/20 rounded-full p-2">
-              <Plane className="h-5 w-5" />
+              <RotateCcw className="h-5 w-5" />
             </div>
             <div>
               <DialogTitle className="text-lg text-white font-semibold">
-                Vuelo Interrumpido Detectado
+                Sesión Anterior Detectada
               </DialogTitle>
               <DialogDescription className="text-blue-100 text-sm mt-0.5">
                 Encontramos una sesión de trabajo sin completar
@@ -179,8 +179,8 @@ export function SessionRecoveryDialog({
             onClick={onRestore}
             className="bg-blue-600 hover:bg-blue-700 text-white shadow-md px-5"
           >
-            <Plane className="mr-1.5 h-3.5 w-3.5" />
-            Continuar Vuelo
+            <RotateCcw className="mr-1.5 h-3.5 w-3.5" />
+            Restaurar Sesión
           </Button>
         </DialogFooter>
       </DialogContent>

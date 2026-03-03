@@ -6,9 +6,9 @@ import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { ImportSession } from "@/lib/backup-service"
 import { ProcessedProduct } from "@/lib/product-processor"
-import { Plane, Download, Check, AlertCircle, Save, Clock } from "lucide-react"
+import { Loader2, Download, Check, AlertCircle, Save, Clock } from "lucide-react"
 
-interface FlightProgressBarProps {
+interface SessionProgressBarProps {
   session: ImportSession | null
   products: ProcessedProduct[]
   lastSavedAt: Date | null
@@ -35,7 +35,7 @@ export function FlightProgressBar({
   lastSavedAt,
   isSaving,
   onDownloadPartial,
-}: FlightProgressBarProps) {
+}: SessionProgressBarProps) {
   const [, forceUpdate] = React.useState(0)
 
   // Update relative time every 30s
@@ -61,7 +61,7 @@ export function FlightProgressBar({
             {allDone ? (
               <Check className="h-3.5 w-3.5 text-green-600" />
             ) : (
-              <Plane className="h-3.5 w-3.5 text-blue-600" />
+              <Loader2 className="h-3.5 w-3.5 text-blue-600 animate-spin" />
             )}
           </div>
           <div className="flex items-center gap-2 text-sm min-w-0">
