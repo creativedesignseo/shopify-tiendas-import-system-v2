@@ -17,8 +17,10 @@ import { Download, Trash2, FileSpreadsheet, UploadCloud, AlertTriangle } from "l
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { cn } from "@/lib/utils"
-import { BackupService } from "@/lib/backup-service"
+import { BackupService, ImportSession } from "@/lib/backup-service"
 import { SettingsDialog } from "@/components/settings-dialog"
+import { SessionRecoveryDialog } from "@/components/session-recovery-dialog"
+import { FlightProgressBar } from "@/components/flight-progress-bar"
 
 // Helper for generating UUIDs in non-secure contexts
 function generateUUID() {
@@ -41,40 +43,46 @@ export default function Dashboard() {
   const [skippedProducts, setSkippedProducts] = React.useState<SkippedProduct[]>([])
   const [showSkippedDialog, setShowSkippedDialog] = React.useState(false)
 
-  // Backup State
-  const [showRestoreDialog, setShowRestoreDialog] = React.useState(false)
-  const [backupProducts, setBackupProducts] = React.useState<ProcessedProduct[]>([])
-  const [sessionId, setSessionId] = React.useState<string>("")
+  // Session & Backup State
+  const [deviceId, setDeviceId] = React.useState<string>("")
+  const [currentSession, setCurrentSession] = React.useState<ImportSession | null>(null)
+  const [showRecoveryDialog, setShowRecoveryDialog] = React.useState(false)
+  const [recoveryProducts, setRecoveryProducts] = React.useState<ProcessedProduct[]>([])
+  const [lastSavedAt, setLastSavedAt] = React.useState<Date | null>(null)
+  const [isSaving, setIsSaving] = React.useState(false)
 
-  // Init Session & Check Backup
+  // Init Device ID & Check for Active Sessions
   React.useEffect(() => {
-    // 1. Get or create Session ID
-    let sid = localStorage.getItem("shopify_importer_device_id")
-    if (!sid) {
-      sid = generateUUID()
-      localStorage.setItem("shopify_importer_device_id", sid)
+    // 1. Get or create Device ID
+    let did = localStorage.getItem("shopify_importer_device_id")
+    if (!did) {
+      did = generateUUID()
+      localStorage.setItem("shopify_importer_device_id", did)
     }
-    setSessionId(sid)
+    setDeviceId(did)
 
-    // 2. Check for backups
-    const checkBackup = async () => {
-       if (!sid) return
-       const backup = await BackupService.getBackup(sid)
-       if (backup && backup.products && Array.isArray(backup.products) && backup.products.length > 0) {
-          setBackupProducts(backup.products)
-          setShowRestoreDialog(true)
+    // 2. Check for active session
+    const checkSession = async () => {
+       if (!did) return
+       const activeSession = await BackupService.getActiveSession(did)
+       if (activeSession && activeSession.products.length > 0) {
+          setRecoveryProducts(activeSession.products)
+          setCurrentSession(activeSession.session)
+          setShowRecoveryDialog(true)
        }
     }
-    checkBackup()
+    checkSession()
 
     // 3. Load MasterData from LocalStorage
     const storedMaster = localStorage.getItem("shopify_importer_master_data")
     if (storedMaster) {
       try {
         const parsed = JSON.parse(storedMaster)
-        // Rehydrate Set
         if (parsed.existingBarcodes) {
            parsed.existingBarcodes = new Set(parsed.existingBarcodes)
+        }
+        if (parsed.existingTitles) {
+           parsed.existingTitles = new Set(parsed.existingTitles)
         }
         setMasterData(parsed)
       } catch (e) {
@@ -83,29 +91,77 @@ export default function Dashboard() {
     }
   }, [])
 
-  // Auto-Save Effect (Debounced)
+  // ─── Auto-Save / Checkpoint Effect (Debounced) ─────────────────
   React.useEffect(() => {
-    if (!sessionId || products.length === 0) return
+    if (!deviceId || products.length === 0) return
 
-    const timeoutId = setTimeout(() => {
-       console.log("Auto-saving to Supabase...", products.length)
-       BackupService.saveBackup(sessionId, products)
-    }, 2000) // 2s debounce
+    const timeoutId = setTimeout(async () => {
+       setIsSaving(true)
+       
+       if (currentSession) {
+         // New session-aware checkpoint
+         await BackupService.saveCheckpoint(
+           deviceId,
+           currentSession.id,
+           products,
+           currentSession.file_name
+         )
+         
+         // Update local session counters
+         const completed = products.filter(p => p.status === 'complete').length
+         const failed = products.filter(p => p.status === 'error').length
+         setCurrentSession(prev => prev ? {
+           ...prev,
+           completed_products: completed,
+           failed_products: failed,
+           updated_at: new Date().toISOString(),
+         } : null)
+       } else {
+         // Legacy fallback
+         await BackupService.saveBackup(deviceId, products)
+       }
+       
+       setLastSavedAt(new Date())
+       setIsSaving(false)
+    }, 3000) // 3s debounce
 
     return () => clearTimeout(timeoutId)
-  }, [products, sessionId])
+  }, [products, deviceId, currentSession])
 
+  // ─── Session Recovery Handlers ─────────────────────────────────
   const handleRestore = () => {
-    setProducts(backupProducts)
-    setShowRestoreDialog(false)
-    alert("✅ Sesión restaurada con éxito.")
+    setProducts(recoveryProducts)
+    setShowRecoveryDialog(false)
   }
 
-  const handleDiscardBackup = () => {
-    setShowRestoreDialog(false)
+  const handleAbandonSession = async () => {
+    if (currentSession) {
+      await BackupService.abandonSession(currentSession.id)
+    }
+    setCurrentSession(null)
+    setRecoveryProducts([])
+    setShowRecoveryDialog(false)
   }
 
-  // 1. Manejar Archivo Maestro
+  const handleDownloadPartial = () => {
+    if (!masterData) {
+      alert("Se necesita el archivo maestro para generar el CSV. Cárgalo primero.")
+      return
+    }
+    const readyProducts = products.filter(p => p.status === "complete" && p.isChecked)
+    if (readyProducts.length === 0) {
+      alert("No hay productos completados para descargar.")
+      return
+    }
+    const csvContent = generateCSV(readyProducts, masterData.headers)
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
+    const link = document.createElement("a")
+    link.href = URL.createObjectURL(blob)
+    link.download = `shopify_parcial_${readyProducts.length}_de_${products.length}.csv`
+    link.click()
+  }
+
+  // ─── 1. Manejar Archivo Maestro ────────────────────────────────
   const handleMasterFile = async (file: File) => {
     try {
       const data = await parseMasterCSV(file)
@@ -114,7 +170,8 @@ export default function Dashboard() {
       // Persist to LocalStorage (Serialize Set to Array)
       const toStore = {
          ...data,
-         existingBarcodes: Array.from(data.existingBarcodes)
+         existingBarcodes: Array.from(data.existingBarcodes),
+         existingTitles: Array.from(data.existingTitles),
       }
       localStorage.setItem("shopify_importer_master_data", JSON.stringify(toStore))
 
@@ -124,7 +181,7 @@ export default function Dashboard() {
     }
   }
 
-  // 2. Manejar Archivo de Nuevos Productos
+  // ─── 2. Manejar Archivo de Nuevos Productos ────────────────────
   const handleNewFile = async (file: File) => {
     if (!masterData) {
       alert("Por favor, sube primero el CSV Maestro.")
@@ -143,8 +200,6 @@ export default function Dashboard() {
       }
 
       if (newProducts.length === 0) {
-        // If we have skipped items, it means headers were likely OK, just all duplicates.
-        // If NO skipped items and NO new products, THEN it's a header issue or empty file.
         if (skipped.length === 0) {
             const foundHeaders = headers.length > 0 ? headers.join(", ") : "(Ninguna o archivo vacío)";
             alert(`⚠️ ¡No se cargaron datos!
@@ -173,7 +228,28 @@ Cabeceras Requeridas (Aceptamos variaciones):
         }
 
         if (trulyNewProducts.length > 0) {
-          setProducts(prev => [...prev, ...trulyNewProducts]);
+          const updatedProducts = [...products, ...trulyNewProducts]
+          setProducts(updatedProducts);
+
+          // Create or update session
+          if (!currentSession) {
+            const session = await BackupService.createSession(
+              deviceId,
+              file.name,
+              updatedProducts.length
+            )
+            if (session) {
+              setCurrentSession(session)
+              console.log('✈️ Flight session started:', session.id, 'for file:', file.name)
+            }
+          } else {
+            // Session already active, just update the total count
+            setCurrentSession(prev => prev ? {
+              ...prev,
+              total_products: updatedProducts.length,
+            } : null)
+          }
+
           if (skipped.length === 0) {
             alert(`✅ ¡Éxito! Se añadieron ${trulyNewProducts.length} productos nuevos.`);
           }
@@ -187,7 +263,7 @@ Cabeceras Requeridas (Aceptamos variaciones):
     }
   }
 
-  // 4. Actualizar Producto (Edición Manual)
+  // ─── 4. Actualizar Producto (Edición Manual) ───────────────────
   const handleUpdateProduct = (id: string, fieldOrUpdates: string | Partial<ProcessedProduct>, value?: any) => {
     setProducts(prev => prev.map(p => {
       if (p.id !== id) return p
@@ -202,8 +278,8 @@ Cabeceras Requeridas (Aceptamos variaciones):
     setProducts(prev => prev.filter(p => p.id !== id))
   }
 
-  // 5. Exportar
-  const handleExport = () => {
+  // ─── 5. Exportar ───────────────────────────────────────────────
+  const handleExport = async () => {
     if (!masterData) return
     const readyProducts = products.filter(p => p.status === "complete" && p.isChecked)
     if (readyProducts.length === 0) {
@@ -217,6 +293,27 @@ Cabeceras Requeridas (Aceptamos variaciones):
     link.href = URL.createObjectURL(blob)
     link.download = `shopify_import_${readyProducts.length}_items.csv`
     link.click()
+
+    // If all products are complete, mark session as completed
+    const allDone = products.every(p => p.status === "complete" || p.status === "error")
+    if (allDone && currentSession) {
+      await BackupService.completeSession(currentSession.id)
+      setCurrentSession(prev => prev ? { ...prev, status: 'completed' } : null)
+    }
+  }
+
+  // ─── 6. Limpiar Todo ──────────────────────────────────────────
+  const handleClearAll = async () => {
+    if (confirm("¿Estás seguro? Esto borrará todos los productos y el archivo maestro.")) {
+      // Abandon session if active
+      if (currentSession && currentSession.status === 'in_progress') {
+        await BackupService.abandonSession(currentSession.id)
+      }
+      setProducts([])
+      setMasterData(null)
+      setCurrentSession(null)
+      localStorage.removeItem("shopify_importer_master_data")
+    }
   }
 
   return (
@@ -239,13 +336,7 @@ Cabeceras Requeridas (Aceptamos variaciones):
             <Button 
                className="cursor-pointer hover:bg-destructive/90"
                variant="outline" 
-               onClick={() => {
-                  if (confirm("¿Estás seguro? Esto borrará todos los productos y el archivo maestro.")) {
-                     setProducts([])
-                     setMasterData(null)
-                     localStorage.removeItem("shopify_importer_master_data")
-                  }
-               }} 
+               onClick={handleClearAll}
                disabled={products.length === 0 && !masterData}
             >
               <Trash2 className="mr-2 h-4 w-4" /> Limpiar Todo
@@ -271,6 +362,17 @@ Cabeceras Requeridas (Aceptamos variaciones):
             </p>
           </div>
         </div>
+      )}
+
+      {/* Flight Progress Bar */}
+      {currentSession && products.length > 0 && (
+        <FlightProgressBar
+          session={currentSession}
+          products={products}
+          lastSavedAt={lastSavedAt}
+          isSaving={isSaving}
+          onDownloadPartial={handleDownloadPartial}
+        />
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -385,28 +487,16 @@ Cabeceras Requeridas (Aceptamos variaciones):
         </DialogContent>
       </Dialog>
 
-       {/* Dialogo de Restauración de Backup */}
-      <Dialog open={showRestoreDialog} onOpenChange={setShowRestoreDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-               <UploadCloud className="h-5 w-5 text-blue-600" />
-               Sesión Encontrada
-            </DialogTitle>
-            <DialogDescription>
-               Encontramos una copia de seguridad en la nube con <strong>{backupProducts.length} productos</strong>.
-               <br/>
-               ¿Quieres restaurar tu trabajo anterior?
-            </DialogDescription>
-          </DialogHeader>
-          <div className="flex justify-end gap-2 mt-4">
-             <Button variant="outline" onClick={handleDiscardBackup}>Iniciar de Cero</Button>
-             <Button onClick={handleRestore} className="bg-blue-600 hover:bg-blue-700 text-white">
-               <Download className="mr-2 h-4 w-4 shrink-0" /> Restaurar Sesión
-             </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      {/* Session Recovery Dialog (El Avión) */}
+      <SessionRecoveryDialog
+        open={showRecoveryDialog}
+        onOpenChange={setShowRecoveryDialog}
+        session={currentSession}
+        products={recoveryProducts}
+        onRestore={handleRestore}
+        onAbandon={handleAbandonSession}
+        onDownloadPartial={handleDownloadPartial}
+      />
     </main>
   )
 }
