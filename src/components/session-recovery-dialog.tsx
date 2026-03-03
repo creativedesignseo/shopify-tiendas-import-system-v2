@@ -62,18 +62,18 @@ export function SessionRecoveryDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[520px] p-0 gap-0 overflow-hidden rounded-3xl">
+      <DialogContent className="sm:max-w-[600px] w-[95vw] p-0 gap-0 overflow-hidden rounded-[2rem]">
         {/* Header with gradient */}
-        <div className="bg-gradient-to-r from-[#0F0F0F] via-[#1A1A1A] to-[#0F0F0F] px-6 py-5 text-white">
-          <div className="flex items-center gap-3 mb-1">
-            <div className="bg-white/20 rounded-full p-2">
-              <RotateCcw className="h-5 w-5" />
+        <div className="bg-gradient-to-r from-[#0F0F0F] via-[#1A1A1A] to-[#0F0F0F] px-6 py-6 text-white">
+           <div className="flex items-center gap-4 mb-1">
+            <div className="bg-white/20 rounded-full p-2.5">
+              <RotateCcw className="h-6 w-6 text-white stroke-[2.5]" />
             </div>
             <div>
-              <DialogTitle className="text-lg text-white font-semibold">
+              <DialogTitle className="text-xl text-white font-extrabold tracking-tight">
                 Sesión Anterior Detectada
               </DialogTitle>
-              <DialogDescription className="text-[#D6F45B] 100 text-sm mt-0.5">
+              <DialogDescription className="text-[#D6F45B] font-semibold text-sm mt-1">
                 Encontramos una sesión de trabajo sin completar
               </DialogDescription>
             </div>
@@ -81,21 +81,21 @@ export function SessionRecoveryDialog({
         </div>
 
         {/* Session Info Card */}
-        <div className="px-6 py-5 space-y-4">
+        <div className="px-6 py-6 space-y-6">
           {/* File Info */}
-          <div className="bg-[#F5F6F7] rounded-2xl border border-[#EBEBEB] p-4 space-y-3">
-            <div className="flex items-start justify-between gap-3">
-              <div className="flex items-center gap-2.5 flex-1 min-w-0">
-                <FileSpreadsheet className="h-5 w-5 text-[#D6F45B] 600 shrink-0" />
+          <div className="bg-[#F5F6F7] rounded-3xl border border-[#EBEBEB] p-5 space-y-4 shadow-sm">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3 flex-1 min-w-0">
+                <FileSpreadsheet className="h-6 w-6 text-[#0F0F0F] shrink-0 stroke-[2.5]" />
                 <div className="min-w-0">
-                  <p className="font-semibold text-sm truncate" title={session.file_name}>
+                  <p className="font-extrabold text-[#0F0F0F] text-base truncate" title={session.file_name}>
                     {session.file_name}
                   </p>
-                  <div className="flex items-center gap-2 text-xs text-[#8C8C8C] mt-0.5">
-                    <Clock className="h-3 w-3" />
+                  <div className="flex items-center gap-2 text-xs text-[#5C5C5C] mt-1 font-semibold">
+                    <Clock className="h-3.5 w-3.5" />
                     <span>{formatDate(session.created_at)}</span>
-                    <span className="text-[#8C8C8C]/50">•</span>
-                    <span className="text-[#D6F45B] font-medium">
+                    <span className="text-[#EBEBEB]">•</span>
+                    <span className="text-[#89b300] font-bold">
                       Última actividad {formatRelativeTime(session.updated_at)}
                     </span>
                   </div>
@@ -103,23 +103,27 @@ export function SessionRecoveryDialog({
               </div>
               <Badge 
                 variant="outline" 
-                className="shrink-0 bg-amber-50 text-amber-700 border-amber-200 text-[10px]"
+                className="shrink-0 bg-white text-[#5C5C5C] border-[#EBEBEB] shadow-sm font-bold text-[10px] uppercase tracking-wider px-3 py-1"
               >
                 En progreso
               </Badge>
             </div>
 
             {/* Progress Bar Header */}
-            <div className="flex items-center justify-between text-xs mb-1">
-              <span className="text-[#8C8C8C] font-semibold">Progreso</span>
-              <span className="font-bold text-[#0F0F0F] text-sm">{progressPercent}%</span>
+            <div className="flex items-center justify-between text-xs mb-1.5">
+              <span className="text-[#8C8C8C] font-extrabold uppercase tracking-wide">Progreso General</span>
+              <span className="font-black text-[#0F0F0F] text-lg">{progressPercent}%</span>
             </div>
             
-            {/* SaaS Progress Bar */}
-            <div className="relative h-6 w-full bg-[#EBEBEB] rounded-full overflow-hidden">
+            {/* SaaS Progress Bar - Thick with striped empty space */}
+            <div className="relative h-10 w-full rounded-full p-1 bg-white border-2 border-[#EBEBEB]">
+               {/* Zebra striped background representing the empty portion */}
+               <div className="absolute inset-1 rounded-full bg-[repeating-linear-gradient(-45deg,#F5F6F7,#F5F6F7_10px,#FFFFFF_10px,#FFFFFF_20px)]" />
+               
+               {/* Actual Progress Fill */}
                <div 
-                 className="absolute top-0 left-0 h-full bg-[#D6F45B] rounded-full transition-all duration-1000 ease-in-out" 
-                 style={{ width: `${progressPercent}%` }} 
+                 className="relative h-full bg-[#D6F45B] rounded-full transition-all duration-1000 ease-in-out shadow-sm z-10" 
+                 style={{ width: `${progressPercent}%`, minWidth: progressPercent > 0 ? '1.5rem' : '0' }} 
                />
             </div>
 
@@ -150,20 +154,20 @@ export function SessionRecoveryDialog({
           </div>
 
           {/* Message */}
-          <p className="text-sm text-[#8C8C8C] text-center mt-6">
-            Tu último proceso quedó en <strong className="text-[#0F0F0F]">{completed} de {total}</strong> productos. 
-            ¿Quieres retomar donde lo dejaste?
+          <p className="text-[15px] text-[#5C5C5C] text-center mt-6 font-medium px-4">
+            Tu proceso de importación quedó en <strong className="text-[#0F0F0F] font-black">{completed} de {total}</strong> productos. 
+            ¿Quieres retomar el progreso donde lo dejaste?
           </p>
         </div>
 
         {/* Actions - Thick SaaS Pills layout */}
-        <div className="px-6 py-5 bg-[#F5F6F7] border-t border-[#EBEBEB] flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div className="px-6 py-6 bg-[#F5F6F7] border-t border-[#EBEBEB] flex flex-col sm:flex-row items-center justify-between gap-3">
           <Button
             variant="outline"
-            className="w-full sm:flex-1 rounded-full border-2 border-[#FF4D4D] text-[#FF4D4D] hover:bg-[#FF4D4D] hover:text-white font-bold h-11 transition-all"
+            className="w-full sm:flex-1 rounded-full border-2 border-[#FF4D4D] text-[#FF4D4D] hover:bg-[#FF4D4D] hover:text-white font-extrabold h-12 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:outline-none transition-all"
             onClick={onAbandon}
           >
-            <Trash2 className="mr-2 h-4 w-4" />
+            <Trash2 className="mr-2 h-4 w-4 stroke-[2.5]" />
             Abandonar
           </Button>
 
@@ -171,17 +175,17 @@ export function SessionRecoveryDialog({
             variant="outline"
             disabled={completed === 0}
             onClick={onDownloadPartial}
-            className="w-full sm:flex-1 rounded-full border-2 border-[#EBEBEB] text-[#0F0F0F] bg-white hover:bg-[#EBEBEB] font-bold h-11 transition-all"
+            className="w-full sm:flex-1 rounded-full border-2 border-[#EBEBEB] text-[#0F0F0F] bg-white hover:bg-[#EBEBEB] hover:text-[#0F0F0F] font-extrabold h-12 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:outline-none transition-all"
           >
-            <Download className="h-4 w-4 mr-2" />
+            <Download className="mr-2 h-4 w-4 stroke-[2.5]" />
             CSV Parcial ({completed})
           </Button>
 
           <Button
             onClick={onRestore}
-            className="w-full sm:flex-1 rounded-full bg-[#D6F45B] hover:bg-[#c4df53] text-[#0F0F0F] font-bold h-11 shadow-sm transition-transform active:scale-95"
+            className="w-full sm:flex-1 rounded-full bg-[#0F0F0F] hover:bg-[#1A1A1A] text-[#D6F45B] font-extrabold h-12 shadow-md focus-visible:ring-0 focus-visible:ring-offset-0 focus:outline-none transition-transform active:scale-95"
           >
-            <RotateCcw className="h-4 w-4 mr-2" />
+            <RotateCcw className="mr-2 h-4 w-4 stroke-[2.5]" />
             Restaurar Sesión
           </Button>
         </div>
