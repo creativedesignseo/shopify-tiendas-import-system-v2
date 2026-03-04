@@ -34,10 +34,89 @@ export function ProductReviewDialog({
   const [quotaErrorMessage, setQuotaErrorMessage] = React.useState("")
   const [errorMetadata, setErrorMetadata] = React.useState<{masked_key?: string, key_source?: string, provider?: string} | null>(null)
   const [draggedIdx, setDraggedIdx] = React.useState<number | null>(null)
+  
+  // Progress & Audio States
+  const [progress, setProgress] = React.useState(0)
+  const [progressText, setProgressText] = React.useState("Iniciando motor de IA...")
+  const progressInterval = React.useRef<NodeJS.Timeout | null>(null)
+
+  // Clean up interval
+  React.useEffect(() => {
+    return () => {
+      if (progressInterval.current) clearInterval(progressInterval.current)
+    }
+  }, [])
+
+  // Web Audio Synthesizer (No external assets needed)
+  const playSound = React.useCallback((type: "start" | "success") => {
+    try {
+      const AudioContext = window.AudioContext || (window as any).webkitAudioContext
+      if (!AudioContext) return
+      const ctx = new AudioContext()
+      
+      if (type === "start") {
+        // High-tech subtle click
+        const osc = ctx.createOscillator()
+        const gain = ctx.createGain()
+        osc.connect(gain)
+        gain.connect(ctx.destination)
+        
+        osc.type = "sine"
+        osc.frequency.setValueAtTime(800, ctx.currentTime)
+        osc.frequency.exponentialRampToValueAtTime(100, ctx.currentTime + 0.1)
+        
+        gain.gain.setValueAtTime(0.1, ctx.currentTime)
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1)
+        
+        osc.start()
+        osc.stop(ctx.currentTime + 0.1)
+      } else if (type === "success") {
+        // Premium Success Chime (Major Third)
+        const playTone = (freq: number, startTime: number) => {
+          const osc = ctx.createOscillator()
+          const gain = ctx.createGain()
+          osc.connect(gain)
+          gain.connect(ctx.destination)
+          
+          osc.type = "sine"
+          osc.frequency.value = freq
+          
+          gain.gain.setValueAtTime(0, startTime)
+          gain.gain.linearRampToValueAtTime(0.15, startTime + 0.05)
+          gain.gain.exponentialRampToValueAtTime(0.001, startTime + 1.5)
+          
+          osc.start(startTime)
+          osc.stop(startTime + 1.5)
+        }
+        
+        playTone(523.25, ctx.currentTime) // C5
+        playTone(659.25, ctx.currentTime + 0.15) // E5
+      }
+    } catch (e) {
+      console.log("Audio play failed, ignoring")
+    }
+  }, [])
 
   const handleGenerate = async () => {
     if (!masterData) return
     setIsGenerating(true)
+    setProgress(0)
+    setProgressText("Conectando con la IA...")
+    playSound("start")
+
+    // Progress Simulation Logic
+    let currentProgress = 0;
+    progressInterval.current = setInterval(() => {
+      currentProgress += Math.random() * 15;
+      if (currentProgress > 90) currentProgress = 90; // Cap at 90% until actually done
+      
+      setProgress(Math.min(90, Math.round(currentProgress)))
+      
+      // Update text based on progress
+      if (currentProgress > 15 && currentProgress < 40) setProgressText("Analizando notas olfativas...")
+      else if (currentProgress >= 40 && currentProgress < 65) setProgressText("Redactando descripción HTML...")
+      else if (currentProgress >= 65) setProgressText("Optimizando etiquetas SEO...")
+    }, 1200)
 
     try {
       const res = await fetch("/api/generate", {
@@ -111,9 +190,20 @@ export function ProductReviewDialog({
       })
       
       // Auto-switch to preview tab if successful
+      if (progressInterval.current) clearInterval(progressInterval.current)
+      setProgress(100)
+      setProgressText("¡Completado!")
+      playSound("success")
       setActiveTab("preview")
 
+      // Delay resetting the generating state slightly so they see 100%
+      setTimeout(() => {
+        setIsGenerating(false)
+      }, 1000)
+
     } catch (error: any) {
+      if (progressInterval.current) clearInterval(progressInterval.current)
+      setIsGenerating(false)
       console.error("Error generating single product:", error)
       const errorMsg = error.message || ""
       const isQuotaError = errorMsg.includes("429") || errorMsg.toLowerCase().includes("quota")
@@ -135,8 +225,6 @@ export function ProductReviewDialog({
          status: "error", 
          errorDetails: errorMsg 
       })
-    } finally {
-      setIsGenerating(false)
     }
   }
 
@@ -180,22 +268,40 @@ export function ProductReviewDialog({
                    {product.vendor} • {product.size || "Sin tamaño"} • {product.barcode}
                 </DialogDescription>
               </div>
-              <Button 
-                onClick={handleGenerate} 
-                disabled={isGenerating || !masterData}
-                className="bg-[#D6F45B] hover:brightness-95 text-[#0F0F0F] shadow-md rounded-full px-6 font-semibold"
-              >
-                {isGenerating ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Generando...
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="mr-2 h-4 w-4" /> 
-                    {product.status === "complete" ? "Regenerar con IA" : "Generar Contenido IA"}
-                  </>
-                )}
-              </Button>
+              
+              <div className="min-w-[200px] flex justify-end">
+                 {isGenerating ? (
+                    <div className="w-[220px] h-10 relative overflow-hidden rounded-full border border-black/5 bg-white shadow-sm flex items-center px-4">
+                       {/* Animated Fill Background */}
+                       <div 
+                         className="absolute top-0 left-0 h-full bg-[#D6F45B] transition-all duration-300 ease-out z-0"
+                         style={{ width: `${progress}%` }}
+                       />
+                       
+                       {/* Progress Content overlay */}
+                       <div className="relative z-10 flex items-center justify-between w-full text-[11px] font-bold text-[#0F0F0F] px-1 tracking-wide">
+                          <span className="flex items-center gap-1.5 truncate pr-2" title={progressText}>
+                             {progress < 100 ? (
+                               <Loader2 className="h-3 w-3 animate-spin shrink-0" />
+                             ) : (
+                               <Check className="h-3 w-3 shrink-0" />
+                             )}
+                             {progressText}
+                          </span>
+                          <span className="shrink-0">{progress}%</span>
+                       </div>
+                    </div>
+                 ) : (
+                    <Button 
+                      onClick={handleGenerate} 
+                      disabled={!masterData}
+                      className="bg-[#D6F45B] hover:brightness-95 text-[#0F0F0F] shadow-md rounded-full px-6 font-semibold"
+                    >
+                      <Sparkles className="mr-2 h-4 w-4" /> 
+                      {product.status === "complete" ? "Regenerar con IA" : "Generar Contenido IA"}
+                    </Button>
+                 )}
+              </div>
            </div>
         </DialogHeader>
 
