@@ -241,7 +241,7 @@ export function ProductReviewDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-6xl max-h-[95vh] flex flex-col p-0 gap-0 rounded-3xl overflow-hidden">
         <DialogHeader className="p-6 border-b border-[#EBEBEB]">
-           <div className="flex justify-between items-start">
+           <div className="flex justify-between items-start pr-12">
               <div>
                 <DialogTitle className="text-xl flex flex-wrap items-center gap-2">
                    {product.title}
