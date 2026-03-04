@@ -164,7 +164,7 @@ export function SessionRecoveryDialog({
         <div className="px-6 py-6 bg-[#F5F6F7] border-t border-[#EBEBEB] flex flex-col sm:flex-row items-center justify-between gap-3">
           <Button
             variant="outline"
-            className="w-full sm:flex-1 rounded-full border-2 border-[#FF4D4D] text-[#FF4D4D] hover:bg-[#FF4D4D] hover:text-white font-extrabold h-12 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:outline-none transition-all"
+            className="w-full sm:flex-1 rounded-full border-2 border-[#FF4D4D] text-[#FF4D4D] hover:bg-[#FF4D4D] hover:text-white font-extrabold h-12 shadow-none ring-0 outline-none focus:ring-0 focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 ring-offset-0 transition-all"
             onClick={onAbandon}
           >
             <Trash2 className="mr-2 h-4 w-4 stroke-[2.5]" />
