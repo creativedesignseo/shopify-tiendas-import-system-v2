@@ -191,20 +191,48 @@ export function ProductsTable({
                 <div className="flex flex-col gap-3 min-w-[220px]">
                   <div className="flex items-start gap-3">
                     {product.images[0] ? (
-                      <img 
-                        src={product.images[0]} 
-                        alt={`Vista previa de ${product.title}`}
-                        className="h-16 w-16 rounded object-cover border cursor-pointer hover:scale-105 hover:border-[#D6F45B] transition-all shadow-sm"
-                        onClick={() => window.open(`https://www.google.com/search?q=${encodeURIComponent(product.vendor + " " + product.title + " perfume bottle")}&tbm=isch`, '_blank')}
-                        title="Buscar en Google"
-                      />
+                      <div className="relative group/img">
+                        <img 
+                          src={product.images[0]} 
+                          alt={`Vista previa de ${product.title}`}
+                          className="h-16 w-16 rounded object-cover border shadow-sm group-hover/img:brightness-90 transition-all"
+                        />
+                        {/* Hover Overlay with dual search buttons */}
+                        <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 opacity-0 group-hover/img:opacity-100 transition-opacity bg-black/40 rounded backdrop-blur-sm">
+                          <button 
+                             className="text-[9px] bg-white hover:bg-gray-100 text-black px-1.5 py-0.5 rounded shadow-sm w-[90%] font-semibold"
+                             onClick={() => window.open(`https://www.google.com/search?q=${encodeURIComponent(product.vendor + " " + product.title + " perfume bottle")}&tbm=isch`, '_blank')}
+                          >
+                            Google
+                          </button>
+                          <button 
+                             className="text-[9px] px-1.5 py-0.5 w-[90%] rounded border border-white/40 bg-white/20 hover:bg-white/30 text-white shadow-[0_4px_12px_-2px_rgba(0,0,0,0.1),inset_0_1px_1px_rgba(255,255,255,0.6)] font-semibold"
+                             onClick={() => window.open(`https://www.google.com/search?q=${encodeURIComponent(product.vendor + " " + product.title + " perfume bottle site:amazon.com")}&tbm=isch`, '_blank')}
+                          >
+                            Amazon
+                          </button>
+                        </div>
+                      </div>
                     ) : (
-                      <div 
-                        className="h-16 w-16 rounded border bg-[#F5F6F7] flex items-center justify-center text-[10px] text-[#8C8C8C] cursor-pointer hover:bg-[#EBEBEB] transition-colors"
-                        onClick={() => window.open(`https://www.google.com/search?q=${encodeURIComponent(product.vendor + " " + product.title + " perfume bottle")}&tbm=isch`, '_blank')}
-                        title="Buscar en Google"
-                      >
-                        Sin img
+                      <div className="relative group/img">
+                        <div className="h-16 w-16 rounded border bg-[#F5F6F7] flex items-center justify-center text-[10px] text-[#8C8C8C] shadow-sm">
+                          Sin img
+                        </div>
+                        {/* Hover Overlay with dual search buttons */}
+                        <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 opacity-0 group-hover/img:opacity-100 transition-opacity bg-black/40 rounded backdrop-blur-sm">
+                          <button 
+                             className="text-[9px] bg-white hover:bg-gray-100 text-black px-1.5 py-0.5 rounded shadow-sm w-[90%] font-semibold"
+                             onClick={() => window.open(`https://www.google.com/search?q=${encodeURIComponent(product.vendor + " " + product.title + " perfume bottle")}&tbm=isch`, '_blank')}
+                          >
+                            Google
+                          </button>
+                          <button 
+                             className="text-[9px] px-1.5 py-0.5 w-[90%] rounded border border-white/40 bg-white/20 hover:bg-white/30 text-white shadow-[0_4px_12px_-2px_rgba(0,0,0,0.1),inset_0_1px_1px_rgba(255,255,255,0.6)] font-semibold"
+                             onClick={() => window.open(`https://www.google.com/search?q=${encodeURIComponent(product.vendor + " " + product.title + " perfume bottle site:amazon.com")}&tbm=isch`, '_blank')}
+                          >
+                            Amazon
+                          </button>
+                        </div>
                       </div>
                     )}
                     <div className="flex flex-col gap-2 flex-1">

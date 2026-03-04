@@ -143,6 +143,10 @@ export function ProductReviewDialog({
   const handleImageSearch = () => {
     window.open(`https://www.google.com/search?q=${encodeURIComponent(product.vendor + " " + product.title + " perfume bottle")}&tbm=isch`, '_blank')
   }
+  
+  const handleAmazonImageSearch = () => {
+    window.open(`https://www.google.com/search?q=${encodeURIComponent(product.vendor + " " + product.title + " perfume bottle site:amazon.com")}&tbm=isch`, '_blank')
+  }
 
   return (
     <>
@@ -295,11 +299,11 @@ export function ProductReviewDialog({
 
                     {/* Add image + Search buttons */}
                     <div className="flex gap-2">
-                      {product.images.filter(Boolean).length < 3 && (
+                       {product.images.filter(Boolean).length < 3 && (
                         <Button 
                           variant="outline" 
                           size="sm" 
-                          className="flex-1 text-xs rounded-lg"
+                          className="flex-[0.4] text-[11px] rounded-lg px-2"
                           onClick={() => {
                             const newImgs = [...product.images]
                             if (newImgs.length < 3) {
@@ -308,12 +312,26 @@ export function ProductReviewDialog({
                             }
                           }}
                         >
-                          <Plus className="w-3 h-3 mr-1.5" /> Añadir Imagen
+                          <Plus className="w-3 h-3 md:w-3.5 md:h-3.5" /> <span className="hidden sm:inline ml-1">Añadir</span>
                         </Button>
                       )}
-                      <Button variant="outline" size="sm" className="flex-1 text-xs rounded-lg" onClick={handleImageSearch}>
-                         <Search className="w-3 h-3 mr-1.5" /> Buscar en Google
-                      </Button>
+                      
+                      <div className="flex-1 flex gap-2">
+                         <Button variant="outline" size="sm" className="flex-1 text-[11px] rounded-lg px-2" onClick={handleImageSearch}>
+                            <Search className="w-3 h-3 mr-1" /> Google
+                         </Button>
+                         
+                         {/* Liquid Glass Amazon Button */}
+                         <Button 
+                           variant="outline" 
+                           size="sm" 
+                           onClick={handleAmazonImageSearch}
+                           className="flex-1 text-[11px] px-2 relative overflow-hidden rounded-lg border border-white/40 bg-white/20 hover:bg-white/30 text-slate-800 shadow-[0_4px_12px_-2px_rgba(0,0,0,0.1),inset_0_1px_1px_rgba(255,255,255,0.6)] backdrop-blur-md transition-all font-semibold"
+                         >
+                            <div className="absolute inset-0 bg-gradient-to-tr from-white/10 to-transparent pointer-events-none" />
+                            <Search className="w-3 h-3 mr-1" /> Amazon
+                         </Button>
+                      </div>
                     </div>
                  </div>
 
