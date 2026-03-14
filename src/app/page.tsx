@@ -16,22 +16,12 @@ import { generateCSV } from "@/lib/csv-exporter"
 import { Download, Trash2, FileSpreadsheet, UploadCloud, AlertTriangle, CheckCircle2 } from "lucide-react"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { cn } from "@/lib/utils"
+import { cn, generateUUID } from "@/lib/utils"
 import { BackupService, ImportSession } from "@/lib/backup-service"
 import { SettingsDialog } from "@/components/settings-dialog"
 import { SessionRecoveryDialog } from "@/components/session-recovery-dialog"
 import { FlightProgressBar } from "@/components/flight-progress-bar"
 
-// Helper for generating UUIDs in non-secure contexts
-function generateUUID() {
-  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
-    return crypto.randomUUID();
-  }
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-    const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
-    return v.toString(16);
-  });
-}
 
 export default function Dashboard() {
   const [masterData, setMasterData] = React.useState<MasterData | null>(null)
