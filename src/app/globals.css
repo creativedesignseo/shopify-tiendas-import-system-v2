@@ -5,53 +5,48 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-inter);
   --font-mono: var(--font-geist-mono);
-  
+
   --radius-lg: var(--radius);
   --radius-md: calc(var(--radius) - 4px);
   --radius-sm: calc(var(--radius) - 8px);
 }
 
 :root {
-  /* SaaS Dashboard Design Tokens */
-  --background: #F5F6F7;
+  --background: #FAFAFA;
   --foreground: #1A1A1A;
-  
+
   --card: #ffffff;
   --card-foreground: #1A1A1A;
-  
+
   --popover: #ffffff;
   --popover-foreground: #1A1A1A;
-  
-  /* Lime accent system */
+
   --primary: #D6F45B;
   --primary-foreground: #0F0F0F;
-  
+
   --secondary: #F0F0F0;
   --secondary-foreground: #1A1A1A;
-  
+
   --muted: #F0F0F0;
   --muted-foreground: #8C8C8C;
-  
+
   --accent: #D6F45B;
   --accent-foreground: #0F0F0F;
-  
+
   --destructive: #ef4444;
   --destructive-foreground: #ffffff;
 
-  --border: #EBEBEB;
-  --input: #EBEBEB;
+  --border: #E5E7EB;
+  --input: #E5E7EB;
   --ring: #D6F45B;
-  
-  /* Large rounded corners */
-  --radius: 1.5rem;
 
-  /* Dark base for navbars, headers */
+  --radius: 1rem;
+
   --dark-base: #0F0F0F;
   --dark-text: #ffffff;
 
-  /* Card shadow */
-  --shadow-card: 0 10px 30px rgba(0,0,0,0.05);
-  --shadow-float: 0 20px 50px rgba(0,0,0,0.08);
+  --shadow-card: 0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.06);
+  --shadow-float: 0 10px 25px rgba(0,0,0,0.06);
 }
 
 body {
@@ -62,7 +57,6 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Layout Safeguards */
 .overflow-x-auto {
   -webkit-overflow-scrolling: touch;
 }
@@ -72,19 +66,10 @@ table {
   border-collapse: collapse;
 }
 
-/* Smooth transitions globally */
-*, *::before, *::after {
-  transition-property: background-color, border-color, color, box-shadow, opacity, transform;
-  transition-duration: 0ms;
-  transition-timing-function: ease;
-}
-
-/* Only animate interactive elements */
 button, a, input, select, textarea, [role="button"], [tabindex] {
-  transition-duration: 250ms;
+  transition: background-color 200ms ease, border-color 200ms ease, color 200ms ease, box-shadow 200ms ease, opacity 200ms ease, transform 200ms ease;
 }
 
-/* Custom Scrollbar for a premium look */
 @media (min-width: 768px) {
   ::-webkit-scrollbar {
     width: 6px;
@@ -102,14 +87,12 @@ button, a, input, select, textarea, [role="button"], [tabindex] {
   }
 }
 
-/* Utility: card with shadow */
 .card-elevated {
   background: var(--card);
   border-radius: var(--radius);
   box-shadow: var(--shadow-card);
 }
 
-/* Focus ring: lime glow */
 *:focus-visible {
   outline: 2px solid var(--ring);
   outline-offset: 2px;
@@ -117,6 +100,6 @@ button, a, input, select, textarea, [role="button"], [tabindex] {
 
 input:focus, textarea:focus, select:focus {
   border-color: var(--ring) !important;
-  box-shadow: 0 0 0 3px rgba(214, 244, 91, 0.15) !important;
+  box-shadow: 0 0 0 2px rgba(214, 244, 91, 0.2) !important;
   outline: none;
 }
