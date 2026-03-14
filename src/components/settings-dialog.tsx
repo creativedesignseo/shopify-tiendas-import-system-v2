@@ -45,11 +45,11 @@ export function SettingsDialog() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="ghost" size="icon" className="rounded-full">
+        <Button variant="ghost" size="icon" className="rounded-xl">
           <Settings className="h-5 w-5" />
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px] rounded-3xl">
+      <DialogContent className="sm:max-w-[425px] rounded-2xl">
         <DialogHeader>
           <DialogTitle>Configuración IA</DialogTitle>
           <DialogDescription>
@@ -66,7 +66,7 @@ export function SettingsDialog() {
                     id="provider"
                     value={provider}
                     onChange={(e) => setProvider(e.target.value)}
-                    className="flex h-11 w-full rounded-2xl border border-[#EBEBEB] bg-white px-4 py-2.5 text-sm text-[#1A1A1A] focus:outline-none focus:border-[#D6F45B] focus:shadow-[0_0_0_3px_rgba(214,244,91,0.15)] disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-250"
+                    className="flex h-10 w-full rounded-xl border border-[#E5E7EB] bg-white px-4 py-2.5 text-sm text-[#1A1A1A] focus:outline-none focus:border-[#D6F45B] focus:shadow-[0_0_0_2px_rgba(214,244,91,0.2)] disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-250"
                 >
                     <option value="gemini">Google Gemini (Recomendado)</option>
                     <option value="openai">OpenAI (ChatGPT)</option>
@@ -117,7 +117,7 @@ export function SettingsDialog() {
                       id="model-version"
                       value={modelVersion}
                       onChange={(e) => setModelVersion(e.target.value)}
-                      className="flex h-11 w-full rounded-2xl border border-[#EBEBEB] bg-white px-4 py-2.5 text-sm text-[#1A1A1A] focus:outline-none focus:border-[#D6F45B] focus:shadow-[0_0_0_3px_rgba(214,244,91,0.15)] disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-250"
+                      className="flex h-10 w-full rounded-xl border border-[#E5E7EB] bg-white px-4 py-2.5 text-sm text-[#1A1A1A] focus:outline-none focus:border-[#D6F45B] focus:shadow-[0_0_0_2px_rgba(214,244,91,0.2)] disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-250"
                   >
                       <option value="gemini-2.5-flash">Gemini 2.5 Flash (Stable - Recomendado)</option>
                       <option value="gemini-3-flash-preview">Gemini 3.0 Flash (Preview - ¡Nuevo!)</option>

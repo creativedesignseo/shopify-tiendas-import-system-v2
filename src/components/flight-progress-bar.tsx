@@ -52,7 +52,7 @@ export function FlightProgressBar({
   const allDone = completed + errors === total
 
   return (
-    <div className="bg-white rounded-3xl shadow-[0_10px_30px_rgba(0,0,0,0.05)] px-5 py-3.5 space-y-2">
+    <div className="bg-white rounded-2xl shadow-[var(--shadow-card)] px-5 py-3.5 space-y-2">
       {/* Top Row */}
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-2.5 min-w-0">
@@ -94,7 +94,7 @@ export function FlightProgressBar({
               variant="outline"
               size="sm"
               onClick={onDownloadPartial}
-              className="h-7 px-2.5 text-xs border-[#EBEBEB] text-[#1A1A1A] hover:bg-[#F5F6F7] rounded-full"
+              className="h-7 px-2.5 text-xs border-[#E5E7EB] text-[#1A1A1A] hover:bg-[#F5F6F7] rounded-lg"
             >
               <Download className="mr-1 h-3 w-3" />
               CSV ({completed})
@@ -105,7 +105,7 @@ export function FlightProgressBar({
 
       {/* SaaS Progress Bar - Thick with striped empty space */}
       <div className="flex items-center gap-4 mt-2">
-        <div className="relative h-10 flex-1 rounded-full p-1 bg-white border-2 border-[#EBEBEB]">
+        <div className="relative h-10 flex-1 rounded-full p-1 bg-white border-2 border-[#E5E7EB]">
            {/* Zebra striped background representing the empty portion */}
            <div className="absolute inset-1 rounded-full bg-[repeating-linear-gradient(-45deg,#F5F6F7,#F5F6F7_10px,#FFFFFF_10px,#FFFFFF_20px)]" />
            
@@ -118,12 +118,12 @@ export function FlightProgressBar({
 
         <div className="flex flex-col items-end justify-center shrink-0">
           <div className="flex items-center gap-1.5">
-            <Badge variant="outline" className="max-h-12 px-2.5 py-1 bg-green-50 text-green-700 border-green-200 text-xs font-bold rounded-[0.7rem] shadow-sm">
+            <Badge variant="outline" className="max-h-12 px-2.5 py-1 bg-green-50 text-green-700 border-green-200 text-xs font-bold rounded-lg shadow-sm">
               <Check className="mr-1 h-3.5 w-3.5 stroke-[3]" />
               {completed}
             </Badge>
             {errors > 0 && (
-              <Badge variant="outline" className="max-h-12 px-2.5 py-1 bg-red-50 text-red-600 border-red-200 text-xs font-bold rounded-[0.7rem] shadow-sm">
+              <Badge variant="outline" className="max-h-12 px-2.5 py-1 bg-red-50 text-red-600 border-red-200 text-xs font-bold rounded-lg shadow-sm">
                 <AlertCircle className="mr-1 h-3.5 w-3.5 stroke-[3]" />
                 {errors}
               </Badge>
