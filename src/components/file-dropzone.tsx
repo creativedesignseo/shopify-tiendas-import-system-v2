@@ -76,10 +76,10 @@ export function FileDropzone({
       onDragOver={handleDragOver}
       onDrop={handleDrop}
       className={cn(
-        "group flex flex-col items-center justify-center rounded-3xl border-2 border-dashed px-6 py-12 transition-all duration-300 ease-in-out bg-white",
+        "group flex flex-col items-center justify-center rounded-2xl border-2 border-dashed px-6 py-8 transition-all duration-200 ease-in-out bg-white",
         isDragActive
-          ? "border-[#D6F45B] bg-[#D6F45B]/5 shadow-[0_0_0_4px_rgba(214,244,91,0.15)]"
-          : "border-[#EBEBEB] hover:border-[#D6F45B]/50 hover:shadow-[0_10px_30px_rgba(0,0,0,0.05)]",
+          ? "border-[#D6F45B] bg-[#D6F45B]/5 shadow-[0_0_0_3px_rgba(214,244,91,0.1)]"
+          : "border-[#E5E7EB] hover:border-[#D6F45B]/40 hover:shadow-sm",
         disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer active:scale-[0.99]",
         className
       )}
@@ -94,11 +94,11 @@ export function FileDropzone({
         disabled={disabled}
       />
       <div className="flex flex-col items-center justify-center gap-3 text-center text-[#8C8C8C] transition-all duration-300 group-hover:text-[#1A1A1A]">
-        <div className="rounded-2xl bg-[#F5F6F7] p-4 transition-all duration-300 group-hover:bg-[#D6F45B]/10 group-hover:scale-110">
-          <UploadCloud className="h-8 w-8 transition-all duration-300" />
+        <div className="rounded-xl bg-[#F5F6F7] p-3 transition-all duration-300 group-hover:bg-[#D6F45B]/10 group-hover:scale-105">
+          <UploadCloud className="h-6 w-6 transition-all duration-300" />
         </div>
-        <div className="text-base font-semibold tracking-tight leading-none">{label}</div>
-        <div className="text-xs font-medium opacity-60 group-hover:opacity-100">{description}</div>
+        <div className="text-sm font-semibold tracking-tight leading-none">{label}</div>
+        <div className="text-xs font-medium opacity-50 group-hover:opacity-80">{description}</div>
       </div>
     </div>
   )
