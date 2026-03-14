@@ -58,12 +58,12 @@ export function ProductsTable({
         Solo los productos <b>marcados</b> con el checkbox serán incluidos en el archivo de exportación.
       </div>
       {/* Desktop/Tablet Table View */}
-      <div className="hidden md:block rounded-2xl border border-[#EBEBEB] overflow-x-auto">
+      <div className="hidden md:block rounded-xl border border-[#E5E7EB] overflow-x-auto">
         <Table className="min-w-[900px] table-fixed">
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[60px] text-center">
-                <Switch 
+              <TableHead className="w-[60px] text-center uppercase tracking-wider text-[11px] font-medium text-[#8C8C8C]">
+                <Switch
                   checked={products.length > 0 && products.every(p => p.isChecked)}
                   onCheckedChange={(checked) => {
                     products.forEach(p => onUpdateProduct(p.id, "isChecked", checked));
@@ -71,14 +71,14 @@ export function ProductsTable({
                   title="Seleccionar todo"
                 />
               </TableHead>
-              <TableHead className="w-[100px] text-center">Estado</TableHead>
-              <TableHead className="w-auto">Título</TableHead>
-              <TableHead className="w-[110px]">Marca</TableHead>
-              <TableHead className="w-[100px]">Precio</TableHead>
-              <TableHead className="w-[100px]">Tamaño</TableHead>
-              <TableHead className="w-[300px]">Imágenes</TableHead>
-              <TableHead className="w-[150px]">Etiquetas</TableHead>
-              <TableHead className="w-[110px] text-right">Acciones</TableHead>
+              <TableHead className="w-[100px] text-center uppercase tracking-wider text-[11px] font-medium text-[#8C8C8C]">Estado</TableHead>
+              <TableHead className="w-auto uppercase tracking-wider text-[11px] font-medium text-[#8C8C8C]">Título</TableHead>
+              <TableHead className="w-[110px] uppercase tracking-wider text-[11px] font-medium text-[#8C8C8C]">Marca</TableHead>
+              <TableHead className="w-[100px] uppercase tracking-wider text-[11px] font-medium text-[#8C8C8C]">Precio</TableHead>
+              <TableHead className="w-[100px] uppercase tracking-wider text-[11px] font-medium text-[#8C8C8C]">Tamaño</TableHead>
+              <TableHead className="w-[300px] uppercase tracking-wider text-[11px] font-medium text-[#8C8C8C]">Imágenes</TableHead>
+              <TableHead className="w-[150px] uppercase tracking-wider text-[11px] font-medium text-[#8C8C8C]">Etiquetas</TableHead>
+              <TableHead className="w-[110px] text-right uppercase tracking-wider text-[11px] font-medium text-[#8C8C8C]">Acciones</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -87,7 +87,7 @@ export function ProductsTable({
               key={product.id} 
               className={cn(
                 "transition-colors group/row",
-                product.isChecked ? "hover:bg-[#F5F6F7]" : "bg-[#F5F6F7]/50 grayscale-[0.5] opacity-80"
+                product.isChecked ? "hover:bg-[#FAFAFA]" : "bg-[#F5F6F7]/50 opacity-70"
               )}
             >
               <TableCell className="text-center">
@@ -98,31 +98,30 @@ export function ProductsTable({
               </TableCell>
               <TableCell className="text-center p-2">
                 {product.status === "pending" && (
-                  <Badge variant="secondary" className="bg-[#EBEBEB] text-[#5C5C5C] hover:bg-[#EBEBEB] rounded-full font-bold text-[10px] px-3 py-1 whitespace-nowrap shadow-none border-none">
+                  <Badge variant="secondary" className="rounded-full text-[10px] px-2.5 py-0.5 font-medium">
                     En cola
                   </Badge>
                 )}
                 {product.status === "generating" && (
-                  <Badge variant="secondary" className="bg-white text-[#0F0F0F] rounded-full font-bold text-[10px] px-3 py-1 whitespace-nowrap shadow-sm border-2 border-[#D6F45B]">
-                    <Loader2 className="h-3 w-3 animate-spin mr-1 inline" /> Proc.
+                  <Badge variant="outline" className="rounded-full text-[10px] px-2.5 py-0.5 font-medium border-[#D6F45B] text-[#1A1A1A]">
+                    <Loader2 className="h-3 w-3 animate-spin mr-1" /> Proc.
                   </Badge>
                 )}
                 {product.status === "complete" && (
-                  <Badge 
-                    variant="secondary" 
-                    className="bg-[#D6F45B] text-[#0F0F0F] hover:bg-[#D6F45B] rounded-full font-bold text-[10px] px-3 py-1 whitespace-nowrap shadow-sm border-none cursor-help transition-transform hover:scale-105"
-                    title={product.modelUsed ? `Generado con ${product.modelUsed}` : 'Generación lista'}
+                  <Badge
+                    className="bg-[#D6F45B] text-[#0F0F0F] rounded-full text-[10px] px-2.5 py-0.5 font-medium border-transparent hover:bg-[#D6F45B]"
+                    title={product.modelUsed ? `Generado con ${product.modelUsed}` : 'Listo'}
                   >
-                    <Check className="h-3 w-3 mr-1 inline stroke-[3]" /> Listo
+                    <Check className="h-3 w-3 mr-1" /> Listo
                   </Badge>
                 )}
                 {product.status === "error" && (
-                  <Badge 
-                    variant="secondary" 
-                    className="bg-[#FF4D4D] text-white hover:bg-[#FF4D4D] rounded-full font-bold text-[10px] px-3 py-1 whitespace-nowrap shadow-sm border-none cursor-help"
-                    title={product.errorDetails || 'Error al procesar'}
+                  <Badge
+                    variant="destructive"
+                    className="rounded-full text-[10px] px-2.5 py-0.5 font-medium"
+                    title={product.errorDetails || 'Error'}
                   >
-                    <AlertCircle className="h-3 w-3 mr-1 inline stroke-[3]" /> Error
+                    <AlertCircle className="h-3 w-3 mr-1" /> Error
                   </Badge>
                 )}
               </TableCell>
@@ -134,7 +133,7 @@ export function ProductsTable({
                     onChange={(e) =>
                       onUpdateProduct(product.id, "generatedTitle", e.target.value)
                     }
-                    className="h-8 font-medium hover:border-[#D6F45B]/50 focus:border-[#D6F45B] transition-colors"
+                    className="h-8 font-medium transition-colors"
                     placeholder="Título del Producto"
                   />
                   <div className="flex items-center gap-2 text-xs text-[#8C8C8C]">
@@ -144,7 +143,7 @@ export function ProductsTable({
                      <Input 
                         value={product.seoTitle}
                         onChange={(e) => onUpdateProduct(product.id, "seoTitle", e.target.value)}
-                        className="h-6 text-xs w-full hover:border-[#D6F45B]/50 focus:border-[#D6F45B] transition-colors"
+                        className="h-6 text-xs w-full transition-colors"
                         placeholder="Título SEO"
                      />
                   </div>
@@ -168,7 +167,7 @@ export function ProductsTable({
                   onChange={(e) =>
                     onUpdateProduct(product.id, "price", e.target.value)
                   }
-                  className="h-8 w-20 hover:border-[#D6F45B]/50 focus:border-[#D6F45B] transition-colors"
+                  className="h-8 w-20 transition-colors"
                 />
               </TableCell>
 
@@ -245,7 +244,7 @@ export function ProductsTable({
                             newImages[0] = e.target.value
                             onUpdateProduct(product.id, "images", newImages)
                           }}
-                          className="h-7 text-xs hover:border-[#D6F45B]/50 focus:border-[#D6F45B] transition-colors flex-1"
+                          className="h-7 text-xs transition-colors flex-1"
                           placeholder="URL Imagen 1 (Principal)"
                         />
                         <Button
@@ -274,7 +273,7 @@ export function ProductsTable({
                             newImages[1] = e.target.value
                             onUpdateProduct(product.id, "images", newImages)
                           }}
-                          className="h-7 text-xs hover:border-[#D6F45B]/50 focus:border-[#D6F45B] transition-colors flex-1"
+                          className="h-7 text-xs transition-colors flex-1"
                           placeholder="URL Imagen 2"
                         />
                          <Button
@@ -304,7 +303,7 @@ export function ProductsTable({
                   onChange={(e) =>
                     onUpdateProduct(product.id, "tags", e.target.value)
                   }
-                  className="h-8 text-xs hover:border-[#D6F45B]/50 focus:border-[#D6F45B] transition-colors"
+                  className="h-8 text-xs transition-colors"
                   placeholder="Etiquetas..."
                 />
               </TableCell>
@@ -334,7 +333,7 @@ export function ProductsTable({
           <div 
             key={product.id} 
             className={cn(
-               "bg-white rounded-xl border shadow-sm p-4 space-y-4 transition-all",
+               "bg-white rounded-2xl border shadow-sm p-4 space-y-4 transition-all",
                !product.isChecked && "grayscale opacity-70 bg-[#F5F6F7] border-dashed"
             )}
           >
@@ -348,23 +347,23 @@ export function ProductsTable({
                       className="mr-1"
                     />
                     {product.status === "complete" && (
-                      <Badge variant="secondary" className="bg-[#D6F45B] text-[#0F0F0F] rounded-full font-bold text-[10px] px-3 py-1 h-6 cursor-help border-none shadow-sm" title={product.modelUsed ? `Generado con ${product.modelUsed}` : 'Listo'}>
-                        <Check className="w-3 h-3 mr-1 stroke-[3]" /> Listo
+                      <Badge className="bg-[#D6F45B] text-[#0F0F0F] rounded-full text-[10px] px-2.5 py-0.5 font-medium border-transparent hover:bg-[#D6F45B]" title={product.modelUsed ? `Generado con ${product.modelUsed}` : 'Listo'}>
+                        <Check className="h-3 w-3 mr-1" /> Listo
                       </Badge>
                     )}
                     {product.status === "pending" && (
-                      <Badge variant="secondary" className="bg-[#EBEBEB] text-[#5C5C5C] rounded-full font-bold text-[10px] px-3 py-1 h-6 border-none shadow-none">
+                      <Badge variant="secondary" className="rounded-full text-[10px] px-2.5 py-0.5 font-medium">
                         En cola
                       </Badge>
                     )}
                     {product.status === "generating" && (
-                      <Badge variant="secondary" className="bg-white text-[#0F0F0F] border-2 border-[#D6F45B] rounded-full font-bold text-[10px] px-3 py-1 h-6 shadow-sm">
-                        <Loader2 className="h-3 w-3 animate-spin mr-1 inline" /> Proc.
+                      <Badge variant="outline" className="rounded-full text-[10px] px-2.5 py-0.5 font-medium border-[#D6F45B] text-[#1A1A1A]">
+                        <Loader2 className="h-3 w-3 animate-spin mr-1" /> Proc.
                       </Badge>
                     )}
                     {product.status === "error" && (
-                      <Badge variant="secondary" className="bg-[#FF4D4D] text-white rounded-full font-bold text-[10px] px-3 py-1 h-6 cursor-help border-none shadow-sm" title={product.errorDetails || 'Error al procesar'}>
-                         <AlertCircle className="h-3 w-3 mr-1 inline stroke-[3]" /> Error
+                      <Badge variant="destructive" className="rounded-full text-[10px] px-2.5 py-0.5 font-medium" title={product.errorDetails || 'Error'}>
+                        <AlertCircle className="h-3 w-3 mr-1" /> Error
                       </Badge>
                     )}
                     <span className="text-xs text-[#8C8C8C]">{product.vendor}</span>
@@ -407,7 +406,7 @@ export function ProductsTable({
             {/* Actions */}
             <Button 
                onClick={() => setReviewProductId(product.id)}
-               className="w-full bg-black text-white hover:bg-black/90 rounded-full shadow-md h-11"
+               className="w-full bg-black text-white hover:bg-black/90 rounded-xl shadow-md h-11"
             >
                <Sparkles className="w-4 h-4 mr-2" />
                Revisar / Generar IA
