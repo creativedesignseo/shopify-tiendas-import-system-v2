@@ -11,7 +11,7 @@ Browser (Settings Dialog)
   → localStorage (shopDomain, accessToken, apiVersion, profileName, outputMode)
   → Frontend sends config per-request to API routes (no env vars needed)
 
-Next.js API Routes (server-side, tokens never exposed to browser):
+Next.js API Routes (server-side proxy — Shopify calls never made from browser JS):
   POST /api/shopify/test-connection
   POST /api/shopify/dedupe
 
@@ -19,8 +19,8 @@ Next.js API Routes (server-side, tokens never exposed to browser):
 ```
 
 **Key decisions:**
-- Tokens stored in localStorage (user explicitly accepted this trade-off for functionality)
-- All Shopify API calls go through Next.js API routes (server-side proxy)
+- Tokens stored in localStorage (user explicitly accepted this trade-off for functionality). They are sent to our own API routes only, never to third-party scripts or client-rendered HTML.
+- All Shopify API calls go through Next.js API routes (server-side proxy, prevents CORS and keeps tokens off the network from the browser's perspective)
 - GraphQL over REST (fewer requests, precise field selection)
 - Rate limit handling with 429 retry + exponential backoff built into shared client
 
@@ -57,15 +57,23 @@ interface ShopifyGraphQLResponse<T> {
 **Functions:**
 - `shopifyGraphQL<T>(config, query, variables?)` — executes GraphQL query with retry on 429 (max 3 retries, exponential backoff starting at 1s)
 - `testShopifyConnection(config)` — queries `{ shop { name email primaryDomain { url } } }`, returns shop info or error
-- `findProductByBarcode(config, barcode)` — queries `products(first:1, query:"barcode:{barcode}")`, returns product or null
-- `findProductsByTitle(config, title, first=5)` — queries `products(first:5, query:"{normalizedTitle}")`, returns array
-- `checkDuplicates(config, products)` — orchestrates barcode-first then title-fallback dedupe for an array of products
+- `findProductByBarcode(config, barcode)` — uses `productVariants(first:1, query:"barcode:{barcode}")` to find by variant barcode (more reliable than product-level search), returns product or null
+- `findProductsByTitle(config, title, first=5)` — queries `products(first:5, query:"{searchTitle}")` where searchTitle preserves spaces but removes diacritics, returns array
+- `checkDuplicates(config, products)` — orchestrates barcode-first then title-fallback dedupe for an array of products, processing in batches (see Batching Strategy below)
 
 **Rate limit strategy:**
 - Read `Retry-After` header on 429
 - Exponential backoff: 1s → 2s → 4s
 - Max 3 retries per request
-- If still 429 after retries, return error (don't hang)
+- If still 429 after retries, return error for that product (don't hang)
+
+**Batching strategy:**
+- The dedupe API route processes products in batches of 10
+- Each batch runs sequentially (1-2 queries per product = 10-20 queries per batch)
+- The frontend sends ALL products in one request, the API route handles batching internally
+- Next.js API route timeout: set `maxDuration = 120` (2 minutes) to accommodate large sets
+- Progress: the API route returns all results at once (streaming deferred to Cycle 2)
+- For typical imports (20-50 products), this completes in 10-30 seconds
 
 ### 2. API Route: Test Connection
 
@@ -109,16 +117,18 @@ interface DedupeResult {
 ```
 
 **Dedupe algorithm per product:**
-1. **Barcode exact match** — `products(first:1, query:"barcode:{barcode}")`
+1. **Barcode exact match** — `productVariants(first:1, query:"barcode:{barcode}")` then navigate to parent product
    - If found → `isDuplicate: true, matchType: "barcode", confidence: 1.0`
-2. **Title fuzzy match** (only if barcode didn't match) — normalize title (lowercase, remove accents, trim), query `products(first:5, query:"{normalized}")`
-   - Compare results using Levenshtein distance
-   - If best match distance < 0.15 → `isDuplicate: true, matchType: "title", confidence: 1 - distance`
+2. **Title fuzzy match** (only if barcode didn't match) — normalize title for search (lowercase, remove diacritics, preserve spaces), query `products(first:5, query:"{searchTitle}")`
+   - Compare each result using normalized Levenshtein distance ratio (distance / max(len(a), len(b)))
+   - If best match ratio < 0.15 → `isDuplicate: true, matchType: "title", confidence: 1 - ratio`
+   - This means titles with ≥85% similarity are flagged as duplicates
 3. **No match** → `isDuplicate: false, matchType: null`
 
-**Title normalization:** Same `normalize()` function from `csv-exporter.ts` — lowercase, remove diacritics, remove non-alphanumeric.
+**Title normalization for search (NEW function, not the csv-exporter one):**
+`normalizeForSearch(title)` — lowercase, remove diacritics (NFD + strip combining marks), trim extra whitespace. Preserves spaces and basic punctuation so Shopify search can match properly. Different from `csv-exporter.ts`'s `normalize()` which strips ALL non-alphanumeric (designed for header matching).
 
-**Levenshtein:** Simple implementation in `shopify-client.ts` (no external dependency needed, ~20 lines).
+**Levenshtein:** Simple implementation in `shopify-client.ts` (~20 lines). Returns normalized ratio: `distance / Math.max(a.length, b.length)`. Range: 0.0 (identical) to 1.0 (completely different).
 
 ### 4. Settings Dialog Enhancement
 
@@ -143,9 +153,11 @@ Add a "Shopify" tab/section alongside the existing "IA" configuration. The dialo
 - `shopify_api_version`
 - `shopify_profile_name`
 - `shopify_output_mode` (default: "csv_only")
-- `shopify_connected` (boolean flag from last successful test)
+- `shopify_connected` (string `"true"` or `"false"` — localStorage only stores strings, always compare with `=== "true"`)
 
 **Dialog width:** Expand from `sm:max-w-[425px]` to `sm:max-w-[550px]` to accommodate tabs.
+
+**Save behavior:** One "Guardar Cambios" button saves both IA and Shopify settings. The existing `handleSave` function is extended to also persist Shopify fields. Test Connection is a separate action (does not require saving first — it uses the current field values directly).
 
 ### 5. Live Dedupe Integration in UI
 
@@ -156,14 +168,15 @@ After products are loaded/processed, if Shopify is configured (`shopify_connecte
 - Show a "Verificar Duplicados en Shopify" button in the table toolbar area
 - Button triggers POST to `/api/shopify/dedupe` with all current products' barcode + title
 - While checking: show spinner on the button, disable it
+- While checking: show spinner + progress text ("Verificando 5/23...")
 - Results update the `ProcessedProduct[]` state:
-  - `isDuplicate: true` products get `isChecked: false`
+  - Products with `shopifyDupeMatchType !== null` get `isChecked: false`
   - New badge/indicator in the table: "Nuevo" (green) or "Duplicado: barcode/título" (red/amber)
   - Duplicate rows show the existing Shopify product title for reference
 
 **File:** `src/lib/product-processor.ts` (modify existing)
 
-Add optional fields to `ProcessedProduct`:
+Add optional fields to `ProcessedProduct` (separate from the existing `isDuplicate` which is used for CSV-based dedupe during import — CSV dedupe removes products entirely, Shopify dedupe only unchecks them):
 ```typescript
 // Shopify dedupe results (optional, populated after live check)
 shopifyDupeMatchType?: "barcode" | "title" | null;
@@ -172,14 +185,16 @@ shopifyDupeExistingId?: string;
 shopifyDupeConfidence?: number;
 ```
 
+**Note:** The existing `isDuplicate` boolean is NOT reused for Shopify dedupe. It remains for CSV-level duplicate filtering (products removed before reaching the table). The `shopifyDupeMatchType` field indicates Shopify-level duplicates (products stay in the table but unchecked).
+
 ### 6. Shopify Connection Status Indicator
 
-**File:** `src/components/main-nav.tsx` (modify existing)
+**File:** `src/app/page.tsx` (modify existing — the Settings gear icon lives here at ~line 358, not in main-nav.tsx)
 
-Small indicator next to the Settings gear icon:
+Small green dot indicator next to the existing `<SettingsDialog />` component:
 - Green dot if `shopify_connected === "true"` in localStorage
 - No dot if not configured
-- Clicking opens Settings dialog on Shopify tab
+- The dot is purely visual (clicking the gear opens Settings as usual, user can navigate to Shopify tab)
 
 ---
 
