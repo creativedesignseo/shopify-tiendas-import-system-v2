@@ -21,6 +21,7 @@ import { BackupService, ImportSession } from "@/lib/backup-service"
 import { SettingsDialog } from "@/components/settings-dialog"
 import { SessionRecoveryDialog } from "@/components/session-recovery-dialog"
 import { FlightProgressBar } from "@/components/flight-progress-bar"
+import { ManualProductForm } from "@/components/manual-product-form"
 
 
 export default function Dashboard() {
@@ -44,6 +45,9 @@ export default function Dashboard() {
   const [recoveryProducts, setRecoveryProducts] = React.useState<ProcessedProduct[]>([])
   const [lastSavedAt, setLastSavedAt] = React.useState<Date | null>(null)
   const [isSaving, setIsSaving] = React.useState(false)
+
+  // Manual Entry Mode
+  const [step2Mode, setStep2Mode] = React.useState<"csv" | "manual">("csv")
 
   // Init Device ID & Check for Active Sessions
   React.useEffect(() => {
@@ -258,6 +262,30 @@ Cabeceras Requeridas (Aceptamos variaciones):
     }
   }
 
+  // ─── 3. Agregar Producto Manual ─────────────────────────────────
+  const handleManualAdd = async (product: ProcessedProduct) => {
+    const updatedProducts = [...products, product]
+    setProducts(updatedProducts)
+
+    // Create or update session
+    if (!currentSession) {
+      const session = await BackupService.createSession(
+        deviceId,
+        "manual-entry",
+        updatedProducts.length
+      )
+      if (session) {
+        setCurrentSession(session)
+        console.log('📦 Manual entry session started:', session.id)
+      }
+    } else {
+      setCurrentSession(prev => prev ? {
+        ...prev,
+        total_products: updatedProducts.length,
+      } : null)
+    }
+  }
+
   // ─── 4. Actualizar Producto (Edición Manual) ───────────────────
   const handleUpdateProduct = (id: string, fieldOrUpdates: string | Partial<ProcessedProduct>, value?: any) => {
     setProducts(prev => prev.map(p => {
@@ -312,7 +340,7 @@ Cabeceras Requeridas (Aceptamos variaciones):
   }
 
   return (
-    <main className="container mx-auto p-8 space-y-8 min-h-screen">
+    <main className="max-w-6xl mx-auto px-6 py-8 space-y-8 min-h-screen">
       <div className="flex flex-wrap justify-between items-center gap-4">
         <div>
            <div className="flex items-center gap-3">
@@ -328,28 +356,25 @@ Cabeceras Requeridas (Aceptamos variaciones):
         </div>
         <div className="flex flex-wrap gap-2 items-center">
             <SettingsDialog />
-            <Button 
-               className="cursor-pointer hover:bg-destructive/90"
-               variant="outline" 
-               onClick={handleClearAll}
-               disabled={products.length === 0 && !masterData}
+            <Button
+              variant="outline"
+              onClick={handleClearAll}
+              disabled={products.length === 0 && !masterData}
             >
               <Trash2 className="mr-2 h-4 w-4" /> Limpiar Todo
             </Button>
-            <Button 
-              className={cn("cursor-pointer transition-all active:scale-95", "hover:bg-primary/90")}
-              onClick={handleExport} 
+            <Button
+              onClick={handleExport}
               disabled={!products.some(p => p.status === "complete" && p.isChecked) || !masterData}
-              variant="default"
             >
-              <Download className="mr-2 h-4 w-4 shrink-0" /> 
+              <Download className="mr-2 h-4 w-4 shrink-0" />
               Exportar ({products.filter(p => p.status === "complete" && p.isChecked).length})
             </Button>
         </div>
       </div>
 
       {products.some(p => p.status === "pending" || p.status === "error") && (
-        <div className="bg-[#0F0F0F] rounded-2xl px-5 py-4 shadow-[0_10px_30px_rgba(0,0,0,0.1)]">
+        <div className="bg-[#0F0F0F] rounded-xl px-5 py-3.5">
           <div className="flex items-center">
             <AlertTriangle className="h-5 w-5 text-[#D6F45B] mr-3" />
             <p className="text-sm text-white/80">
@@ -373,7 +398,7 @@ Cabeceras Requeridas (Aceptamos variaciones):
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Zona Archivo Maestro */}
         <Card className={cn(
-          "transition-all duration-300",
+          "transition-all duration-200",
           masterData ? "ring-2 ring-[#D6F45B]/50" : ""
         )}>
           <CardHeader>
@@ -397,10 +422,10 @@ Cabeceras Requeridas (Aceptamos variaciones):
           </CardContent>
         </Card>
 
-        {/* Zona Nuevos Productos */}
+        {/* Zona Nuevos Productos — CSV or Manual */}
         <Card className={cn(
-          "transition-all duration-300", 
-          !masterData ? "opacity-50 cursor-not-allowed" : ""
+          "transition-all duration-200",
+          !masterData ? "opacity-50 pointer-events-none" : ""
         )}>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -408,16 +433,53 @@ Cabeceras Requeridas (Aceptamos variaciones):
                Paso 2: Nuevos Productos
             </CardTitle>
             <CardDescription>
-              Sube CSV simple (Nombre, Marca, Precio (EUR), Tamaño, Código de barras).
+              Añade productos desde un archivo CSV o insértalos manualmente.
             </CardDescription>
+            {/* Segmented Control */}
+            {masterData && (
+              <div className="flex bg-[#F0F0F0] rounded-lg p-1 mt-3">
+                <button
+                  onClick={() => setStep2Mode("csv")}
+                  className={cn(
+                    "flex-1 text-sm font-medium py-2 px-4 rounded-md transition-all duration-200",
+                    step2Mode === "csv"
+                      ? "bg-[#D6F45B] text-[#0F0F0F] shadow-sm"
+                      : "text-[#8C8C8C] hover:text-[#1A1A1A]"
+                  )}
+                >
+                  Subir CSV
+                </button>
+                <button
+                  onClick={() => setStep2Mode("manual")}
+                  className={cn(
+                    "flex-1 text-sm font-medium py-2 px-4 rounded-md transition-all duration-200",
+                    step2Mode === "manual"
+                      ? "bg-[#D6F45B] text-[#0F0F0F] shadow-sm"
+                      : "text-[#8C8C8C] hover:text-[#1A1A1A]"
+                  )}
+                >
+                  Manual
+                </button>
+              </div>
+            )}
           </CardHeader>
           <CardContent>
-             <FileDropzone 
+            {step2Mode === "csv" ? (
+              <FileDropzone
                 onFileSelect={handleNewFile}
                 accept=".csv"
                 disabled={!masterData}
                 label="Arrastra Nuevos Productos"
-             />
+              />
+            ) : (
+              masterData && (
+                <ManualProductForm
+                  masterData={masterData}
+                  existingProducts={products}
+                  onAddProduct={handleManualAdd}
+                />
+              )
+            )}
           </CardContent>
         </Card>
       </div>
@@ -425,10 +487,10 @@ Cabeceras Requeridas (Aceptamos variaciones):
       {/* Acciones y Progreso */}
       {products.length > 0 && (
         <Card>
-            <CardHeader className="pb-3 border-b border-[#EBEBEB] bg-[#F5F6F7]/50 rounded-t-3xl">
+            <CardHeader className="pb-3 border-b border-[#E5E7EB] bg-[#F5F6F7]/50 rounded-t-2xl">
               <div className="flex justify-between items-center">
                  <CardTitle className="text-lg">Zona de Preparación ({products.length} productos cargados)</CardTitle>
-                 <div className="text-xs text-[#0F0F0F] bg-[#D6F45B] px-3 py-1 rounded-full font-semibold">
+                 <div className="text-xs text-[#0F0F0F] bg-[#D6F45B] px-3 py-1 rounded-lg font-medium">
                     Modo Revisión Asistida Activo
                  </div>
               </div>
@@ -446,7 +508,7 @@ Cabeceras Requeridas (Aceptamos variaciones):
       
       {/* Dialogo de Duplicados */}
       <Dialog open={showSkippedDialog} onOpenChange={setShowSkippedDialog}>
-        <DialogContent className="max-w-2xl rounded-3xl">
+        <DialogContent className="max-w-2xl rounded-2xl">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-amber-600">
                <AlertTriangle className="h-5 w-5" /> 
@@ -456,7 +518,7 @@ Cabeceras Requeridas (Aceptamos variaciones):
               Los siguientes productos ya existen en el Maestro y <b>NO</b> se importarán.
             </DialogDescription>
           </DialogHeader>
-          <div className="rounded-2xl border border-[#EBEBEB] max-h-[400px] overflow-y-auto">
+          <div className="rounded-xl border border-[#E5E7EB] max-h-[400px] overflow-y-auto">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -484,7 +546,7 @@ Cabeceras Requeridas (Aceptamos variaciones):
 
       {/* Dialogo de Éxito */}
       <Dialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
-        <DialogContent className="max-w-md rounded-3xl border-[#EBEBEB] text-center p-8 sm:p-10 [&>button]:hidden">
+        <DialogContent className="max-w-md rounded-2xl border-[#E5E7EB] text-center p-8 sm:p-10 [&>button]:hidden">
           <div className="flex flex-col items-center justify-center space-y-5">
              <div className="h-20 w-20 rounded-full bg-[#D6F45B] flex items-center justify-center mb-2 shadow-lg shadow-[#D6F45B]/20">
                 <CheckCircle2 className="h-10 w-10 text-[#0F0F0F]" />
@@ -495,8 +557,8 @@ Cabeceras Requeridas (Aceptamos variaciones):
              <DialogDescription className="text-[#8C8C8C] text-lg font-medium max-w-[280px] mx-auto">
                Se añadieron <strong className="text-[#0F0F0F] font-bold">{successCount}</strong> productos nuevos correctamente.
              </DialogDescription>
-             <Button 
-               className="mt-6 w-full rounded-full bg-[#0F0F0F] text-[#D6F45B] hover:brightness-95 py-6 text-lg font-semibold shadow-md"
+             <Button
+               className="mt-6 w-full rounded-xl bg-[#0F0F0F] text-[#D6F45B] hover:bg-[#1A1A1A] py-5 text-base font-semibold shadow-sm"
                onClick={() => setShowSuccessDialog(false)}
              >
                Continuar
