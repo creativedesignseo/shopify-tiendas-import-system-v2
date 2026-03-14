@@ -239,8 +239,8 @@ export function ProductReviewDialog({
   return (
     <>
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-6xl max-h-[95vh] flex flex-col p-0 gap-0 rounded-3xl overflow-hidden">
-        <DialogHeader className="p-6 border-b border-[#EBEBEB]">
+      <DialogContent className="max-w-6xl max-h-[95vh] flex flex-col p-0 gap-0 rounded-2xl overflow-hidden">
+        <DialogHeader className="p-6 border-b border-[#E5E7EB]">
            <div className="flex justify-between items-start pr-12">
               <div>
                 <DialogTitle className="text-xl flex flex-wrap items-center gap-2">
@@ -251,7 +251,7 @@ export function ProductReviewDialog({
                          <Check className="w-3 h-3 mr-1"/> Listo
                        </Badge>
                        {product.modelUsed && (
-                          <Badge variant="outline" className="text-[10px] bg-[#F5F6F7] text-[#1A1A1A] border-[#EBEBEB]">
+                          <Badge variant="outline" className="text-[10px] bg-[#F5F6F7] text-[#1A1A1A] border-[#E5E7EB]">
                            {product.modelUsed
                               .replace("models/", "")
                               .replace("gemini-", "Gemini ")
@@ -274,7 +274,7 @@ export function ProductReviewDialog({
                     <div className="w-[220px] h-10 relative overflow-hidden rounded-full border border-black/5 bg-white shadow-sm flex items-center px-4">
                        {/* Animated Fill Background */}
                        <div 
-                         className="absolute top-0 left-0 h-full bg-[#D6F45B] transition-all duration-300 ease-out z-0"
+                         className="absolute top-0 left-0 h-full bg-[#D6F45B] transition-all duration-200 ease-out z-0"
                          style={{ width: `${progress}%` }}
                        />
                        
@@ -295,7 +295,7 @@ export function ProductReviewDialog({
                     <Button 
                       onClick={handleGenerate} 
                       disabled={!masterData}
-                      className="bg-[#D6F45B] hover:brightness-95 text-[#0F0F0F] shadow-md rounded-full px-6 font-semibold"
+                      className="bg-[#D6F45B] hover:brightness-95 text-[#0F0F0F] shadow-md rounded-xl px-6 font-semibold"
                     >
                       <Sparkles className="mr-2 h-4 w-4" /> 
                       {product.status === "complete" ? "Regenerar con IA" : "Generar Contenido IA"}
@@ -307,7 +307,7 @@ export function ProductReviewDialog({
 
         <div className="flex-1 overflow-hidden flex flex-col md:flex-row">
            {/* LEFT COLUMN: Data & Images */}
-           <ScrollArea className="w-full md:w-[35%] border-b md:border-b-0 md:border-r border-[#EBEBEB] bg-[#F5F6F7]/50 p-6 h-[400px] md:h-auto">
+           <ScrollArea className="w-full md:w-[35%] border-b md:border-b-0 md:border-r border-[#E5E7EB] bg-[#F5F6F7]/50 p-6 h-[400px] md:h-auto">
               <div className="space-y-6">
                  
                  {/* Images Section */}
@@ -342,7 +342,7 @@ export function ProductReviewDialog({
                            }}
                            onDragEnd={() => setDraggedIdx(null)}
                            className={`flex items-center gap-3 px-3 py-2.5 bg-white transition-all ${
-                             idx > 0 ? "border-t border-[#EBEBEB]" : ""
+                             idx > 0 ? "border-t border-[#E5E7EB]" : ""
                            } ${draggedIdx === idx ? "opacity-50 scale-[0.98]" : "hover:bg-[#F5F6F7]/50"}`}
                          >
                             <div className="shrink-0 cursor-grab active:cursor-grabbing text-[#D1D5DB] hover:text-[#8C8C8C] transition-colors" title="Arrastrar para reordenar">
@@ -358,7 +358,7 @@ export function ProductReviewDialog({
                                   onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden') }}
                                 />
                               ) : null}
-                              <div className={`h-10 w-10 flex items-center justify-center rounded-md border border-dashed border-[#EBEBEB] bg-[#F5F6F7] text-[#8C8C8C] ${imgUrl ? 'hidden' : ''}`}>
+                              <div className={`h-10 w-10 flex items-center justify-center rounded-md border border-dashed border-[#E5E7EB] bg-[#F5F6F7] text-[#8C8C8C] ${imgUrl ? 'hidden' : ''}`}>
                                 <ImageIcon className="w-4 h-4 opacity-30" />
                               </div>
                             </div>
@@ -372,7 +372,7 @@ export function ProductReviewDialog({
                                   onUpdate(product.id, "images", newImgs)
                                }}
                                placeholder={`URL Imagen ${idx + 1}`}
-                               className="h-8 text-xs flex-1 border-[#EBEBEB] focus-visible:ring-[#D6F45B]"
+                               className="h-8 text-xs flex-1 border-[#E5E7EB] focus-visible:ring-[#D6F45B]"
                             />
 
                             {/* Action buttons */}
@@ -441,7 +441,7 @@ export function ProductReviewDialog({
                     </div>
                  </div>
 
-                 <div className="h-px bg-[#EBEBEB]" />
+                 <div className="h-px bg-[#E5E7EB]" />
 
                  {/* Basic Info */}
                  <div className="space-y-3">
@@ -780,7 +780,7 @@ export function ProductReviewDialog({
 
                     <TabsContent value="seo" className="p-6 m-0 h-full">
                        <div className="max-w-2xl mx-auto space-y-6">
-                          <div className="space-y-2 p-4 border border-[#EBEBEB] rounded-lg bg-white shadow-sm">
+                          <div className="space-y-2 p-4 border border-[#E5E7EB] rounded-lg bg-white shadow-sm">
                              <Label className="text-xs font-semibold text-[#D6F45B] mb-2 block">Vista Previa en Google</Label>
                              <div className="text-xl text-[#1a0dab] hover:underline cursor-pointer truncate">
                                 {product.seoTitle || product.generatedTitle}
@@ -827,12 +827,12 @@ export function ProductReviewDialog({
            </div>
         </div>
 
-        <DialogFooter className="p-4 border-t border-[#EBEBEB] bg-[#F5F6F7]/20">
+        <DialogFooter className="p-4 border-t border-[#E5E7EB] bg-[#F5F6F7]/20">
            <div className="flex justify-between w-full items-center">
               <div className="text-xs text-[#8C8C8C]">
                  {product.id}
               </div>
-               <Button onClick={() => onOpenChange(false)} className="bg-black text-[#D6F45B] hover:bg-black/90 rounded-full px-8 shadow-lg">
+               <Button onClick={() => onOpenChange(false)} className="bg-black text-[#D6F45B] hover:bg-black/90 rounded-xl px-8 shadow-lg">
                   Cerrar / Guardar Cambios
                </Button>
            </div>
