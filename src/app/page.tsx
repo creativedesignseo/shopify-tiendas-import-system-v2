@@ -41,10 +41,13 @@ export default function Dashboard() {
 
   // Shopify connection indicator & output mode
   const [shopifyConnected, setShopifyConnected] = React.useState(false)
+  const [shopifyProductsCount, setShopifyProductsCount] = React.useState<number | null>(null)
   const [outputMode, setOutputMode] = React.useState("csv_only")
   const [showPublishDialog, setShowPublishDialog] = React.useState(false)
   React.useEffect(() => {
     setShopifyConnected(localStorage.getItem("shopify_connected") === "true")
+    const storedCount = localStorage.getItem("shopify_products_count")
+    setShopifyProductsCount(storedCount ? Number(storedCount) : null)
     setOutputMode(localStorage.getItem("shopify_output_mode") || "csv_only")
   }, [])
 
@@ -448,13 +451,26 @@ Cabeceras Requeridas (Aceptamos variaciones):
                <FileSpreadsheet className="h-5 w-5" /> 
                {masterData ? "Archivo Maestro Cargado" : "Paso 1: CSV Maestro"}
             </CardTitle>
-            <CardDescription>
-              {masterData
-                 ? `${masterData.totalProductsCount} productos rastreados en la tienda.`
-                 : outputMode !== "csv_only"
-                 ? "Opcional en modo Shopify Live. Solo necesario para exportar CSV."
-                 : "Sube el último 'products_export.csv' para aprender cabeceras y códigos."}
-            </CardDescription>
+            {masterData ? (
+              <div className="flex items-baseline gap-2">
+                <span className="text-3xl font-bold text-[#1A1A1A]">{masterData.totalProductsCount}</span>
+                <span className="text-sm text-[#8C8C8C]">productos en la tienda</span>
+              </div>
+            ) : (outputMode !== "csv_only" && shopifyConnected) ? (
+              <div className="space-y-1">
+                <div className="text-sm font-medium text-green-700">Tienda conectada</div>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-3xl font-bold text-[#1A1A1A]">{shopifyProductsCount ?? "—"}</span>
+                  <span className="text-sm text-[#8C8C8C]">productos en Shopify</span>
+                </div>
+              </div>
+            ) : (
+              <CardDescription>
+                {outputMode !== "csv_only"
+                  ? "Opcional en modo Shopify Live. Solo necesario para exportar CSV."
+                  : "Sube el último 'products_export.csv' para aprender cabeceras y códigos."}
+              </CardDescription>
+            )}
           </CardHeader>
           <CardContent>
              <FileDropzone 
@@ -469,16 +485,24 @@ Cabeceras Requeridas (Aceptamos variaciones):
         {/* Zona Nuevos Productos — CSV or Manual */}
         <Card className={cn(
           "transition-all duration-200",
-          !masterData && outputMode === "csv_only" ? "opacity-50 pointer-events-none" : ""
+          !masterData && outputMode === "csv_only" ? "opacity-50 pointer-events-none" : "",
+          products.length > 0 ? "ring-2 ring-[#D6F45B]/50" : ""
         )}>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
                <UploadCloud className="h-5 w-5" />
                {outputMode === "csv_only" ? "Paso 2: Nuevos Productos" : "Nuevos Productos"}
             </CardTitle>
-            <CardDescription>
-              Añade productos desde un archivo CSV o insértalos manualmente.
-            </CardDescription>
+            {products.length > 0 ? (
+              <div className="flex items-baseline gap-2">
+                <span className="text-3xl font-bold text-[#1A1A1A]">{products.length}</span>
+                <span className="text-sm text-[#8C8C8C]">producto{products.length !== 1 ? "s" : ""} cargado{products.length !== 1 ? "s" : ""}</span>
+              </div>
+            ) : (
+              <CardDescription>
+                Añade productos desde un archivo CSV o insértalos manualmente.
+              </CardDescription>
+            )}
             {/* Segmented Control */}
             {(masterData || outputMode !== "csv_only") && (
               <div className="flex bg-[#F0F0F0] rounded-lg p-1 mt-3">

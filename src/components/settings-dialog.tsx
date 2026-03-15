@@ -107,15 +107,18 @@ export function SettingsDialog() {
         setConnectionStatus("connected")
         setConnectionInfo(`${data.shop.name} — ${data.shop.domain}`)
         localStorage.setItem("shopify_connected", "true")
+        localStorage.setItem("shopify_products_count", String(data.shop.productsCount ?? 0))
       } else {
         setConnectionStatus("error")
         setConnectionInfo(data.error || "Error de conexión")
         localStorage.setItem("shopify_connected", "false")
+        localStorage.removeItem("shopify_products_count")
       }
     } catch (err: any) {
       setConnectionStatus("error")
       setConnectionInfo(err.message || "No se puede conectar")
       localStorage.setItem("shopify_connected", "false")
+      localStorage.removeItem("shopify_products_count")
     }
   }
 

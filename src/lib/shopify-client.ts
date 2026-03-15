@@ -29,6 +29,7 @@ export interface ShopInfo {
   name: string;
   email: string;
   domain: string;
+  productsCount: number;
 }
 
 // ---------------------------------------------------------------------------
@@ -148,6 +149,9 @@ interface ShopQueryData {
     name: string;
     email: string;
     primaryDomain: { url: string };
+    productsCount?: {
+      count?: number;
+    };
   };
 }
 
@@ -160,7 +164,7 @@ export async function testShopifyConnection(
   try {
     const result = await shopifyGraphQL<ShopQueryData>(
       config,
-      `{ shop { name email primaryDomain { url } } }`,
+      `{ shop { name email primaryDomain { url } productsCount { count } } }`,
     );
 
     if (result.errors?.length) {
@@ -172,7 +176,11 @@ export async function testShopifyConnection(
     }
 
     const { name, email, primaryDomain } = result.data.shop;
-    return { success: true, shop: { name, email, domain: primaryDomain.url } };
+    const productsCount = result.data.shop.productsCount?.count ?? 0;
+    return {
+      success: true,
+      shop: { name, email, domain: primaryDomain.url, productsCount },
+    };
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : String(err);
     return { success: false, error: message };
