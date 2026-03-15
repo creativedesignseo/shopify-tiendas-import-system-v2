@@ -22,6 +22,7 @@ import { SettingsDialog } from "@/components/settings-dialog"
 import { SessionRecoveryDialog } from "@/components/session-recovery-dialog"
 import { FlightProgressBar } from "@/components/flight-progress-bar"
 import { ManualProductForm } from "@/components/manual-product-form"
+import { ShopifyPublishDialog } from "@/components/shopify-publish-dialog"
 
 
 export default function Dashboard() {
@@ -38,10 +39,13 @@ export default function Dashboard() {
   const [successCount, setSuccessCount] = React.useState<number>(0)
   const [showSuccessDialog, setShowSuccessDialog] = React.useState(false)
 
-  // Shopify connection indicator
+  // Shopify connection indicator & output mode
   const [shopifyConnected, setShopifyConnected] = React.useState(false)
+  const [outputMode, setOutputMode] = React.useState("csv_only")
+  const [showPublishDialog, setShowPublishDialog] = React.useState(false)
   React.useEffect(() => {
     setShopifyConnected(localStorage.getItem("shopify_connected") === "true")
+    setOutputMode(localStorage.getItem("shopify_output_mode") || "csv_only")
   }, [])
 
   // Session & Backup State
@@ -308,26 +312,47 @@ Cabeceras Requeridas (Aceptamos variaciones):
   }
 
   // ─── 5. Exportar ───────────────────────────────────────────────
-  const handleExport = async () => {
+  const downloadCSV = (readyProducts: ProcessedProduct[]) => {
     if (!masterData) return
-    const readyProducts = products.filter(p => p.status === "complete" && p.isChecked)
-    if (readyProducts.length === 0) {
-      alert("No hay productos SELECCIONADOS y terminados para exportar.")
-      return
-    }
     const csvArgs = generateCSV(readyProducts, masterData.headers)
-    
     const blob = new Blob([csvArgs], { type: "text/csv;charset=utf-8;" })
     const link = document.createElement("a")
     link.href = URL.createObjectURL(blob)
     link.download = `shopify_import_${readyProducts.length}_items.csv`
     link.click()
+  }
+
+  const handleExport = async () => {
+    const readyProducts = products.filter(p => p.status === "complete" && p.isChecked)
+    if (readyProducts.length === 0) {
+      alert("No hay productos SELECCIONADOS y terminados para exportar.")
+      return
+    }
+
+    const mode = localStorage.getItem("shopify_output_mode") || "csv_only"
+
+    if (mode === "csv_only") {
+      if (!masterData) return
+      downloadCSV(readyProducts)
+    } else if (mode === "shopify_only") {
+      setShowPublishDialog(true)
+    } else if (mode === "csv_and_shopify") {
+      setShowPublishDialog(true)
+    }
 
     // If all products are complete, mark session as completed
     const allDone = products.every(p => p.status === "complete" || p.status === "error")
     if (allDone && currentSession) {
       await BackupService.completeSession(currentSession.id)
       setCurrentSession(prev => prev ? { ...prev, status: 'completed' } : null)
+    }
+  }
+
+  const handlePublishComplete = (results: import("@/lib/shopify-client").CreateProductResult[]) => {
+    const mode = localStorage.getItem("shopify_output_mode") || "csv_only"
+    if (mode === "csv_and_shopify" && masterData) {
+      const readyProducts = products.filter(p => p.status === "complete" && p.isChecked)
+      downloadCSV(readyProducts)
     }
   }
 
@@ -376,10 +401,14 @@ Cabeceras Requeridas (Aceptamos variaciones):
             </Button>
             <Button
               onClick={handleExport}
-              disabled={!products.some(p => p.status === "complete" && p.isChecked) || !masterData}
+              disabled={!products.some(p => p.status === "complete" && p.isChecked) || (outputMode === "csv_only" && !masterData)}
             >
               <Download className="mr-2 h-4 w-4 shrink-0" />
-              Exportar ({products.filter(p => p.status === "complete" && p.isChecked).length})
+              {outputMode === "shopify_only"
+                ? `Publicar (${products.filter(p => p.status === "complete" && p.isChecked).length})`
+                : outputMode === "csv_and_shopify"
+                ? `Exportar + Publicar (${products.filter(p => p.status === "complete" && p.isChecked).length})`
+                : `Exportar (${products.filter(p => p.status === "complete" && p.isChecked).length})`}
             </Button>
         </div>
       </div>
@@ -587,6 +616,14 @@ Cabeceras Requeridas (Aceptamos variaciones):
         onRestore={handleRestore}
         onAbandon={handleAbandonSession}
         onDownloadPartial={handleDownloadPartial}
+      />
+
+      {/* Shopify Publish Dialog (Cycle 2) */}
+      <ShopifyPublishDialog
+        open={showPublishDialog}
+        onOpenChange={setShowPublishDialog}
+        products={products.filter(p => p.status === "complete" && p.isChecked)}
+        onPublishComplete={handlePublishComplete}
       />
     </main>
   )
