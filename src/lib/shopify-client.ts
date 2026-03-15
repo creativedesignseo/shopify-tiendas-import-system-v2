@@ -361,3 +361,113 @@ export async function checkDuplicates(
 
   return results;
 }
+
+// ---------------------------------------------------------------------------
+// Product Creation (Cycle 2)
+// ---------------------------------------------------------------------------
+
+import type { ShopifyProductInput } from "./shopify-mapper";
+
+export interface CreateProductResult {
+  barcode: string;
+  title: string;
+  status: "created" | "skipped" | "failed";
+  productId?: string;
+  handle?: string;
+  error?: string;
+}
+
+export async function createShopifyProduct(
+  config: ShopifyClientConfig,
+  input: ShopifyProductInput,
+): Promise<CreateProductResult> {
+  const mutation = `
+    mutation productCreate($input: ProductInput!) {
+      productCreate(input: $input) {
+        product {
+          id
+          handle
+        }
+        userErrors {
+          field
+          message
+        }
+      }
+    }
+  `;
+
+  const productInput: Record<string, unknown> = {
+    title: input.title,
+    bodyHtml: input.bodyHtml,
+    vendor: input.vendor,
+    productType: input.productType,
+    tags: input.tags,
+    status: input.status,
+    images: input.images.map((img) => ({ src: img.src, altText: img.altText })),
+    variants: input.variants.map((v) => {
+      const variant: Record<string, unknown> = {
+        price: v.price,
+        sku: v.sku,
+        barcode: v.barcode,
+        weight: v.weight,
+        weightUnit: v.weightUnit,
+        requiresShipping: v.requiresShipping,
+        taxable: v.taxable,
+        options: v.options,
+      };
+      if (v.cost) {
+        variant.inventoryItem = { cost: v.cost };
+      }
+      return variant;
+    }),
+    metafields: input.metafields,
+  };
+
+  if (input.seoTitle || input.seoDescription) {
+    productInput.seo = { title: input.seoTitle, description: input.seoDescription };
+  }
+
+  try {
+    const result = await shopifyGraphQL<{
+      productCreate: {
+        product: { id: string; handle: string } | null;
+        userErrors: Array<{ field: string[]; message: string }>;
+      };
+    }>(config, mutation, { input: productInput });
+
+    if (result.errors && result.errors.length > 0) {
+      return {
+        barcode: input.variants[0]?.barcode || "",
+        title: input.title,
+        status: "failed",
+        error: result.errors.map((e) => e.message).join(", "),
+      };
+    }
+
+    const data = result.data?.productCreate;
+    if (data?.userErrors && data.userErrors.length > 0) {
+      return {
+        barcode: input.variants[0]?.barcode || "",
+        title: input.title,
+        status: "failed",
+        error: data.userErrors.map((e) => e.message).join(", "),
+      };
+    }
+
+    return {
+      barcode: input.variants[0]?.barcode || "",
+      title: input.title,
+      status: "created",
+      productId: data?.product?.id,
+      handle: data?.product?.handle,
+    };
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Error desconocido";
+    return {
+      barcode: input.variants[0]?.barcode || "",
+      title: input.title,
+      status: "failed",
+      error: message,
+    };
+  }
+}
