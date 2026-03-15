@@ -18,7 +18,8 @@ export interface ProcessedProduct {
   price: string; // from Precio (EUR)
   barcode: string; // from Código de barras
   size: string; // from Tamaño
-  
+  costPerItem: string; // from Cost per item (precio de costo)
+
   // AI Generated / Editable Fields
   generatedTitle: string;
   bodyHtml: string; // Preview
@@ -55,6 +56,12 @@ export interface ProcessedProduct {
   observation?: string;
   errorDetails?: string;
   modelUsed?: string;
+
+  // Shopify live dedupe results (populated after "Verificar Duplicados" action)
+  shopifyDupeMatchType?: "barcode" | "title" | null;
+  shopifyDupeExistingTitle?: string;
+  shopifyDupeExistingId?: string;
+  shopifyDupeConfidence?: number;
 }
 
 export const calculateUnitPrice = (sizeStr: string) => {
@@ -110,7 +117,8 @@ const HEADER_MAPPINGS = {
   title: ['nombre', 'name', 'title', 'producto', 'product name', 'nombre del producto'],
   vendor: ['marca', 'brand', 'vendor', 'fabricante'],
   price: ['precio (eur)', 'precio', 'price', 'pvp', 'eur', 'costle'],
-  size: ['tamaño', 'tamano', 'size', 'medida', 'capacidad', 'formato']
+  size: ['tamaño', 'tamano', 'size', 'medida', 'capacidad', 'formato'],
+  costPerItem: ['cost per item', 'costo', 'precio de costo', 'coste', 'cost', 'precio costo', 'costo por unidad']
 };
 
 const findHeader = (fileHeaders: string[], candidates: string[]): string | undefined => {
@@ -140,6 +148,7 @@ export const processNewProducts = (
             vendor: findHeader(fileHeaders, HEADER_MAPPINGS.vendor),
             price: findHeader(fileHeaders, HEADER_MAPPINGS.price),
             size: findHeader(fileHeaders, HEADER_MAPPINGS.size),
+            costPerItem: findHeader(fileHeaders, HEADER_MAPPINGS.costPerItem),
         };
 
         const rawProducts = results.data;
@@ -203,6 +212,7 @@ export const processNewProducts = (
             price: headerMap.price ? raw[headerMap.price] : "",
             barcode: barcode,
             size: size,
+            costPerItem: headerMap.costPerItem ? raw[headerMap.costPerItem] : "",
             
             generatedTitle: name,
             bodyHtml: "", 
