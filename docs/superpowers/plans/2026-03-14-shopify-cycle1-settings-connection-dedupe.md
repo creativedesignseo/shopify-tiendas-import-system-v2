@@ -682,7 +682,7 @@ After `handleSave`, add:
 
 - [ ] **Step 5: Rewrite the dialog body with tabs**
 
-Replace the `<DialogContent>` and everything inside it with the tabbed version. The dialog width changes from `sm:max-w-[425px]` to `sm:max-w-[550px]`:
+Replace ONLY the `<DialogContent>...</DialogContent>` block (lines 52-137 of the original file) with the tabbed version below. Keep the surrounding `<Dialog>` wrapper and `<DialogTrigger>` intact. The dialog width changes from `sm:max-w-[425px]` to `sm:max-w-[550px]`:
 
 ```tsx
       <DialogContent className="sm:max-w-[550px] rounded-2xl">
@@ -952,7 +952,7 @@ git commit -m "feat: add Shopify tab to settings dialog with credentials and tes
 
 - [ ] **Step 1: Add connection indicator state and effect**
 
-In the main `Home` component in `page.tsx`, add state for the Shopify connection status. Find where other state is declared and add:
+In the `Dashboard` component in `page.tsx` (the default export), add state for the Shopify connection status. Find where other state is declared and add:
 
 ```typescript
   const [shopifyConnected, setShopifyConnected] = React.useState(false)
@@ -1001,6 +1001,7 @@ At the top of the `ProductsTable` component (after the `reviewProductId` state),
 
 ```typescript
   const [isCheckingDupes, setIsCheckingDupes] = React.useState(false)
+  const [dupeCheckProgress, setDupeCheckProgress] = React.useState("")
   const [shopifyConfigured, setShopifyConfigured] = React.useState(false)
 
   React.useEffect(() => {
@@ -1009,6 +1010,7 @@ At the top of the `ProductsTable` component (after the `reviewProductId` state),
 
   const handleCheckShopifyDupes = async () => {
     setIsCheckingDupes(true)
+    setDupeCheckProgress(`0/${products.length}`)
     try {
       const shopDomain = localStorage.getItem("shopify_shop_domain") || ""
       const accessToken = localStorage.getItem("shopify_access_token") || ""
@@ -1033,22 +1035,24 @@ At the top of the `ProductsTable` component (after the `reviewProductId` state),
       const data = await res.json()
 
       if (data.success && data.results) {
-        data.results.forEach((result: any) => {
-          const product = products.find((p) => p.barcode === result.barcode)
-          if (product) {
-            const updates: Partial<import("@/lib/product-processor").ProcessedProduct> = {
-              shopifyDupeMatchType: result.matchType,
-              shopifyDupeConfidence: result.confidence,
-            }
-            if (result.existingProduct) {
-              updates.shopifyDupeExistingTitle = result.existingProduct.title
-              updates.shopifyDupeExistingId = result.existingProduct.id
-            }
-            if (result.isDuplicate) {
-              updates.isChecked = false
-            }
-            onUpdateProduct(product.id, updates)
+        // Use index-based matching (API preserves order) to avoid issues
+        // when multiple products have empty barcodes
+        data.results.forEach((result: any, index: number) => {
+          setDupeCheckProgress(`${index + 1}/${products.length}`)
+          const product = products[index]
+          if (!product) return
+          const updates: Partial<import("@/lib/product-processor").ProcessedProduct> = {
+            shopifyDupeMatchType: result.matchType,
+            shopifyDupeConfidence: result.confidence,
           }
+          if (result.existingProduct) {
+            updates.shopifyDupeExistingTitle = result.existingProduct.title
+            updates.shopifyDupeExistingId = result.existingProduct.id
+          }
+          if (result.isDuplicate) {
+            updates.isChecked = false
+          }
+          onUpdateProduct(product.id, updates)
         })
       }
     } catch (err) {
@@ -1081,7 +1085,7 @@ Find the info bar that starts with `<div className="flex items-center gap-2 text
             {isCheckingDupes ? (
               <>
                 <Loader2 className="w-3 h-3 mr-1.5 animate-spin" />
-                Verificando...
+                Verificando {dupeCheckProgress}...
               </>
             ) : (
               <>
@@ -1114,6 +1118,11 @@ In the desktop table, find where the product status badge is rendered (the `<Bad
                     {product.shopifyDupeMatchType === null && product.shopifyDupeConfidence !== undefined && product.shopifyDupeConfidence >= 0 && (
                       <Badge className="text-[10px] ml-1 bg-green-100 text-green-700 hover:bg-green-100">
                         Nuevo
+                      </Badge>
+                    )}
+                    {product.shopifyDupeConfidence === -1 && (
+                      <Badge className="text-[10px] ml-1 bg-yellow-100 text-yellow-700 hover:bg-yellow-100">
+                        Desconocido
                       </Badge>
                     )}
 ```
