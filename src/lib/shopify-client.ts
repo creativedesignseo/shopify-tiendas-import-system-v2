@@ -398,6 +398,9 @@ export async function createShopifyProduct(
           variants(first: 1) {
             nodes {
               id
+              inventoryItem {
+                id
+              }
             }
           }
         }
@@ -431,7 +434,7 @@ export async function createShopifyProduct(
         product: {
           id: string;
           handle: string;
-          variants?: { nodes: Array<{ id: string }> };
+          variants?: { nodes: Array<{ id: string; inventoryItem?: { id: string } }> };
         } | null;
         userErrors: Array<{ field: string[]; message: string }>;
       };
@@ -462,7 +465,9 @@ export async function createShopifyProduct(
     // Shopify now creates a default variant. Update it with mapped price/SKU/barcode/cost.
     const createdProductId = data?.product?.id;
     const createdVariantId = data?.product?.variants?.nodes?.[0]?.id;
+    const createdInventoryItemId = data?.product?.variants?.nodes?.[0]?.inventoryItem?.id;
     const sourceVariant = input.variants?.[0];
+    let postCreateWarning: string | undefined;
     if (createdProductId && createdVariantId && sourceVariant) {
       const variantMutation = `
         mutation productVariantsBulkUpdate($productId: ID!, $variants: [ProductVariantsBulkInput!]!) {
@@ -479,6 +484,9 @@ export async function createShopifyProduct(
         id: createdVariantId,
         price: sourceVariant.price,
         taxable: sourceVariant.taxable,
+        weight: sourceVariant.weight,
+        weightUnit: sourceVariant.weightUnit,
+        inventoryPolicy: sourceVariant.inventoryPolicy || "DENY",
       };
 
       const inventoryItem: Record<string, unknown> = {};
@@ -512,12 +520,65 @@ export async function createShopifyProduct(
       }
     }
 
+    // Try to set default inventory quantity (10) on first location.
+    if (createdInventoryItemId && sourceVariant?.inventoryQuantity) {
+      try {
+        const locationResult = await shopifyGraphQL<{
+          locations: { nodes: Array<{ id: string }> };
+        }>(config, `query { locations(first: 1) { nodes { id } } }`);
+
+        const locationId = locationResult.data?.locations?.nodes?.[0]?.id;
+        if (locationId) {
+          const inventoryMutation = `
+            mutation inventoryAdjustQuantities($input: InventoryAdjustQuantitiesInput!) {
+              inventoryAdjustQuantities(input: $input) {
+                userErrors {
+                  field
+                  message
+                }
+              }
+            }
+          `;
+
+          const inventoryResult = await shopifyGraphQL<{
+            inventoryAdjustQuantities: {
+              userErrors: Array<{ field?: string[]; message: string }>;
+            };
+          }>(config, inventoryMutation, {
+            input: {
+              name: "available",
+              reason: "correction",
+              changes: [
+                {
+                  delta: Number(sourceVariant.inventoryQuantity),
+                  inventoryItemId: createdInventoryItemId,
+                  locationId,
+                },
+              ],
+            },
+          });
+
+          const invErrors = inventoryResult.data?.inventoryAdjustQuantities?.userErrors;
+          if (invErrors && invErrors.length > 0) {
+            postCreateWarning = `Inventario no ajustado: ${invErrors.map((e) => e.message).join(", ")}`;
+          }
+        } else {
+          postCreateWarning = "Inventario no ajustado: no se encontro location activa.";
+        }
+      } catch (inventoryError: unknown) {
+        const inventoryMessage =
+          inventoryError instanceof Error ? inventoryError.message : "Error desconocido de inventario";
+        postCreateWarning = `Inventario no ajustado: ${inventoryMessage}`;
+      }
+    }
+
     return {
       barcode: input.variants[0]?.barcode || "",
       title: input.title,
       status: "created",
       productId: data?.product?.id,
       handle: data?.product?.handle,
+      error: postCreateWarning,
     };
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Error desconocido";

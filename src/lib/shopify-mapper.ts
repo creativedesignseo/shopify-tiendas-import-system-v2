@@ -1,4 +1,4 @@
-import { ProcessedProduct } from "./product-processor";
+﻿import { ProcessedProduct } from "./product-processor";
 
 export interface ShopifyProductInput {
   title: string;
@@ -14,6 +14,8 @@ export interface ShopifyProductInput {
     price: string;
     sku?: string;
     barcode?: string;
+    inventoryQuantity?: number;
+    inventoryPolicy?: "DENY" | "CONTINUE";
     weight?: number;
     weightUnit?: string;
     requiresShipping?: boolean;
@@ -31,10 +33,15 @@ export interface ShopifyProductInput {
 
 /**
  * Cleans a European-formatted price string.
- * "54,00 €" → "54.00"
+ * "54,00 EUR" -> "54.00"
  */
 export function cleanPrice(price: string): string {
-  return price.replace("€", "").trim().replace(",", ".");
+  return price
+    .replace("€", "")
+    .replace("â‚¬", "")
+    .replace(/\s/g, "")
+    .replace(",", ".")
+    .trim();
 }
 
 /**
@@ -43,7 +50,7 @@ export function cleanPrice(price: string): string {
 export function mapProductToShopify(
   product: ProcessedProduct
 ): ShopifyProductInput {
-  const tags = product.tags
+  const tags = (product.tags || "")
     .split(",")
     .map((t) => t.trim())
     .filter((t) => t.length > 0);
@@ -89,6 +96,8 @@ export function mapProductToShopify(
         price: cleanPrice(product.price),
         sku: product.barcode || undefined,
         barcode: product.barcode || undefined,
+        inventoryQuantity: 10,
+        inventoryPolicy: "DENY",
         weight: 350,
         weightUnit: "GRAMS",
         requiresShipping: true,
@@ -111,7 +120,7 @@ export function validateForShopify(product: ProcessedProduct): string[] {
   const errors: string[] = [];
 
   if (!product.generatedTitle?.trim()) {
-    errors.push("Título");
+    errors.push("Titulo");
   }
   if (!product.price?.trim()) {
     errors.push("Precio");
