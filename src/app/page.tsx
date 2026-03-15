@@ -13,7 +13,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { MasterData, parseMasterCSV } from "@/lib/csv-parser"
 import { ProcessedProduct, processNewProducts, SkippedProduct } from "@/lib/product-processor"
 import { generateCSV } from "@/lib/csv-exporter"
-import { Download, Trash2, FileSpreadsheet, UploadCloud, AlertTriangle, CheckCircle2 } from "lucide-react"
+import { Download, Trash2, FileSpreadsheet, UploadCloud, AlertTriangle, CheckCircle2, Store } from "lucide-react"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { cn, generateUUID } from "@/lib/utils"
@@ -442,6 +442,26 @@ Cabeceras Requeridas (Aceptamos variaciones):
         />
       )}
 
+      {outputMode !== "csv_only" && shopifyConnected && (
+        <Card className="ring-2 ring-[#D6F45B]/50">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Store className="h-5 w-5" />
+              Tienda Shopify Conectada
+            </CardTitle>
+            <div className="text-sm text-[#1A1A1A] font-medium truncate">
+              {shopifyShopName || "Shopify"}
+            </div>
+            <div className="flex items-baseline gap-2">
+              <span className="text-3xl font-bold text-[#1A1A1A]">
+                {shopifyProductsCount !== null ? shopifyProductsCount : "—"}
+              </span>
+              <span className="text-sm text-[#8C8C8C]">productos en Shopify</span>
+            </div>
+          </CardHeader>
+        </Card>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Zona Archivo Maestro */}
         <Card className={cn(
@@ -457,19 +477,6 @@ Cabeceras Requeridas (Aceptamos variaciones):
               <div className="flex items-baseline gap-2">
                 <span className="text-3xl font-bold text-[#1A1A1A]">{masterData.totalProductsCount}</span>
                 <span className="text-sm text-[#8C8C8C]">productos en la tienda</span>
-              </div>
-            ) : (outputMode !== "csv_only" && shopifyConnected) ? (
-              <div className="space-y-1">
-                <div className="text-sm font-medium text-green-700">Tienda conectada</div>
-                <div className="text-sm text-[#1A1A1A] font-medium truncate">
-                  {shopifyShopName || "Shopify"}
-                </div>
-                <div className="flex items-baseline gap-2">
-                  <span className="text-3xl font-bold text-[#1A1A1A]">
-                    {shopifyProductsCount !== null ? shopifyProductsCount : "—"}
-                  </span>
-                  <span className="text-sm text-[#8C8C8C]">productos en Shopify</span>
-                </div>
               </div>
             ) : (
               <CardDescription>
