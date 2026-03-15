@@ -390,8 +390,8 @@ export async function createShopifyProduct(
   input: ShopifyProductInput,
 ): Promise<CreateProductResult> {
   const mutation = `
-    mutation productCreate($input: ProductInput!) {
-      productCreate(input: $input) {
+    mutation productCreate($product: ProductCreateInput!, $media: [CreateMediaInput!]) {
+      productCreate(product: $product, media: $media) {
         product {
           id
           handle
@@ -406,34 +406,19 @@ export async function createShopifyProduct(
 
   const productInput: Record<string, unknown> = {
     title: input.title,
-    bodyHtml: input.bodyHtml,
+    descriptionHtml: input.bodyHtml,
     vendor: input.vendor,
-    productType: input.productType,
     tags: input.tags,
     status: input.status,
-    images: input.images.map((img) => ({ src: img.src, altText: img.altText })),
-    variants: input.variants.map((v) => {
-      const variant: Record<string, unknown> = {
-        price: v.price,
-        sku: v.sku,
-        barcode: v.barcode,
-        weight: v.weight,
-        weightUnit: v.weightUnit,
-        requiresShipping: v.requiresShipping,
-        taxable: v.taxable,
-        options: v.options,
-      };
-      if (v.cost) {
-        variant.inventoryItem = { cost: v.cost };
-      }
-      return variant;
-    }),
     metafields: input.metafields,
   };
 
-  if (input.seoTitle || input.seoDescription) {
-    productInput.seo = { title: input.seoTitle, description: input.seoDescription };
-  }
+  const mediaInput =
+    input.images?.map((img) => ({
+      mediaContentType: "IMAGE",
+      originalSource: img.src,
+      alt: img.altText || undefined,
+    })) || [];
 
   try {
     const result = await shopifyGraphQL<{
@@ -441,7 +426,10 @@ export async function createShopifyProduct(
         product: { id: string; handle: string } | null;
         userErrors: Array<{ field: string[]; message: string }>;
       };
-    }>(config, mutation, { input: productInput });
+    }>(config, mutation, {
+      product: productInput,
+      media: mediaInput.length > 0 ? mediaInput : undefined,
+    });
 
     if (result.errors && result.errors.length > 0) {
       return {
