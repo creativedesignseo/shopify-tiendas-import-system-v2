@@ -21,7 +21,7 @@ import {
 import { Textarea } from "@/components/ui/textarea"
 import { Switch } from "@/components/ui/switch"
 import { ProcessedProduct } from "@/lib/product-processor"
-import { Check, AlertCircle, Loader2, Settings2, ExternalLink, Search, Sparkles, Image as ImageIcon } from "lucide-react"
+import { Check, AlertCircle, Loader2, Settings2, ExternalLink, Search, Sparkles, Image as ImageIcon, Store } from "lucide-react"
 import { MasterData } from "@/lib/csv-parser"
 import { ProductReviewDialog } from "./product-review-dialog"
 
@@ -40,7 +40,68 @@ export function ProductsTable({
 }: ProductsTableProps) {
   // State for Review Dialog
   const [reviewProductId, setReviewProductId] = React.useState<string | null>(null)
-  
+
+  // Shopify dedupe state
+  const [isCheckingDupes, setIsCheckingDupes] = React.useState(false)
+  const [dupeCheckProgress, setDupeCheckProgress] = React.useState("")
+  const [shopifyConfigured, setShopifyConfigured] = React.useState(false)
+
+  React.useEffect(() => {
+    setShopifyConfigured(localStorage.getItem("shopify_connected") === "true")
+  }, [])
+
+  const handleCheckShopifyDupes = async () => {
+    setIsCheckingDupes(true)
+    setDupeCheckProgress(`0/${products.length}`)
+    try {
+      const shopDomain = localStorage.getItem("shopify_shop_domain") || ""
+      const accessToken = localStorage.getItem("shopify_access_token") || ""
+      const apiVersion = localStorage.getItem("shopify_api_version") || "2025-01"
+
+      const productsToCheck = products.map((p) => ({
+        barcode: p.barcode,
+        title: p.generatedTitle || p.title,
+      }))
+
+      const res = await fetch("/api/shopify/dedupe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          shopDomain,
+          accessToken,
+          apiVersion,
+          products: productsToCheck,
+        }),
+      })
+
+      const data = await res.json()
+
+      if (data.success && data.results) {
+        data.results.forEach((result: any, index: number) => {
+          setDupeCheckProgress(`${index + 1}/${products.length}`)
+          const product = products[index]
+          if (!product) return
+          const updates: Partial<ProcessedProduct> = {
+            shopifyDupeMatchType: result.matchType,
+            shopifyDupeConfidence: result.confidence,
+          }
+          if (result.existingProduct) {
+            updates.shopifyDupeExistingTitle = result.existingProduct.title
+            updates.shopifyDupeExistingId = result.existingProduct.id
+          }
+          if (result.isDuplicate) {
+            updates.isChecked = false
+          }
+          onUpdateProduct(product.id, updates)
+        })
+      }
+    } catch (err) {
+      console.error("Error checking Shopify duplicates:", err)
+    } finally {
+      setIsCheckingDupes(false)
+    }
+  }
+
   if (products.length === 0) {
     return (
       <div className="text-center py-10 text-[#8C8C8C] rounded-2xl bg-[#F5F6F7]">
@@ -57,12 +118,42 @@ export function ProductsTable({
         <Check className="h-3 w-3 text-green-500" />
         Solo los productos <b>marcados</b> con el checkbox serán incluidos en el archivo de exportación.
       </div>
+
+      {/* Shopify Dedupe Button */}
+      {shopifyConfigured && (
+        <div className="flex items-center justify-between bg-[#F5F6F7] p-3 rounded-xl border border-[#E5E7EB]">
+          <div className="flex items-center gap-2 text-xs text-[#8C8C8C]">
+            <Store className="h-3.5 w-3.5" />
+            Verificar duplicados contra tu tienda Shopify
+          </div>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={handleCheckShopifyDupes}
+            disabled={isCheckingDupes}
+            className="text-xs"
+          >
+            {isCheckingDupes ? (
+              <>
+                <Loader2 className="w-3 h-3 mr-1.5 animate-spin" />
+                Verificando {dupeCheckProgress}...
+              </>
+            ) : (
+              <>
+                <Search className="w-3 h-3 mr-1.5" />
+                Verificar Duplicados
+              </>
+            )}
+          </Button>
+        </div>
+      )}
+
       {/* Desktop/Tablet Table View */}
       <div className="hidden md:block rounded-xl border border-[#E5E7EB] overflow-x-auto">
-        <Table className="min-w-[900px] table-fixed">
+        <Table className="min-w-[1200px] table-fixed">
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[60px] text-center uppercase tracking-wider text-[11px] font-medium text-[#8C8C8C]">
+              <TableHead className="w-[50px] text-center uppercase tracking-wider text-[11px] font-medium text-[#8C8C8C]">
                 <Switch
                   checked={products.length > 0 && products.every(p => p.isChecked)}
                   onCheckedChange={(checked) => {
@@ -71,14 +162,15 @@ export function ProductsTable({
                   title="Seleccionar todo"
                 />
               </TableHead>
-              <TableHead className="w-[100px] text-center uppercase tracking-wider text-[11px] font-medium text-[#8C8C8C]">Estado</TableHead>
-              <TableHead className="w-auto uppercase tracking-wider text-[11px] font-medium text-[#8C8C8C]">Título</TableHead>
+              <TableHead className="w-[80px] text-center uppercase tracking-wider text-[11px] font-medium text-[#8C8C8C]">Estado</TableHead>
+              <TableHead className="w-[280px] uppercase tracking-wider text-[11px] font-medium text-[#8C8C8C]">Título</TableHead>
               <TableHead className="w-[110px] uppercase tracking-wider text-[11px] font-medium text-[#8C8C8C]">Marca</TableHead>
-              <TableHead className="w-[100px] uppercase tracking-wider text-[11px] font-medium text-[#8C8C8C]">Precio</TableHead>
-              <TableHead className="w-[100px] uppercase tracking-wider text-[11px] font-medium text-[#8C8C8C]">Tamaño</TableHead>
-              <TableHead className="w-[300px] uppercase tracking-wider text-[11px] font-medium text-[#8C8C8C]">Imágenes</TableHead>
-              <TableHead className="w-[150px] uppercase tracking-wider text-[11px] font-medium text-[#8C8C8C]">Etiquetas</TableHead>
-              <TableHead className="w-[110px] text-right uppercase tracking-wider text-[11px] font-medium text-[#8C8C8C]">Acciones</TableHead>
+              <TableHead className="w-[80px] uppercase tracking-wider text-[11px] font-medium text-[#8C8C8C]">Precio</TableHead>
+              <TableHead className="w-[80px] uppercase tracking-wider text-[11px] font-medium text-[#8C8C8C]">Costo</TableHead>
+              <TableHead className="w-[90px] uppercase tracking-wider text-[11px] font-medium text-[#8C8C8C]">Tamaño</TableHead>
+              <TableHead className="w-[280px] uppercase tracking-wider text-[11px] font-medium text-[#8C8C8C]">Imágenes</TableHead>
+              <TableHead className="w-[130px] uppercase tracking-wider text-[11px] font-medium text-[#8C8C8C]">Etiquetas</TableHead>
+              <TableHead className="w-[100px] text-right uppercase tracking-wider text-[11px] font-medium text-[#8C8C8C]">Acciones</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -124,6 +216,27 @@ export function ProductsTable({
                     <AlertCircle className="h-3 w-3 mr-1" /> Error
                   </Badge>
                 )}
+                {/* Shopify Dedupe Badges */}
+                {product.shopifyDupeMatchType && (
+                  <Badge variant="destructive" className="text-[10px] mt-1">
+                    Duplicado ({product.shopifyDupeMatchType === "barcode" ? "código" : "título"})
+                  </Badge>
+                )}
+                {product.shopifyDupeMatchType === null && product.shopifyDupeConfidence !== undefined && product.shopifyDupeConfidence >= 0 && (
+                  <Badge className="text-[10px] mt-1 bg-green-100 text-green-700 hover:bg-green-100">
+                    Nuevo
+                  </Badge>
+                )}
+                {product.shopifyDupeConfidence === -1 && (
+                  <Badge className="text-[10px] mt-1 bg-yellow-100 text-yellow-700 hover:bg-yellow-100">
+                    Desconocido
+                  </Badge>
+                )}
+                {product.shopifyDupeExistingTitle && (
+                  <p className="text-[9px] text-red-400 mt-0.5 truncate max-w-[150px]" title={product.shopifyDupeExistingTitle}>
+                    Ya existe: {product.shopifyDupeExistingTitle}
+                  </p>
+                )}
               </TableCell>
               
               <TableCell className="overflow-hidden">
@@ -167,7 +280,18 @@ export function ProductsTable({
                   onChange={(e) =>
                     onUpdateProduct(product.id, "price", e.target.value)
                   }
-                  className="h-8 w-20 transition-colors"
+                  className="h-8 w-full transition-colors"
+                />
+              </TableCell>
+
+              <TableCell>
+                <Input
+                  value={product.costPerItem || ""}
+                  onChange={(e) =>
+                    onUpdateProduct(product.id, "costPerItem", e.target.value)
+                  }
+                  className="h-8 w-full transition-colors"
+                  placeholder="—"
                 />
               </TableCell>
 
@@ -366,6 +490,14 @@ export function ProductsTable({
                         <AlertCircle className="h-3 w-3 mr-1" /> Error
                       </Badge>
                     )}
+                    {product.shopifyDupeMatchType && (
+                      <Badge variant="destructive" className="text-[10px]">
+                        Dup ({product.shopifyDupeMatchType === "barcode" ? "código" : "título"})
+                      </Badge>
+                    )}
+                    {product.shopifyDupeMatchType === null && product.shopifyDupeConfidence !== undefined && product.shopifyDupeConfidence >= 0 && (
+                      <Badge className="text-[10px] bg-green-100 text-green-700 hover:bg-green-100">Nuevo</Badge>
+                    )}
                     <span className="text-xs text-[#8C8C8C]">{product.vendor}</span>
                  </div>
                  <h3 className="font-semibold text-sm leading-tight">{product.generatedTitle || product.title}</h3>
@@ -385,13 +517,22 @@ export function ProductsTable({
 
             {/* Content: Inputs */}
             <div className="space-y-3 pt-2 border-t border-[#EBEBEB]">
-               <div className="grid grid-cols-2 gap-3">
+               <div className="grid grid-cols-3 gap-3">
                   <div>
                     <label className="text-[10px] font-medium text-[#8C8C8C] uppercase">Precio</label>
-                    <Input 
+                    <Input
                       value={product.price}
                       onChange={(e) => onUpdateProduct(product.id, "price", e.target.value)}
                       className="h-9 mt-1"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-medium text-[#8C8C8C] uppercase">Costo</label>
+                    <Input
+                      value={product.costPerItem || ""}
+                      onChange={(e) => onUpdateProduct(product.id, "costPerItem", e.target.value)}
+                      className="h-9 mt-1"
+                      placeholder="—"
                     />
                   </div>
                   <div>
