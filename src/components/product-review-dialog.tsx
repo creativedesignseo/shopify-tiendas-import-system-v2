@@ -98,7 +98,6 @@ export function ProductReviewDialog({
   }, [])
 
   const handleGenerate = async () => {
-    if (!masterData) return
     setIsGenerating(true)
     setProgress(0)
     setProgressText("Conectando con la IA...")
@@ -128,7 +127,7 @@ export function ProductReviewDialog({
             Marca: product.vendor,
             Tamaño: product.size
           },
-          htmlTemplate: masterData.htmlTemplate,
+          htmlTemplate: masterData?.htmlTemplate || "",
           provider: localStorage.getItem("ai_provider") || "gemini",
           apiKey: localStorage.getItem("ai_api_key") || "",
           modelVersion: localStorage.getItem("ai_model_version") || "gemini-2.5-flash"
@@ -148,7 +147,7 @@ export function ProductReviewDialog({
       // Fallback logic matches main page
       let finalBodyHtml = aiData.body_html || ""
       if (!finalBodyHtml) {
-          const template = masterData.htmlTemplate || ""
+          const template = masterData?.htmlTemplate || ""
           finalBodyHtml = template
             .replace(/{{name}}/g, product.title)
             .replace(/{{brand}}/g, product.vendor)
@@ -292,9 +291,8 @@ export function ProductReviewDialog({
                        </div>
                     </div>
                  ) : (
-                    <Button 
-                      onClick={handleGenerate} 
-                      disabled={!masterData}
+                    <Button
+                      onClick={handleGenerate}
                       className="bg-[#D6F45B] hover:brightness-95 text-[#0F0F0F] shadow-md rounded-xl px-6 font-semibold"
                     >
                       <Sparkles className="mr-2 h-4 w-4" /> 
@@ -455,18 +453,27 @@ export function ProductReviewDialog({
                              className="h-8 font-medium"
                           />
                        </div>
-                       <div className="grid grid-cols-3 gap-2">
+                       <div className="grid grid-cols-2 gap-2">
                           <div className="space-y-1">
                              <Label className="text-xs">Precio</Label>
-                             <Input 
+                             <Input
                                 value={product.price}
                                 onChange={(e) => onUpdate(product.id, "price", e.target.value)}
                                 className="h-8"
                              />
                           </div>
                           <div className="space-y-1">
+                             <Label className="text-xs">Costo</Label>
+                             <Input
+                                value={product.costPerItem || ""}
+                                onChange={(e) => onUpdate(product.id, "costPerItem", e.target.value)}
+                                placeholder="—"
+                                className="h-8"
+                             />
+                          </div>
+                          <div className="space-y-1">
                              <Label className="text-xs">Tamaño (ml)</Label>
-                             <Input 
+                             <Input
                                 value={product.size}
                                 onChange={(e) => onUpdate(product.id, "size", e.target.value)}
                                 placeholder="Ej: 100 ml"
@@ -475,7 +482,7 @@ export function ProductReviewDialog({
                           </div>
                           <div className="space-y-1">
                              <Label className="text-xs">Tags</Label>
-                             <Input 
+                             <Input
                                 value={product.tags}
                                 onChange={(e) => onUpdate(product.id, "tags", e.target.value)}
                                 className="h-8"
