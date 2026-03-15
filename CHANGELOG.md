@@ -1,3 +1,12 @@
+## [Unreleased]
+### Added
+- **Agent Continuity Docs**: Added shared handoff context so Claude Code, Antigravity/Gemini, and Codex can continue the same roadmap without losing state.
+
+### Changed
+- **Cycle 1 + Cycle 2 landed**: Shopify connection test, live dedupe, live publish, output modes, and Shopify-first workflow improvements.
+- **Shopify Store Summary UI**: Connected store name + product count now shown as a separate section (outside CSV Maestro card) in Shopify modes.
+- **Settings UX**: Replaced generic success alert with styled success modal for consistency with the rest of the dashboard.
+
 ## [1.8.0] - 2026-03-03
 ### Changed
 - **SaaS Dashboard Redesign**: Complete visual overhaul of the entire application to match a modern, premium SaaS aesthetic. Implemented a card-based layout with large rounded corners (3xl), soft shadows, generous white space, and a high-contrast lime green secondary accent (`#D6F45B`).

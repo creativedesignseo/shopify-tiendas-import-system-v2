@@ -1,36 +1,41 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Shopify Tiendas Import System v2
 
-## Getting Started
+Herramienta interna para importar, enriquecer, deduplicar y publicar productos en Shopify.
 
-First, run the development server:
+## Estado Actual (Mar 2026)
+
+- Cycle 1 implementado: configuración Shopify, test de conexión y dedupe live.
+- Cycle 2 implementado: publicación live a Shopify + modos de salida (`csv_only`, `shopify_only`, `csv_and_shopify`).
+- Modo Shopify Live ya permite trabajar sin CSV maestro.
+- La UI muestra tienda conectada + total de productos Shopify.
+
+## Continuidad Multi-Agente
+
+Este proyecto ya fue trabajado por múltiples agentes y puede continuar sin fricción:
+
+- Claude Code
+- Antigravity + Gemini
+- Codex (GPT-5)
+
+Para continuidad técnica entre agentes, revisar:
+
+- `docs/AGENT_MEMORY.md`
+- `docs/superpowers/specs/`
+- `docs/superpowers/plans/`
+- `CHANGELOG.md`
+
+## Comandos
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm run build
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+App local: `http://localhost:3000`
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Notas de Flujo
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Configuración IA y Shopify se guarda en `localStorage`.
+- En modo `csv_only`, el CSV maestro sigue siendo necesario para exportar CSV.
+- En modos Shopify Live, el maestro es opcional.
