@@ -17,6 +17,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 export function SettingsDialog() {
   const [open, setOpen] = React.useState(false)
+  const [showSaveSuccessDialog, setShowSaveSuccessDialog] = React.useState(false)
   const [provider, setProvider] = React.useState("gemini")
   const [apiKey, setApiKey] = React.useState("")
   const [modelVersion, setModelVersion] = React.useState("gemini-2.5-flash")
@@ -77,7 +78,7 @@ export function SettingsDialog() {
     localStorage.setItem("shopify_output_mode", shopOutputMode)
 
     setOpen(false)
-    alert("✅ Configuración guardada.")
+    setShowSaveSuccessDialog(true)
   }
 
   const handleTestConnection = async () => {
@@ -128,6 +129,7 @@ export function SettingsDialog() {
   const selectClass = "flex h-10 w-full rounded-xl border border-[#E5E7EB] bg-white px-4 py-2.5 text-sm text-[#1A1A1A] focus:outline-none focus:border-[#D6F45B] focus:shadow-[0_0_0_2px_rgba(214,244,91,0.2)] disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-250"
 
   return (
+    <>
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="ghost" size="icon" className="rounded-xl">
@@ -393,5 +395,28 @@ export function SettingsDialog() {
         </DialogFooter>
       </DialogContent>
     </Dialog>
+
+    <Dialog open={showSaveSuccessDialog} onOpenChange={setShowSaveSuccessDialog}>
+      <DialogContent className="max-w-md rounded-2xl border-[#E5E7EB] text-center p-8 sm:p-10 [&>button]:hidden">
+        <div className="flex flex-col items-center justify-center space-y-5">
+          <div className="h-20 w-20 rounded-full bg-[#D6F45B] flex items-center justify-center mb-2 shadow-lg shadow-[#D6F45B]/20">
+            <CheckCircle className="h-10 w-10 text-[#0F0F0F]" />
+          </div>
+          <DialogTitle className="text-3xl font-bold tracking-tight text-[#0F0F0F]">
+            ¡Guardado!
+          </DialogTitle>
+          <DialogDescription className="text-[#8C8C8C] text-lg font-medium max-w-[280px] mx-auto">
+            La configuración se guardó correctamente.
+          </DialogDescription>
+          <Button
+            className="mt-6 w-full rounded-xl bg-[#0F0F0F] text-[#D6F45B] hover:bg-[#1A1A1A] py-5 text-base font-semibold shadow-sm"
+            onClick={() => setShowSaveSuccessDialog(false)}
+          >
+            Continuar
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+    </>
   )
 }
