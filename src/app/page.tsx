@@ -38,6 +38,12 @@ export default function Dashboard() {
   const [successCount, setSuccessCount] = React.useState<number>(0)
   const [showSuccessDialog, setShowSuccessDialog] = React.useState(false)
 
+  // Shopify connection indicator
+  const [shopifyConnected, setShopifyConnected] = React.useState(false)
+  React.useEffect(() => {
+    setShopifyConnected(localStorage.getItem("shopify_connected") === "true")
+  }, [])
+
   // Session & Backup State
   const [deviceId, setDeviceId] = React.useState<string>("")
   const [currentSession, setCurrentSession] = React.useState<ImportSession | null>(null)
@@ -340,7 +346,7 @@ Cabeceras Requeridas (Aceptamos variaciones):
   }
 
   return (
-    <main className="max-w-6xl mx-auto px-6 py-8 space-y-8 min-h-screen">
+    <main className="max-w-[1600px] mx-auto px-6 py-8 space-y-8 min-h-screen">
       <div className="flex flex-wrap justify-between items-center gap-4">
         <div>
            <div className="flex items-center gap-3">
@@ -355,7 +361,12 @@ Cabeceras Requeridas (Aceptamos variaciones):
            <p className="text-[#8C8C8C]">Filtro de duplicados, precios UE y enriquecimiento con IA.</p>
         </div>
         <div className="flex flex-wrap gap-2 items-center">
-            <SettingsDialog />
+            <div className="relative">
+              <SettingsDialog />
+              {shopifyConnected && (
+                <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-green-500 border-2 border-white" />
+              )}
+            </div>
             <Button
               variant="outline"
               onClick={handleClearAll}
