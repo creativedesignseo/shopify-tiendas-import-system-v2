@@ -2,24 +2,17 @@
 
 Herramienta interna para importar, enriquecer, deduplicar y publicar productos en Shopify.
 
-## Estado Actual (Mar 2026)
+## Estado del Proyecto (2026-03-15)
 
-- Cycle 1 implementado: configuración Shopify, test de conexión y dedupe live.
-- Cycle 2 implementado: publicación live a Shopify + modos de salida (`csv_only`, `shopify_only`, `csv_and_shopify`).
-- Modo Shopify Live ya permite trabajar sin CSV maestro.
-- La UI muestra tienda conectada + total de productos Shopify.
+- Cycle 1: Implementado (Settings Shopify, test de conexion, dedupe live).
+- Cycle 2: Implementado (publish live, output modes, dialogo de publicacion).
+- Flujo Shopify Live sin CSV maestro: activo.
+- Soporte multi-agente: Claude Code + Antigravity/Gemini + Codex.
 
-## Continuidad Multi-Agente
-
-Este proyecto ya fue trabajado por múltiples agentes y puede continuar sin fricción:
-
-- Claude Code
-- Antigravity + Gemini
-- Codex (GPT-5)
-
-Para continuidad técnica entre agentes, revisar:
+## Archivos de Handoff (OBLIGATORIO leer)
 
 - `docs/AGENT_MEMORY.md`
+- `docs/CONVERSATION_MEMORY.md`
 - `docs/superpowers/specs/`
 - `docs/superpowers/plans/`
 - `CHANGELOG.md`
@@ -34,8 +27,22 @@ npm run build
 
 App local: `http://localhost:3000`
 
-## Notas de Flujo
+## Flujo de Datos Clave
 
-- Configuración IA y Shopify se guarda en `localStorage`.
-- En modo `csv_only`, el CSV maestro sigue siendo necesario para exportar CSV.
-- En modos Shopify Live, el maestro es opcional.
+- Config IA y Shopify: `localStorage`.
+- `csv_only`: requiere CSV maestro para exportar CSV.
+- `shopify_only` y `csv_and_shopify`: maestro opcional, publica via API Shopify.
+
+## API Routes
+
+- `/api/generate`
+- `/api/shopify/test-connection`
+- `/api/shopify/dedupe`
+- `/api/shopify/publish`
+
+## Nota Operativa
+
+Si un agente continua trabajo, debe actualizar:
+- `CHANGELOG.md` (seccion Unreleased)
+- `docs/AGENT_MEMORY.md`
+- `docs/CONVERSATION_MEMORY.md`

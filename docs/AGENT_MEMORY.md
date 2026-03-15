@@ -2,77 +2,66 @@
 
 Last updated: 2026-03-15
 
-## Purpose
-Single source of truth so any agent (Claude Code, Antigravity/Gemini, Codex) can continue this repository as if it were one engineering team.
+## Objetivo
+Contexto tecnico unico para que cualquier agente (Claude Code, Antigravity/Gemini, Codex) continue sin perder estado.
 
-## Product Summary
-Internal Shopify import tool with:
-- CSV ingestion and processing
-- AI-assisted content generation (`/api/generate`)
-- Shopify integration for dedupe and publish
-- Session backup/recovery and UI review workflow
+## Estado Tecnico
 
-## Implemented Cycles
+### Cycle 1 (Implementado)
+- Settings Shopify en `src/components/settings-dialog.tsx`.
+- Test conexion: `src/app/api/shopify/test-connection/route.ts`.
+- Dedupe live: `src/app/api/shopify/dedupe/route.ts`.
+- Cliente shared: `src/lib/shopify-client.ts`.
 
-### Cycle 1 (Implemented)
-- Shopify settings tab in `SettingsDialog`
-- Test connection endpoint: `/api/shopify/test-connection`
-- Live dedupe endpoint: `/api/shopify/dedupe`
-- Shared client in `src/lib/shopify-client.ts`
-- Dedupe results integrated in `products-table.tsx`
+### Cycle 2 (Implementado)
+- Output modes: `csv_only`, `shopify_only`, `csv_and_shopify`.
+- Mapper: `src/lib/shopify-mapper.ts`.
+- Publish route: `src/app/api/shopify/publish/route.ts`.
+- Publish dialog: `src/components/shopify-publish-dialog.tsx`.
+- Export flow: `src/app/page.tsx`.
 
-### Cycle 2 (Implemented)
-- Output modes: `csv_only`, `shopify_only`, `csv_and_shopify`
-- Product mapper: `src/lib/shopify-mapper.ts`
-- Publish endpoint: `/api/shopify/publish`
-- Publish dialog: `src/components/shopify-publish-dialog.tsx`
-- Export flow integrated in `src/app/page.tsx`
+## Cambios Recientes (ultimo bloque)
+- Conexion Shopify ahora guarda nombre y productsCount en localStorage.
+- Resumen de tienda conectado se muestra en card separada (no dentro de CSV Maestro).
+- Settings save usa modal visual (sin alert generico).
+- Boton IA habilitado en Shopify mode sin CSV maestro.
+- `/api/generate` forzado a salida en espanol y title normalizado a nombre del perfume.
+- `productCreate` actualizado a schema moderno (`ProductCreateInput + media`).
+- Post-create update de variant para precio / sku / barcode / cost.
+- Intento de inventario por defecto en 10 (si location/permisos lo permiten).
 
-## Current UX/Behavior
-- Shopify modes can work without master CSV.
-- In Shopify mode, connected store summary is shown in a separate card:
-  - Store name
-  - Total Shopify products (`productsCount`)
-- Settings save shows a styled success modal (not browser alert).
+## LocalStorage Keys
 
-## Important LocalStorage Keys
-- AI:
-  - `ai_provider`
-  - `ai_api_key`
-  - `ai_model_version`
-- Shopify:
-  - `shopify_shop_domain`
-  - `shopify_access_token`
-  - `shopify_api_version`
-  - `shopify_profile_name`
-  - `shopify_output_mode`
-  - `shopify_connected`
-  - `shopify_shop_name`
-  - `shopify_products_count`
+### IA
+- `ai_provider`
+- `ai_api_key`
+- `ai_model_version`
 
-## Key Paths
-- Main UI flow: `src/app/page.tsx`
-- Settings: `src/components/settings-dialog.tsx`
-- Review dialog: `src/components/product-review-dialog.tsx`
-- Table + dedupe UI: `src/components/products-table.tsx`
-- Shopify client: `src/lib/shopify-client.ts`
-- Shopify mapper: `src/lib/shopify-mapper.ts`
-- API routes:
-  - `src/app/api/generate/route.ts`
-  - `src/app/api/shopify/test-connection/route.ts`
-  - `src/app/api/shopify/dedupe/route.ts`
-  - `src/app/api/shopify/publish/route.ts`
+### Shopify
+- `shopify_shop_domain`
+- `shopify_access_token`
+- `shopify_api_version`
+- `shopify_profile_name`
+- `shopify_output_mode`
+- `shopify_connected`
+- `shopify_shop_name`
+- `shopify_products_count`
 
-## How to Verify Quickly
-1. `npm run build`
-2. Open app and configure Shopify in Settings
-3. Click Test Connection and confirm:
-   - Connected state
-   - Store name + product count in UI
-4. Run dedupe check from product table
-5. Test publish flow in Shopify mode (dry run + live)
+## Archivos Criticos
+- `src/app/page.tsx`
+- `src/components/settings-dialog.tsx`
+- `src/components/products-table.tsx`
+- `src/components/product-review-dialog.tsx`
+- `src/lib/shopify-client.ts`
+- `src/lib/shopify-mapper.ts`
+- `src/app/api/generate/route.ts`
 
-## Collaboration Convention
-- Do not overwrite unrelated user changes.
-- Keep commits focused and atomic.
-- Update this file when adding a major workflow or changing storage keys/contracts.
+## Pendientes Conocidos
+- Verificar en export Shopify post-fix que variant quede con campos completos en todos los casos de tienda.
+- Si inventario no aplica por location/permisos, agregar seleccion de `locationId` en Settings.
+- Decidir si mover secretos de localStorage a server-side secure storage (fuera de alcance actual).
+
+## Regla de Colaboracion
+- No sobrescribir cambios locales del usuario no relacionados.
+- Commits pequenos y atomicos.
+- Actualizar esta memoria despues de cada cambio importante.

@@ -1,11 +1,15 @@
 ## [Unreleased]
 ### Added
-- **Agent Continuity Docs**: Added shared handoff context so Claude Code, Antigravity/Gemini, and Codex can continue the same roadmap without losing state.
+- **Multi-Agent Handoff Pack**: Added/updated `README.md`, `docs/AGENT_MEMORY.md`, and `docs/CONVERSATION_MEMORY.md` so Claude Code, Antigravity/Gemini, and Codex can continue as one team.
 
 ### Changed
-- **Cycle 1 + Cycle 2 landed**: Shopify connection test, live dedupe, live publish, output modes, and Shopify-first workflow improvements.
-- **Shopify Store Summary UI**: Connected store name + product count now shown as a separate section (outside CSV Maestro card) in Shopify modes.
-- **Settings UX**: Replaced generic success alert with styled success modal for consistency with the rest of the dashboard.
+- **Shopify Publish API compatibility**: Migrated product creation to modern Shopify GraphQL schema (`ProductCreateInput` + `media`).
+- **Post-create Variant Update**: Added variant update after create to set price, SKU, barcode, cost and policy fields.
+- **Default Inventory Behavior**: Added default inventory target of `10` with best-effort adjustment on first active location.
+- **AI Generation Consistency**: Forced Spanish output in `/api/generate` and normalized generated title to product name.
+- **Shopify Summary UX**: Connected store name and product count moved outside CSV Maestro card.
+- **Settings Save UX**: Replaced generic browser alert with styled success modal.
+- **Shopify-Only Flow**: AI generation and product prep work now operate without requiring master CSV in Shopify modes.
 
 ## [1.8.0] - 2026-03-03
 ### Changed
