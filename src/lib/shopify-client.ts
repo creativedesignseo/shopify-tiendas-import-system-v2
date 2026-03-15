@@ -395,6 +395,11 @@ export async function createShopifyProduct(
         product {
           id
           handle
+          variants(first: 1) {
+            nodes {
+              id
+            }
+          }
         }
         userErrors {
           field
@@ -423,7 +428,11 @@ export async function createShopifyProduct(
   try {
     const result = await shopifyGraphQL<{
       productCreate: {
-        product: { id: string; handle: string } | null;
+        product: {
+          id: string;
+          handle: string;
+          variants?: { nodes: Array<{ id: string }> };
+        } | null;
         userErrors: Array<{ field: string[]; message: string }>;
       };
     }>(config, mutation, {
@@ -448,6 +457,59 @@ export async function createShopifyProduct(
         status: "failed",
         error: data.userErrors.map((e) => e.message).join(", "),
       };
+    }
+
+    // Shopify now creates a default variant. Update it with mapped price/SKU/barcode/cost.
+    const createdProductId = data?.product?.id;
+    const createdVariantId = data?.product?.variants?.nodes?.[0]?.id;
+    const sourceVariant = input.variants?.[0];
+    if (createdProductId && createdVariantId && sourceVariant) {
+      const variantMutation = `
+        mutation productVariantsBulkUpdate($productId: ID!, $variants: [ProductVariantsBulkInput!]!) {
+          productVariantsBulkUpdate(productId: $productId, variants: $variants) {
+            userErrors {
+              field
+              message
+            }
+          }
+        }
+      `;
+
+      const variantInput: Record<string, unknown> = {
+        id: createdVariantId,
+        price: sourceVariant.price,
+        taxable: sourceVariant.taxable,
+      };
+
+      const inventoryItem: Record<string, unknown> = {};
+      if (sourceVariant.sku) inventoryItem.sku = sourceVariant.sku;
+      if (sourceVariant.barcode) inventoryItem.barcode = sourceVariant.barcode;
+      if (sourceVariant.cost) inventoryItem.cost = sourceVariant.cost;
+      if (sourceVariant.requiresShipping !== undefined) {
+        inventoryItem.requiresShipping = sourceVariant.requiresShipping;
+      }
+      if (Object.keys(inventoryItem).length > 0) {
+        variantInput.inventoryItem = inventoryItem;
+      }
+
+      const variantResult = await shopifyGraphQL<{
+        productVariantsBulkUpdate: {
+          userErrors: Array<{ field?: string[]; message: string }>;
+        };
+      }>(config, variantMutation, {
+        productId: createdProductId,
+        variants: [variantInput],
+      });
+
+      const variantErrors = variantResult.data?.productVariantsBulkUpdate?.userErrors;
+      if (variantErrors && variantErrors.length > 0) {
+        return {
+          barcode: input.variants[0]?.barcode || "",
+          title: input.title,
+          status: "failed",
+          error: variantErrors.map((e) => e.message).join(", "),
+        };
+      }
     }
 
     return {
