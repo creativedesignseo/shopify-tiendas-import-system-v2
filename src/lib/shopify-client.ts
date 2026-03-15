@@ -149,9 +149,9 @@ interface ShopQueryData {
     name: string;
     email: string;
     primaryDomain: { url: string };
-    productsCount?: {
-      count?: number;
-    };
+  };
+  productsCount?: {
+    count?: number;
   };
 }
 
@@ -164,7 +164,7 @@ export async function testShopifyConnection(
   try {
     const result = await shopifyGraphQL<ShopQueryData>(
       config,
-      `{ shop { name email primaryDomain { url } productsCount { count } } }`,
+      `{ shop { name email primaryDomain { url } } productsCount { count } }`,
     );
 
     if (result.errors?.length) {
@@ -176,7 +176,7 @@ export async function testShopifyConnection(
     }
 
     const { name, email, primaryDomain } = result.data.shop;
-    const productsCount = result.data.shop.productsCount?.count ?? 0;
+    const productsCount = result.data.productsCount?.count ?? 0;
     return {
       success: true,
       shop: { name, email, domain: primaryDomain.url, productsCount },

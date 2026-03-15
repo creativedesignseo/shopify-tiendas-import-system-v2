@@ -41,11 +41,13 @@ export default function Dashboard() {
 
   // Shopify connection indicator & output mode
   const [shopifyConnected, setShopifyConnected] = React.useState(false)
+  const [shopifyShopName, setShopifyShopName] = React.useState("")
   const [shopifyProductsCount, setShopifyProductsCount] = React.useState<number | null>(null)
   const [outputMode, setOutputMode] = React.useState("csv_only")
   const [showPublishDialog, setShowPublishDialog] = React.useState(false)
   React.useEffect(() => {
     setShopifyConnected(localStorage.getItem("shopify_connected") === "true")
+    setShopifyShopName(localStorage.getItem("shopify_shop_name") || "")
     const storedCount = localStorage.getItem("shopify_products_count")
     setShopifyProductsCount(storedCount ? Number(storedCount) : null)
     setOutputMode(localStorage.getItem("shopify_output_mode") || "csv_only")
@@ -459,8 +461,13 @@ Cabeceras Requeridas (Aceptamos variaciones):
             ) : (outputMode !== "csv_only" && shopifyConnected) ? (
               <div className="space-y-1">
                 <div className="text-sm font-medium text-green-700">Tienda conectada</div>
+                <div className="text-sm text-[#1A1A1A] font-medium truncate">
+                  {shopifyShopName || "Shopify"}
+                </div>
                 <div className="flex items-baseline gap-2">
-                  <span className="text-3xl font-bold text-[#1A1A1A]">{shopifyProductsCount ?? "—"}</span>
+                  <span className="text-3xl font-bold text-[#1A1A1A]">
+                    {shopifyProductsCount !== null ? shopifyProductsCount : "—"}
+                  </span>
                   <span className="text-sm text-[#8C8C8C]">productos en Shopify</span>
                 </div>
               </div>
