@@ -349,13 +349,27 @@ export function SettingsDialog() {
                     />
                     Solo CSV (actual)
                   </label>
-                  <label className="flex items-center gap-2 text-sm text-[#8C8C8C] cursor-not-allowed">
-                    <input type="radio" name="outputMode" disabled className="accent-[#D6F45B]" />
+                  <label className="flex items-center gap-2 text-sm cursor-pointer">
+                    <input
+                      type="radio"
+                      name="outputMode"
+                      value="shopify_only"
+                      checked={shopOutputMode === "shopify_only"}
+                      onChange={(e) => setShopOutputMode(e.target.value)}
+                      className="accent-[#D6F45B]"
+                    />
                     Solo Shopify Live
                     <span className="text-[10px] bg-[#EBEBEB] px-1.5 py-0.5 rounded">Ciclo 2</span>
                   </label>
-                  <label className="flex items-center gap-2 text-sm text-[#8C8C8C] cursor-not-allowed">
-                    <input type="radio" name="outputMode" disabled className="accent-[#D6F45B]" />
+                  <label className="flex items-center gap-2 text-sm cursor-pointer">
+                    <input
+                      type="radio"
+                      name="outputMode"
+                      value="csv_and_shopify"
+                      checked={shopOutputMode === "csv_and_shopify"}
+                      onChange={(e) => setShopOutputMode(e.target.value)}
+                      className="accent-[#D6F45B]"
+                    />
                     CSV + Shopify Live
                     <span className="text-[10px] bg-[#EBEBEB] px-1.5 py-0.5 rounded">Ciclo 2</span>
                   </label>
