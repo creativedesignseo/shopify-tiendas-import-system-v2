@@ -191,7 +191,9 @@ export default function Dashboard() {
 
   // ─── 2. Manejar Archivo de Nuevos Productos ────────────────────
   const handleNewFile = async (file: File) => {
-    if (!masterData) {
+    const mode = localStorage.getItem("shopify_output_mode") || "csv_only"
+    const isShopifyMode = mode === "shopify_only" || mode === "csv_and_shopify"
+    if (!masterData && !isShopifyMode) {
       alert("Por favor, sube primero el CSV Maestro.")
       return
     }
@@ -447,8 +449,10 @@ Cabeceras Requeridas (Aceptamos variaciones):
                {masterData ? "Archivo Maestro Cargado" : "Paso 1: CSV Maestro"}
             </CardTitle>
             <CardDescription>
-              {masterData 
-                 ? `${masterData.totalProductsCount} productos rastreados en la tienda.` 
+              {masterData
+                 ? `${masterData.totalProductsCount} productos rastreados en la tienda.`
+                 : outputMode !== "csv_only"
+                 ? "Opcional en modo Shopify Live. Solo necesario para exportar CSV."
                  : "Sube el último 'products_export.csv' para aprender cabeceras y códigos."}
             </CardDescription>
           </CardHeader>
@@ -465,18 +469,18 @@ Cabeceras Requeridas (Aceptamos variaciones):
         {/* Zona Nuevos Productos — CSV or Manual */}
         <Card className={cn(
           "transition-all duration-200",
-          !masterData ? "opacity-50 pointer-events-none" : ""
+          !masterData && outputMode === "csv_only" ? "opacity-50 pointer-events-none" : ""
         )}>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
                <UploadCloud className="h-5 w-5" />
-               Paso 2: Nuevos Productos
+               {outputMode === "csv_only" ? "Paso 2: Nuevos Productos" : "Nuevos Productos"}
             </CardTitle>
             <CardDescription>
               Añade productos desde un archivo CSV o insértalos manualmente.
             </CardDescription>
             {/* Segmented Control */}
-            {masterData && (
+            {(masterData || outputMode !== "csv_only") && (
               <div className="flex bg-[#F0F0F0] rounded-lg p-1 mt-3">
                 <button
                   onClick={() => setStep2Mode("csv")}
@@ -508,11 +512,11 @@ Cabeceras Requeridas (Aceptamos variaciones):
               <FileDropzone
                 onFileSelect={handleNewFile}
                 accept=".csv"
-                disabled={!masterData}
+                disabled={!masterData && outputMode === "csv_only"}
                 label="Arrastra Nuevos Productos"
               />
             ) : (
-              masterData && (
+              (masterData || outputMode !== "csv_only") && (
                 <ManualProductForm
                   masterData={masterData}
                   existingProducts={products}

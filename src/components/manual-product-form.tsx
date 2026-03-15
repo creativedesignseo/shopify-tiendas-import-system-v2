@@ -11,7 +11,7 @@ import { sanitizeBarcode } from "@/lib/barcode-utils"
 import { generateUUID } from "@/lib/utils"
 
 interface ManualProductFormProps {
-  masterData: MasterData
+  masterData: MasterData | null
   existingProducts: ProcessedProduct[]
   onAddProduct: (product: ProcessedProduct) => void
 }
@@ -23,6 +23,7 @@ export function ManualProductForm({ masterData, existingProducts, onAddProduct }
   const [precio, setPrecio] = React.useState("")
   const [tamano, setTamano] = React.useState("")
   const [barcode, setBarcode] = React.useState("")
+  const [costPerItem, setCostPerItem] = React.useState("")
 
   const [barcodeError, setBarcodeError] = React.useState("")
   const [titleWarning, setTitleWarning] = React.useState("")
@@ -37,7 +38,7 @@ export function ManualProductForm({ masterData, existingProducts, onAddProduct }
     const sanitized = sanitizeBarcode(barcode.trim())
     if (!sanitized) return
 
-    const inMaster = masterData.existingBarcodes.has(sanitized)
+    const inMaster = masterData?.existingBarcodes.has(sanitized) ?? false
     const inProducts = existingProducts.some(p => p.barcode === sanitized)
 
     if (inMaster || inProducts) {
@@ -51,7 +52,7 @@ export function ManualProductForm({ masterData, existingProducts, onAddProduct }
     const normalized = nombre.trim().toLowerCase()
     if (!normalized) return
 
-    const inMaster = masterData.existingTitles.has(normalized)
+    const inMaster = masterData?.existingTitles.has(normalized) ?? false
     const inProducts = existingProducts.some(p => p.title.trim().toLowerCase() === normalized)
 
     if (inMaster || inProducts) {
@@ -73,6 +74,7 @@ export function ManualProductForm({ masterData, existingProducts, onAddProduct }
       price: precio.trim(),
       barcode: sanitizedBarcode,
       size: tamano.trim(),
+      costPerItem: costPerItem.trim(),
 
       generatedTitle: nombre.trim(),
       bodyHtml: "",
@@ -105,6 +107,7 @@ export function ManualProductForm({ masterData, existingProducts, onAddProduct }
     setPrecio("")
     setTamano("")
     setBarcode("")
+    setCostPerItem("")
     setBarcodeError("")
     setTitleWarning("")
 
@@ -156,8 +159,8 @@ export function ManualProductForm({ masterData, existingProducts, onAddProduct }
         </div>
       </div>
 
-      {/* Row 2: Precio + Tamaño + Barcode */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+      {/* Row 2: Precio + Costo + Tamaño + Barcode */}
+      <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
         <div className="space-y-1.5">
           <Label htmlFor="manual-precio" className="text-xs font-medium text-[#8C8C8C] uppercase tracking-wider">
             Precio (EUR)
@@ -167,6 +170,18 @@ export function ManualProductForm({ masterData, existingProducts, onAddProduct }
             value={precio}
             onChange={(e) => setPrecio(e.target.value)}
             placeholder="39.90"
+            autoComplete="off"
+          />
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="manual-cost" className="text-xs font-medium text-[#8C8C8C] uppercase tracking-wider">
+            Costo
+          </Label>
+          <Input
+            id="manual-cost"
+            value={costPerItem}
+            onChange={(e) => setCostPerItem(e.target.value)}
+            placeholder="25.00"
             autoComplete="off"
           />
         </div>

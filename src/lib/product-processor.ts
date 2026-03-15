@@ -132,7 +132,7 @@ const findHeader = (fileHeaders: string[], candidates: string[]): string | undef
 
 export const processNewProducts = (
   file: File,
-  masterData: MasterData
+  masterData: MasterData | null
 ): Promise<{ products: ProcessedProduct[]; skipped: SkippedProduct[]; headers: string[] }> => {
   return new Promise((resolve, reject) => {
     Papa.parse(file, {
@@ -173,7 +173,8 @@ export const processNewProducts = (
           if (!barcode) return;
 
           // 1. Check Barcode Duplicates (Primary - Exact Match)
-          if (masterData.existingBarcodes.has(barcode) || seenBarcodesInFile.has(barcode)) {
+          const masterBarcodes = masterData?.existingBarcodes ?? new Set<string>();
+          if (masterBarcodes.has(barcode) || seenBarcodesInFile.has(barcode)) {
             // Solo lo añadimos a skipped si no lo hemos "visto" ya (para no duplicar el reporte)
             if (!seenBarcodesInFile.has(barcode)) {
                skipped.push({
@@ -186,8 +187,9 @@ export const processNewProducts = (
           }
 
           // 2. Check Title Duplicates (Secondary - Reinforcement)
+          const masterTitles = masterData?.existingTitles ?? new Set<string>();
           const normalizedTitle = name ? name.trim().toLowerCase() : "";
-          if (normalizedTitle && (masterData.existingTitles.has(normalizedTitle) || seenTitlesInFile.has(normalizedTitle))) {
+          if (normalizedTitle && (masterTitles.has(normalizedTitle) || seenTitlesInFile.has(normalizedTitle))) {
              if (!seenTitlesInFile.has(normalizedTitle)) {
                 skipped.push({
                   name: name,
@@ -195,7 +197,7 @@ export const processNewProducts = (
                   reason: "Nombre Exacto Duplicado"
                 });
              }
-             return; 
+             return;
           }
 
           if (normalizedTitle) seenTitlesInFile.add(normalizedTitle);
