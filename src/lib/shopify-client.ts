@@ -517,13 +517,11 @@ export async function createShopifyProduct(
         }
       `;
 
-      const variantInput: Record<string, unknown> = {
+      const variantInputCritical: Record<string, unknown> = {
         id: createdVariantId,
         price: sourceVariant.price,
         taxable: sourceVariant.taxable,
         inventoryPolicy: sourceVariant.inventoryPolicy || "DENY",
-        showUnitPrice: sourceVariant.showUnitPrice,
-        unitPriceMeasurement: sourceVariant.unitPriceMeasurement,
       };
 
       const inventoryItem: Record<string, unknown> = {};
@@ -534,20 +532,8 @@ export async function createShopifyProduct(
         inventoryItem.requiresShipping = sourceVariant.requiresShipping;
       }
       inventoryItem.tracked = true;
-      if (sourceVariant.weight !== undefined && sourceVariant.weightUnit) {
-        const weightInKg =
-          sourceVariant.weightUnit === "GRAMS"
-            ? sourceVariant.weight / 1000
-            : sourceVariant.weight;
-        inventoryItem.measurement = {
-          weight: {
-            value: weightInKg,
-            unit: "KILOGRAMS",
-          },
-        };
-      }
       if (Object.keys(inventoryItem).length > 0) {
-        variantInput.inventoryItem = inventoryItem;
+        variantInputCritical.inventoryItem = inventoryItem;
       }
 
       const variantResult = await shopifyGraphQL<{
@@ -556,14 +542,64 @@ export async function createShopifyProduct(
         };
       }>(config, variantMutation, {
         productId: createdProductId,
-        variants: [variantInput],
+        variants: [variantInputCritical],
       });
 
       const variantErrors = variantResult.data?.productVariantsBulkUpdate?.userErrors;
       if (variantErrors && variantErrors.length > 0) {
-        postCreateWarnings.push(
-          `Variante actualizada con advertencias: ${variantErrors.map((e) => e.message).join(", ")}`,
-        );
+        return {
+          barcode: input.variants[0]?.barcode || "",
+          title: input.title,
+          status: "failed",
+          error: `Error al actualizar precio/costo/sku/barcode: ${variantErrors
+            .map((e) => e.message)
+            .join(", ")}`,
+        };
+      }
+
+      // Optional second pass: unit price + weight measurement.
+      const optionalVariantInput: Record<string, unknown> = {
+        id: createdVariantId,
+      };
+      if (sourceVariant.showUnitPrice !== undefined) {
+        optionalVariantInput.showUnitPrice = sourceVariant.showUnitPrice;
+      }
+      if (sourceVariant.unitPriceMeasurement) {
+        optionalVariantInput.unitPriceMeasurement = sourceVariant.unitPriceMeasurement;
+      }
+      if (sourceVariant.weight !== undefined && sourceVariant.weightUnit) {
+        const weightInKg =
+          sourceVariant.weightUnit === "GRAMS"
+            ? sourceVariant.weight / 1000
+            : sourceVariant.weight;
+        optionalVariantInput.inventoryItem = {
+          measurement: {
+            weight: {
+              value: weightInKg,
+              unit: "KILOGRAMS",
+            },
+          },
+        };
+      }
+
+      if (Object.keys(optionalVariantInput).length > 1) {
+        const optionalUpdateResult = await shopifyGraphQL<{
+          productVariantsBulkUpdate: {
+            userErrors: Array<{ field?: string[]; message: string }>;
+          };
+        }>(config, variantMutation, {
+          productId: createdProductId,
+          variants: [optionalVariantInput],
+        });
+
+        const optionalErrors = optionalUpdateResult.data?.productVariantsBulkUpdate?.userErrors;
+        if (optionalErrors && optionalErrors.length > 0) {
+          postCreateWarnings.push(
+            `Campos opcionales no aplicados (unit price/peso): ${optionalErrors
+              .map((e) => e.message)
+              .join(", ")}`,
+          );
+        }
       }
     }
 
