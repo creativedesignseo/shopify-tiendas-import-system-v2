@@ -79,6 +79,11 @@ Contexto tecnico unico para que cualquier agente (Claude Code, Antigravity/Gemin
 - Si alguna tienda no permite ajuste por location/permisos: agregar selector explicito de `locationId`.
 - Endurecer manejo de errores de inventario para reintento automatico por producto.
 - Decidir mover secretos de localStorage a storage server-side (fuera de alcance actual).
+- **Perfume Knowledge Base & Agent** — spec completa en `docs/PERFUME_AGENT_SPEC.md`:
+  - BD propia de perfumes en Supabase (notas, peso real, equivalencias dupe/inspired-by).
+  - Enriquecimiento hibrido: BD propia primero, IA como fallback.
+  - Agente conversacional para clientes (chat Shopify + WhatsApp futuro).
+  - Upgrade a GPT-5/Claude Opus para precision en datos de perfumeria de lujo.
 
 ## Regla de Colaboracion
 - No sobrescribir cambios locales del usuario no relacionados.
