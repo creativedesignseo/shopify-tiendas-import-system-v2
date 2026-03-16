@@ -48,3 +48,6 @@ Test/
 
 # Claude Code session
 .claude/
+
+# MCP config (contains access tokens)
+.mcp.json
