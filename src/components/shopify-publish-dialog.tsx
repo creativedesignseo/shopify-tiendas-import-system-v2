@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import type { ProcessedProduct } from "@/lib/product-processor";
 import type { CreateProductResult } from "@/lib/shopify-client";
+import { useUserSettings } from "@/hooks/use-user-settings";
 
 interface ShopifyPublishDialogProps {
   open: boolean;
@@ -37,6 +38,7 @@ export function ShopifyPublishDialog({
   const [selectedPublicationIds, setSelectedPublicationIds] = React.useState<string[]>([]);
   const [publicationNames, setPublicationNames] = React.useState<Record<string, string>>({});
   const [defaultInventoryQty, setDefaultInventoryQty] = React.useState(10);
+  const { settings } = useUserSettings();
 
   // Success chime (same as product generation)
   const playSuccessSound = React.useCallback(() => {
@@ -71,58 +73,25 @@ export function ShopifyPublishDialog({
       setProgress(0);
       setCurrentProduct("");
       setError("");
-      const storedMode = (localStorage.getItem("shopify_publication_mode") || "all") as "all" | "custom";
-      const storedIdsRaw = localStorage.getItem("shopify_publication_ids");
-      const storedChannelsRaw = localStorage.getItem("shopify_publications_cache");
-      const storedQty = Number(localStorage.getItem("shopify_default_inventory_qty") || "10");
-
-      setPublicationMode(storedMode === "custom" ? "custom" : "all");
-      try {
-        const parsedIds = storedIdsRaw ? JSON.parse(storedIdsRaw) : [];
-        setSelectedPublicationIds(Array.isArray(parsedIds) ? parsedIds : []);
-      } catch {
-        setSelectedPublicationIds([]);
-      }
-      try {
-        const parsedChannels = storedChannelsRaw ? JSON.parse(storedChannelsRaw) : [];
-        const names: Record<string, string> = {};
-        if (Array.isArray(parsedChannels)) {
-          parsedChannels.forEach((channel: { id?: string; name?: string }) => {
-            if (channel?.id && channel?.name) {
-              names[channel.id] = channel.name;
-            }
-          });
-        }
-        setPublicationNames(names);
-      } catch {
-        setPublicationNames({});
-      }
-      setDefaultInventoryQty(Number.isFinite(storedQty) && storedQty >= 0 ? Math.floor(storedQty) : 10);
+      setPublicationMode(settings.publication_mode === "custom" ? "custom" : "all");
+      setSelectedPublicationIds(settings.publication_ids || []);
+      setPublicationNames({});
+      setDefaultInventoryQty(settings.default_inventory_qty || 10);
     }
-  }, [open]);
+  }, [open, settings]);
 
-  const shopName = typeof window !== "undefined"
-    ? localStorage.getItem("shopify_profile_name") || localStorage.getItem("shopify_shop_domain") || "Shopify"
-    : "Shopify";
+  const shopName = settings.shopify_shop_name || settings.shopify_domain || "Shopify";
 
   const handlePublish = async () => {
     setPhase("publishing");
     setProgress(0);
 
-    const shopDomain = localStorage.getItem("shopify_shop_domain") || "";
-    const accessToken = localStorage.getItem("shopify_access_token") || "";
-    const apiVersion = localStorage.getItem("shopify_api_version") || "2025-01";
-    const publicationMode = (localStorage.getItem("shopify_publication_mode") || "all") as "all" | "custom";
-    const publicationIds = (() => {
-      try {
-        const raw = localStorage.getItem("shopify_publication_ids");
-        const parsed = raw ? JSON.parse(raw) : [];
-        return Array.isArray(parsed) ? parsed : [];
-      } catch {
-        return [];
-      }
-    })();
-    const defaultInventoryQuantity = Number(localStorage.getItem("shopify_default_inventory_qty") || "10");
+    const shopDomain = settings.shopify_domain;
+    const accessToken = settings.shopify_access_token;
+    const apiVersion = settings.shopify_api_version;
+    const publicationMode = settings.publication_mode as "all" | "custom";
+    const publicationIds = settings.publication_ids || [];
+    const defaultInventoryQuantity = settings.default_inventory_qty || 10;
 
     if (!shopDomain || !accessToken) {
       setError("Faltan credenciales de Shopify. Configúralas en Ajustes.");

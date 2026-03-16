@@ -24,6 +24,7 @@ import { ProcessedProduct } from "@/lib/product-processor"
 import { Check, AlertCircle, Loader2, Settings2, ExternalLink, Search, Sparkles, Image as ImageIcon, Store } from "lucide-react"
 import { MasterData } from "@/lib/csv-parser"
 import { ProductReviewDialog } from "./product-review-dialog"
+import { useUserSettings } from "@/hooks/use-user-settings"
 
 interface ProductsTableProps {
   products: ProcessedProduct[]
@@ -40,23 +41,20 @@ export function ProductsTable({
 }: ProductsTableProps) {
   // State for Review Dialog
   const [reviewProductId, setReviewProductId] = React.useState<string | null>(null)
+  const { settings } = useUserSettings()
 
   // Shopify dedupe state
   const [isCheckingDupes, setIsCheckingDupes] = React.useState(false)
   const [dupeCheckProgress, setDupeCheckProgress] = React.useState("")
-  const [shopifyConfigured, setShopifyConfigured] = React.useState(false)
-
-  React.useEffect(() => {
-    setShopifyConfigured(localStorage.getItem("shopify_connected") === "true")
-  }, [])
+  const shopifyConfigured = Boolean(settings.shopify_domain && settings.shopify_access_token)
 
   const handleCheckShopifyDupes = async () => {
     setIsCheckingDupes(true)
     setDupeCheckProgress(`0/${products.length}`)
     try {
-      const shopDomain = localStorage.getItem("shopify_shop_domain") || ""
-      const accessToken = localStorage.getItem("shopify_access_token") || ""
-      const apiVersion = localStorage.getItem("shopify_api_version") || "2025-01"
+      const shopDomain = settings.shopify_domain
+      const accessToken = settings.shopify_access_token
+      const apiVersion = settings.shopify_api_version
 
       const productsToCheck = products.map((p) => ({
         barcode: p.barcode,

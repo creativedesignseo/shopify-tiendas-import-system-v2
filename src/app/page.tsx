@@ -23,9 +23,11 @@ import { SessionRecoveryDialog } from "@/components/session-recovery-dialog"
 import { FlightProgressBar } from "@/components/flight-progress-bar"
 import { ManualProductForm } from "@/components/manual-product-form"
 import { ShopifyPublishDialog } from "@/components/shopify-publish-dialog"
+import { useUserSettings } from "@/hooks/use-user-settings"
 
 
 export default function Dashboard() {
+  const { settings } = useUserSettings()
   const [masterData, setMasterData] = React.useState<MasterData | null>(null)
   const [products, setProducts] = React.useState<ProcessedProduct[]>([])
   const [isProcessing, setIsProcessing] = React.useState(false)
@@ -46,14 +48,13 @@ export default function Dashboard() {
   const [outputMode, setOutputMode] = React.useState("csv_only")
   const [showPublishDialog, setShowPublishDialog] = React.useState(false)
   const refreshShopifySnapshot = React.useCallback(async () => {
-    const connected = localStorage.getItem("shopify_connected") === "true"
-    const shopDomain = localStorage.getItem("shopify_shop_domain") || ""
-    const accessToken = localStorage.getItem("shopify_access_token") || ""
-    const apiVersion = localStorage.getItem("shopify_api_version") || "2025-01"
-    const mode = localStorage.getItem("shopify_output_mode") || "csv_only"
+    const shopDomain = settings.shopify_domain
+    const accessToken = settings.shopify_access_token
+    const apiVersion = settings.shopify_api_version
+    const connected = Boolean(shopDomain && accessToken)
 
     setShopifyConnected(connected)
-    setOutputMode(mode)
+    setOutputMode(settings.output_mode)
 
     if (!connected) {
       setShopifyShopName("")
@@ -61,13 +62,11 @@ export default function Dashboard() {
       return
     }
 
-    // Fast local snapshot first.
-    setShopifyShopName(localStorage.getItem("shopify_shop_name") || "")
-    const storedCount = localStorage.getItem("shopify_products_count")
-    setShopifyProductsCount(storedCount ? Number(storedCount) : null)
+    // Fast snapshot from settings
+    setShopifyShopName(settings.shopify_shop_name)
+    setShopifyProductsCount(settings.shopify_products_count || null)
 
-    // Real sync against Shopify.
-    if (!shopDomain || !accessToken) return
+    // Real sync against Shopify
     try {
       const res = await fetch("/api/shopify/test-connection", {
         method: "POST",
@@ -81,12 +80,10 @@ export default function Dashboard() {
       const count = Number(data.shop?.productsCount ?? 0)
       setShopifyShopName(name)
       setShopifyProductsCount(count)
-      localStorage.setItem("shopify_shop_name", name)
-      localStorage.setItem("shopify_products_count", String(count))
     } catch {
-      // Keep last known local snapshot on transient network errors.
+      // Keep last known snapshot on transient network errors.
     }
-  }, [])
+  }, [settings])
 
   React.useEffect(() => {
     refreshShopifySnapshot()
@@ -257,8 +254,7 @@ export default function Dashboard() {
 
   // ─── 2. Manejar Archivo de Nuevos Productos ────────────────────
   const handleNewFile = async (file: File) => {
-    const mode = localStorage.getItem("shopify_output_mode") || "csv_only"
-    const isShopifyMode = mode === "shopify_only" || mode === "csv_and_shopify"
+    const isShopifyMode = settings.output_mode === "shopify_only" || settings.output_mode === "csv_and_shopify"
     if (!masterData && !isShopifyMode) {
       alert("Por favor, sube primero el CSV Maestro.")
       return
@@ -397,7 +393,7 @@ Cabeceras Requeridas (Aceptamos variaciones):
       return
     }
 
-    const mode = localStorage.getItem("shopify_output_mode") || "csv_only"
+    const mode = settings.output_mode || "csv_only"
 
     if (mode === "csv_only") {
       if (!masterData) return
@@ -417,7 +413,7 @@ Cabeceras Requeridas (Aceptamos variaciones):
   }
 
   const handlePublishComplete = (results: import("@/lib/shopify-client").CreateProductResult[]) => {
-    const mode = localStorage.getItem("shopify_output_mode") || "csv_only"
+    const mode = settings.output_mode || "csv_only"
     if (mode === "csv_and_shopify" && masterData) {
       const readyProducts = products.filter(p => p.status === "complete" && p.isChecked)
       downloadCSV(readyProducts)

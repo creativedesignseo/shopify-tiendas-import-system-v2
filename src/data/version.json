@@ -1,6 +1,18 @@
 {
-  "current": "1.9.2",
+  "current": "2.0.0",
   "releases": [
+    {
+      "version": "2.0.0",
+      "date": "2026-03-16",
+      "entries": [
+        { "type": "added", "text": "Sistema de autenticación con Supabase Auth (email + contraseña)." },
+        { "type": "added", "text": "Página de login/registro con diseño Uber-style." },
+        { "type": "added", "text": "Ajustes de usuario almacenados en Supabase (por cuenta, no por navegador)." },
+        { "type": "added", "text": "Migración automática de localStorage a Supabase al primer login." },
+        { "type": "added", "text": "Protección de rutas: middleware redirige a /login si no hay sesión." },
+        { "type": "changed", "text": "Todos los componentes migrados de localStorage a useUserSettings (Supabase)." }
+      ]
+    },
     {
       "version": "1.9.2",
       "date": "2026-03-16",

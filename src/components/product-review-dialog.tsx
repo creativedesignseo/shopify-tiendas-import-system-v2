@@ -12,6 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ProcessedProduct } from "@/lib/product-processor"
 import { MasterData } from "@/lib/csv-parser"
 import { Loader2, Sparkles, Search, ExternalLink, Check, Image as ImageIcon, FileText, TriangleAlert, X, Plus, GripVertical } from "lucide-react"
+import { useUserSettings } from "@/hooks/use-user-settings"
 
 interface ProductReviewDialogProps {
   product: ProcessedProduct
@@ -28,6 +29,7 @@ export function ProductReviewDialog({
   onOpenChange, 
   onUpdate 
 }: ProductReviewDialogProps) {
+  const { settings } = useUserSettings()
   const [isGenerating, setIsGenerating] = React.useState(false)
   const [activeTab, setActiveTab] = React.useState("details")
   const [showQuotaError, setShowQuotaError] = React.useState(false)
@@ -118,11 +120,11 @@ export function ProductReviewDialog({
     }, 1200)
 
     try {
-      const provider = localStorage.getItem("ai_provider") || "gemini"
+      const provider = settings.ai_provider || "gemini"
       const modelVersion =
         provider === "openai"
-          ? (localStorage.getItem("ai_openai_model_version") || localStorage.getItem("ai_model_version") || "gpt-4o-mini")
-          : (localStorage.getItem("ai_gemini_model_version") || localStorage.getItem("ai_model_version") || "gemini-2.5-flash")
+          ? (settings.ai_openai_model || "gpt-4o-mini")
+          : (settings.ai_gemini_model || "gemini-2.5-flash")
 
       const res = await fetch("/api/generate", {
         method: "POST",
@@ -135,7 +137,7 @@ export function ProductReviewDialog({
           },
           htmlTemplate: masterData?.htmlTemplate || "",
           provider,
-          apiKey: localStorage.getItem("ai_api_key") || "",
+          apiKey: settings.ai_api_key || "",
           modelVersion
         })
       })

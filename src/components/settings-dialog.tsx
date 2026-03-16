@@ -1,6 +1,6 @@
-
 import * as React from "react"
 import { Settings, Save, Eye, EyeOff, Loader2, CheckCircle, XCircle, Store, RefreshCw } from "lucide-react"
+import { useUserSettings } from "@/hooks/use-user-settings"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -16,6 +16,7 @@ import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 export function SettingsDialog() {
+  const { settings, updateSettings } = useUserSettings()
   const [open, setOpen] = React.useState(false)
   const [showSaveSuccessDialog, setShowSaveSuccessDialog] = React.useState(false)
   const [provider, setProvider] = React.useState("gemini")
@@ -41,77 +42,43 @@ export function SettingsDialog() {
   const [connectionStatus, setConnectionStatus] = React.useState<"idle" | "testing" | "connected" | "error">("idle")
   const [connectionInfo, setConnectionInfo] = React.useState("")
 
+  // Load settings from Supabase when dialog opens
   React.useEffect(() => {
     if (open) {
-      // Load AI settings
-      const storedProvider = localStorage.getItem("ai_provider") || "gemini"
-      const storedKey = localStorage.getItem("ai_api_key") || ""
-      const storedModel = localStorage.getItem("ai_model_version") || "gemini-2.5-flash"
-      const storedGeminiModel = localStorage.getItem("ai_gemini_model_version") || storedModel || "gemini-2.5-flash"
-      const storedOpenAiModel = localStorage.getItem("ai_openai_model_version") || "gpt-4o-mini"
-      setProvider(storedProvider)
-      setApiKey(storedKey)
-      setGeminiModelVersion(storedGeminiModel)
-      setOpenaiModelVersion(storedOpenAiModel)
-
-      // Load Shopify settings
-      const storedDomain = localStorage.getItem("shopify_shop_domain") || ""
-      const storedToken = localStorage.getItem("shopify_access_token") || ""
-      const storedVersion = localStorage.getItem("shopify_api_version") || "2025-01"
-      const storedProfile = localStorage.getItem("shopify_profile_name") || ""
-      const storedMode = localStorage.getItem("shopify_output_mode") || "csv_only"
-      const storedInventoryQty = localStorage.getItem("shopify_default_inventory_qty") || "10"
-      const storedPublicationMode = localStorage.getItem("shopify_publication_mode") || "all"
-      const storedPublicationIds = localStorage.getItem("shopify_publication_ids")
-      const storedPublications = localStorage.getItem("shopify_publications_cache")
-      setShopDomain(storedDomain)
-      setShopAccessToken(storedToken)
-      setShopApiVersion(storedVersion)
-      setShopProfileName(storedProfile)
-      setShopOutputMode(storedMode)
-      setDefaultInventoryQty(storedInventoryQty)
-      setPublicationMode(storedPublicationMode === "custom" ? "custom" : "all")
-      try {
-        const parsedIds = storedPublicationIds ? JSON.parse(storedPublicationIds) : []
-        setSelectedPublicationIds(Array.isArray(parsedIds) ? parsedIds : [])
-      } catch {
-        setSelectedPublicationIds([])
-      }
-      try {
-        const parsedPublications = storedPublications ? JSON.parse(storedPublications) : []
-        setPublications(Array.isArray(parsedPublications) ? parsedPublications : [])
-      } catch {
-        setPublications([])
-      }
+      setProvider(settings.ai_provider)
+      setApiKey(settings.ai_api_key)
+      setGeminiModelVersion(settings.ai_gemini_model)
+      setOpenaiModelVersion(settings.ai_openai_model)
+      setShopDomain(settings.shopify_domain)
+      setShopAccessToken(settings.shopify_access_token)
+      setShopApiVersion(settings.shopify_api_version)
+      setShopProfileName("")
+      setShopOutputMode(settings.output_mode)
+      setDefaultInventoryQty(String(settings.default_inventory_qty))
+      setPublicationMode(settings.publication_mode === "custom" ? "custom" : "all")
+      setSelectedPublicationIds(settings.publication_ids || [])
+      setPublications([])
 
       // Reset connection status on open
-      const wasConnected = localStorage.getItem("shopify_connected") === "true"
-      setConnectionStatus(wasConnected ? "connected" : "idle")
-      setConnectionInfo(wasConnected ? "Conectado previamente" : "")
+      setConnectionStatus(settings.shopify_domain ? "connected" : "idle")
+      setConnectionInfo(settings.shopify_domain ? "Conectado previamente" : "")
     }
-  }, [open])
+  }, [open, settings])
 
-  const handleSave = () => {
-    // Save AI settings
-    localStorage.setItem("ai_provider", provider)
-    localStorage.setItem("ai_api_key", apiKey)
-    localStorage.setItem("ai_gemini_model_version", geminiModelVersion)
-    localStorage.setItem("ai_openai_model_version", openaiModelVersion)
-    localStorage.setItem(
-      "ai_model_version",
-      provider === "openai" ? openaiModelVersion : geminiModelVersion
-    )
-
-    // Save Shopify settings
-    localStorage.setItem("shopify_shop_domain", shopDomain)
-    localStorage.setItem("shopify_access_token", shopAccessToken)
-    localStorage.setItem("shopify_api_version", shopApiVersion)
-    localStorage.setItem("shopify_profile_name", shopProfileName)
-    localStorage.setItem("shopify_output_mode", shopOutputMode)
-    localStorage.setItem("shopify_default_inventory_qty", defaultInventoryQty || "10")
-    localStorage.setItem("shopify_publication_mode", publicationMode)
-    localStorage.setItem("shopify_publication_ids", JSON.stringify(selectedPublicationIds))
-    localStorage.setItem("shopify_publications_cache", JSON.stringify(publications))
+  const handleSave = async () => {
+    await updateSettings({
+      ai_provider: provider,
+      ai_api_key: apiKey,
+      ai_gemini_model: geminiModelVersion,
+      ai_openai_model: openaiModelVersion,
+      shopify_domain: shopDomain,
+      shopify_access_token: shopAccessToken,
+      shopify_api_version: shopApiVersion,
+      output_mode: shopOutputMode,
+      default_inventory_qty: Number(defaultInventoryQty) || 10,
+      publication_mode: publicationMode,
+      publication_ids: selectedPublicationIds,
+    })
 
     setOpen(false)
     setShowSaveSuccessDialog(true)
@@ -186,23 +153,20 @@ export function SettingsDialog() {
       if (data.success) {
         setConnectionStatus("connected")
         setConnectionInfo(`${data.shop.name} — ${data.shop.domain}`)
-        localStorage.setItem("shopify_connected", "true")
-        localStorage.setItem("shopify_shop_name", data.shop.name || "")
-        localStorage.setItem("shopify_products_count", String(data.shop.productsCount ?? 0))
+        updateSettings({
+          shopify_shop_name: data.shop.name || "",
+          shopify_products_count: data.shop.productsCount ?? 0,
+        })
         await handleLoadPublications()
       } else {
         setConnectionStatus("error")
         setConnectionInfo(data.error || "Error de conexión")
-        localStorage.setItem("shopify_connected", "false")
-        localStorage.removeItem("shopify_shop_name")
-        localStorage.removeItem("shopify_products_count")
+        updateSettings({ shopify_shop_name: "", shopify_products_count: 0 })
       }
     } catch (err: any) {
       setConnectionStatus("error")
       setConnectionInfo(err.message || "No se puede conectar")
-      localStorage.setItem("shopify_connected", "false")
-      localStorage.removeItem("shopify_shop_name")
-      localStorage.removeItem("shopify_products_count")
+      updateSettings({ shopify_shop_name: "", shopify_products_count: 0 })
     }
   }
 
@@ -220,7 +184,7 @@ export function SettingsDialog() {
         <DialogHeader>
           <DialogTitle>Configuración</DialogTitle>
           <DialogDescription>
-            Configura tu IA y conexión a Shopify. Los datos se guardan en tu navegador.
+            Configura tu IA y conexión a Shopify. Los datos se guardan en tu cuenta.
           </DialogDescription>
         </DialogHeader>
 
