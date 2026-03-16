@@ -1,5 +1,5 @@
 
-import { supabase } from './supabase';
+import { supabase, isSupabaseConfigured } from './supabase';
 import { ProcessedProduct } from './product-processor';
 
 // ─── Types ───────────────────────────────────────────────────────
@@ -86,6 +86,7 @@ export const BackupService = {
   /** Get the most recent active (in_progress) session for this device */
   async getActiveSession(deviceId: string): Promise<SessionWithProducts | null> {
     try {
+      if (!isSupabaseConfigured) return null;
       // 1. Find active session
       const { data: session, error: sessionError } = await supabase
         .from('import_sessions')
@@ -119,7 +120,8 @@ export const BackupService = {
         products,
       };
     } catch (error) {
-      console.error('Error fetching active session:', error);
+      const details = error instanceof Error ? error.message : JSON.stringify(error);
+      console.error('Error fetching active session:', details);
       return null;
     }
   },
