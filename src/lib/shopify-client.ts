@@ -416,8 +416,16 @@ export async function createShopifyProduct(
     title: input.title,
     descriptionHtml: input.bodyHtml,
     vendor: input.vendor,
+    productType: input.productType,
     tags: input.tags,
     status: input.status,
+    seo:
+      input.seoTitle || input.seoDescription
+        ? {
+            title: input.seoTitle || undefined,
+            description: input.seoDescription || undefined,
+          }
+        : undefined,
     metafields: input.metafields,
   };
 
@@ -467,7 +475,7 @@ export async function createShopifyProduct(
     const createdVariantId = data?.product?.variants?.nodes?.[0]?.id;
     const createdInventoryItemId = data?.product?.variants?.nodes?.[0]?.inventoryItem?.id;
     const sourceVariant = input.variants?.[0];
-    let postCreateWarning: string | undefined;
+    const postCreateWarnings: string[] = [];
     if (createdProductId && createdVariantId && sourceVariant) {
       const variantMutation = `
         mutation productVariantsBulkUpdate($productId: ID!, $variants: [ProductVariantsBulkInput!]!) {
@@ -484,17 +492,30 @@ export async function createShopifyProduct(
         id: createdVariantId,
         price: sourceVariant.price,
         taxable: sourceVariant.taxable,
-        weight: sourceVariant.weight,
-        weightUnit: sourceVariant.weightUnit,
         inventoryPolicy: sourceVariant.inventoryPolicy || "DENY",
+        showUnitPrice: sourceVariant.showUnitPrice,
+        unitPriceMeasurement: sourceVariant.unitPriceMeasurement,
       };
 
       const inventoryItem: Record<string, unknown> = {};
       if (sourceVariant.sku) inventoryItem.sku = sourceVariant.sku;
       if (sourceVariant.barcode) inventoryItem.barcode = sourceVariant.barcode;
-      if (sourceVariant.cost) inventoryItem.cost = sourceVariant.cost;
+      if (sourceVariant.cost) inventoryItem.cost = Number(sourceVariant.cost);
       if (sourceVariant.requiresShipping !== undefined) {
         inventoryItem.requiresShipping = sourceVariant.requiresShipping;
+      }
+      inventoryItem.tracked = true;
+      if (sourceVariant.weight !== undefined && sourceVariant.weightUnit) {
+        const weightInKg =
+          sourceVariant.weightUnit === "GRAMS"
+            ? sourceVariant.weight / 1000
+            : sourceVariant.weight;
+        inventoryItem.measurement = {
+          weight: {
+            value: weightInKg,
+            unit: "KILOGRAMS",
+          },
+        };
       }
       if (Object.keys(inventoryItem).length > 0) {
         variantInput.inventoryItem = inventoryItem;
@@ -511,12 +532,9 @@ export async function createShopifyProduct(
 
       const variantErrors = variantResult.data?.productVariantsBulkUpdate?.userErrors;
       if (variantErrors && variantErrors.length > 0) {
-        return {
-          barcode: input.variants[0]?.barcode || "",
-          title: input.title,
-          status: "failed",
-          error: variantErrors.map((e) => e.message).join(", "),
-        };
+        postCreateWarnings.push(
+          `Variante actualizada con advertencias: ${variantErrors.map((e) => e.message).join(", ")}`,
+        );
       }
     }
 
@@ -560,15 +578,65 @@ export async function createShopifyProduct(
 
           const invErrors = inventoryResult.data?.inventoryAdjustQuantities?.userErrors;
           if (invErrors && invErrors.length > 0) {
-            postCreateWarning = `Inventario no ajustado: ${invErrors.map((e) => e.message).join(", ")}`;
+            postCreateWarnings.push(
+              `Inventario no ajustado: ${invErrors.map((e) => e.message).join(", ")}`,
+            );
           }
         } else {
-          postCreateWarning = "Inventario no ajustado: no se encontro location activa.";
+          postCreateWarnings.push("Inventario no ajustado: no se encontro location activa.");
         }
       } catch (inventoryError: unknown) {
         const inventoryMessage =
           inventoryError instanceof Error ? inventoryError.message : "Error desconocido de inventario";
-        postCreateWarning = `Inventario no ajustado: ${inventoryMessage}`;
+        postCreateWarnings.push(`Inventario no ajustado: ${inventoryMessage}`);
+      }
+    }
+
+    // Publish to all available channels by default.
+    if (createdProductId) {
+      try {
+        const publicationsResult = await shopifyGraphQL<{
+          publications: { nodes: Array<{ id: string }> };
+        }>(
+          config,
+          `query { publications(first: 50) { nodes { id } } }`,
+        );
+
+        const publicationIds = publicationsResult.data?.publications?.nodes?.map((p) => p.id) || [];
+        if (publicationIds.length > 0) {
+          const publishMutation = `
+            mutation publishablePublish($id: ID!, $input: [PublicationInput!]!) {
+              publishablePublish(id: $id, input: $input) {
+                userErrors {
+                  field
+                  message
+                }
+              }
+            }
+          `;
+
+          const publishResult = await shopifyGraphQL<{
+            publishablePublish: {
+              userErrors: Array<{ field?: string[]; message: string }>;
+            };
+          }>(config, publishMutation, {
+            id: createdProductId,
+            input: publicationIds.map((publicationId) => ({ publicationId })),
+          });
+
+          const publishErrors = publishResult.data?.publishablePublish?.userErrors;
+          if (publishErrors && publishErrors.length > 0) {
+            postCreateWarnings.push(
+              `Canales no publicados: ${publishErrors.map((e) => e.message).join(", ")}`,
+            );
+          }
+        } else {
+          postCreateWarnings.push("No se encontraron canales de venta para publicar automaticamente.");
+        }
+      } catch (publishError: unknown) {
+        const publishMessage =
+          publishError instanceof Error ? publishError.message : "Error desconocido de publicacion";
+        postCreateWarnings.push(`Canales no publicados: ${publishMessage}`);
       }
     }
 
@@ -578,7 +646,7 @@ export async function createShopifyProduct(
       status: "created",
       productId: data?.product?.id,
       handle: data?.product?.handle,
-      error: postCreateWarning,
+      error: postCreateWarnings.length > 0 ? postCreateWarnings.join(" | ") : undefined,
     };
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Error desconocido";
