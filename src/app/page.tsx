@@ -45,13 +45,74 @@ export default function Dashboard() {
   const [shopifyProductsCount, setShopifyProductsCount] = React.useState<number | null>(null)
   const [outputMode, setOutputMode] = React.useState("csv_only")
   const [showPublishDialog, setShowPublishDialog] = React.useState(false)
-  React.useEffect(() => {
-    setShopifyConnected(localStorage.getItem("shopify_connected") === "true")
+  const refreshShopifySnapshot = React.useCallback(async () => {
+    const connected = localStorage.getItem("shopify_connected") === "true"
+    const shopDomain = localStorage.getItem("shopify_shop_domain") || ""
+    const accessToken = localStorage.getItem("shopify_access_token") || ""
+    const apiVersion = localStorage.getItem("shopify_api_version") || "2025-01"
+    const mode = localStorage.getItem("shopify_output_mode") || "csv_only"
+
+    setShopifyConnected(connected)
+    setOutputMode(mode)
+
+    if (!connected) {
+      setShopifyShopName("")
+      setShopifyProductsCount(null)
+      return
+    }
+
+    // Fast local snapshot first.
     setShopifyShopName(localStorage.getItem("shopify_shop_name") || "")
     const storedCount = localStorage.getItem("shopify_products_count")
     setShopifyProductsCount(storedCount ? Number(storedCount) : null)
-    setOutputMode(localStorage.getItem("shopify_output_mode") || "csv_only")
+
+    // Real sync against Shopify.
+    if (!shopDomain || !accessToken) return
+    try {
+      const res = await fetch("/api/shopify/test-connection", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ shopDomain, accessToken, apiVersion }),
+      })
+      const data = await res.json()
+      if (!data.success) return
+
+      const name = data.shop?.name || ""
+      const count = Number(data.shop?.productsCount ?? 0)
+      setShopifyShopName(name)
+      setShopifyProductsCount(count)
+      localStorage.setItem("shopify_shop_name", name)
+      localStorage.setItem("shopify_products_count", String(count))
+    } catch {
+      // Keep last known local snapshot on transient network errors.
+    }
   }, [])
+
+  React.useEffect(() => {
+    refreshShopifySnapshot()
+  }, [refreshShopifySnapshot])
+
+  React.useEffect(() => {
+    // Auto-sync every 60s + when tab/window gains focus.
+    const intervalId = window.setInterval(() => {
+      refreshShopifySnapshot()
+    }, 60000)
+
+    const onVisibility = () => {
+      if (document.visibilityState === "visible") {
+        refreshShopifySnapshot()
+      }
+    }
+    const onFocus = () => refreshShopifySnapshot()
+
+    document.addEventListener("visibilitychange", onVisibility)
+    window.addEventListener("focus", onFocus)
+    return () => {
+      window.clearInterval(intervalId)
+      document.removeEventListener("visibilitychange", onVisibility)
+      window.removeEventListener("focus", onFocus)
+    }
+  }, [refreshShopifySnapshot])
 
   // Session & Backup State
   const [deviceId, setDeviceId] = React.useState<string>("")
