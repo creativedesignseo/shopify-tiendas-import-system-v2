@@ -24,30 +24,24 @@ function toTitleCase(text: string): string {
     .trim();
 }
 
+function buildCatalogTitle(productName: string, brand: string, size?: string): string {
+  const cleanName = toTitleCase((productName || "").trim());
+  const cleanBrand = toTitleCase((brand || "").trim());
+  const cleanSize = (size || "").trim();
+  const parts = [cleanName, cleanBrand].filter(Boolean);
+  let title = parts.join(" - ");
+  if (cleanSize) title = `${title} ${cleanSize}`;
+  return title.trim().slice(0, 70);
+}
+
 function normalizeGeneratedTitle(
   rawTitle: string | undefined,
   productName: string,
   brand: string,
   size?: string,
 ): string {
-  const cleanName = (productName || "").trim();
-  const cleanBrand = (brand || "").trim();
-  const cleanSize = (size || "").trim();
-
-  // Preferred: keep model output if meaningful and SEO-oriented.
-  const candidate = (rawTitle || "").trim();
-  if (candidate.length >= 8) {
-    const fixed = candidate
-      .replace(/\s+/g, " ")
-      .replace(/[|]{2,}/g, "|")
-      .trim();
-    return fixed.length > 70 ? fixed.slice(0, 70).trim() : fixed;
-  }
-
-  // Fallback SEO title pattern
-  const base = [cleanName, cleanBrand].filter(Boolean).join(" - ");
-  const withSize = cleanSize ? `${base} ${cleanSize}` : base;
-  return toTitleCase((withSize || cleanName || "Perfume").trim());
+  // En modo catalogo estricto usamos titulo deterministico (paridad con CSV).
+  return buildCatalogTitle(productName, brand, size);
 }
 
 export async function POST(req: Request) {
@@ -67,10 +61,10 @@ export async function POST(req: Request) {
     }
 
     const systemPrompt = `
-Eres un copywriter SEO experto en perfumeria premium.
+Eres un catalogador tecnico para e-commerce de perfumeria.
 
 TAREA:
-Genera contenido unico para un perfume especifico.
+Genera contenido tecnico y claro para un perfume especifico.
 Todo el contenido debe estar en espanol neutro.
 
 PRODUCTO OBJETIVO:
@@ -89,14 +83,15 @@ ${htmlTemplate || "<!-- Sin plantilla, usa estructura estandar de descripcion de
 
 REGLAS CRITICAS:
 - Responde 100% en espanol.
-- "title" debe ser SEO-friendly, natural y claro (nombre + marca + tamano/tipo si aplica), maximo 70 caracteres.
-- No uses frases en ingles tipo "Experience..." o "Discover...".
+- No uses tono comercial exagerado, claims de marketing ni frases en ingles.
+- Evita palabras de venta como: "descubre", "experimenta", "lujo inigualable", "irresistible", etc.
+- Usa estilo de ficha tecnica: preciso, informativo y neutral.
 - "body_html" debe hablar unicamente de "${product.Nombre}" de "${product.Marca}".
 - Si la plantilla menciona otros productos, ignoralos.
 
 REQUISITOS DE SALIDA:
-1) title: titulo SEO en espanol para e-commerce (evita relleno; prioriza claridad y conversion).
-2) body_html: HTML original en espanol, con notas olfativas y recomendaciones.
+1) title: usa exactamente este formato: "${product.Nombre} - ${product.Marca}${product.Tamaño ? ` ${product.Tamaño}` : ""}" (max 70).
+2) body_html: HTML en espanol con estructura limpia y factual (descripcion, notas, uso recomendado).
 3) seo_title: titulo SEO (max 60 caracteres).
 4) seo_description: meta descripcion (max 160 caracteres).
 5) tags: la PRIMERA etiqueta debe ser "${product.Marca}", luego 4-7 etiquetas relevantes.
