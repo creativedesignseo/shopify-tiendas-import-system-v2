@@ -187,8 +187,8 @@ export function ProductReviewDialog({
         size: product.size || aiSize,
         // Only set images from AI if user hasn't manually added any
         images: hasExistingImages ? product.images : (aiImages.length > 0 ? aiImages : product.images),
-        // Only set weight from AI if user hasn't manually changed it from default
-        ...(aiWeight && (!product.shopifyWeightGrams || product.shopifyWeightGrams === 350) ? { shopifyWeightGrams: aiWeight } : {}),
+        // Only set weight from AI if user hasn't manually set a custom value
+        ...(aiWeight && (!product.shopifyWeightGrams || product.shopifyWeightGrams === 0) ? { shopifyWeightGrams: aiWeight } : {}),
         metafields: {
            acorde: product.metafields.acorde || aiData.metafields?.acorde || "",
            genero: product.metafields.genero || aiData.metafields?.genero || "",
@@ -881,7 +881,8 @@ export function ProductReviewDialog({
                             <Input
                               type="number"
                               min={0}
-                              value={product.shopifyWeightGrams ?? 350}
+                              value={product.shopifyWeightGrams ?? 0}
+                              placeholder="Genera con IA para estimar"
                               onChange={(e) =>
                                 onUpdate(product.id, "shopifyWeightGrams", Number(e.target.value || 0))
                               }

@@ -251,7 +251,7 @@ export const processNewProducts = (
             shopifySku: barcode,
             shopifyBarcode: barcode,
             shopifyInventoryQuantity: 10,
-            shopifyWeightGrams: 350,
+            shopifyWeightGrams: 0,
             shopifyRequiresShipping: true,
             shopifyTaxable: true,
             shopifyStatus: "ACTIVE",

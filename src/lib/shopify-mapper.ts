@@ -125,7 +125,7 @@ export function mapProductToShopify(
         barcode: product.shopifyBarcode || product.barcode || undefined,
         inventoryQuantity: product.shopifyInventoryQuantity ?? 10,
         inventoryPolicy: "DENY",
-        weight: product.shopifyWeightGrams ?? 350,
+        weight: product.shopifyWeightGrams || 0,
         weightUnit: "GRAMS",
         requiresShipping: product.shopifyRequiresShipping ?? true,
         taxable: product.shopifyTaxable ?? true,
