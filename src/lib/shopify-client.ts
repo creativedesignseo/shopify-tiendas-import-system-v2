@@ -448,7 +448,6 @@ export async function createShopifyProduct(
     productType: input.productType,
     tags: input.tags,
     status: input.status,
-    category: input.category || undefined,
     seo:
       input.seoTitle || input.seoDescription
         ? {

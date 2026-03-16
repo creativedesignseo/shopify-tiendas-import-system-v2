@@ -7,7 +7,6 @@ export interface ShopifyProductInput {
   productType: string;
   tags: string[];
   status: "ACTIVE" | "DRAFT";
-  category?: string;
   seoTitle?: string;
   seoDescription?: string;
   images: Array<{ src: string; altText?: string }>;
@@ -116,7 +115,6 @@ export function mapProductToShopify(
     productType: product.shopifyProductType || "Eau de Parfum",
     tags,
     status: product.shopifyStatus || "ACTIVE",
-    category: "Salud y belleza > Cuidado personal > Cosméticos > Perfumes y colonias > Aguas de perfume",
     seoTitle: product.seoTitle || undefined,
     seoDescription: product.seoDescription || undefined,
     images,
