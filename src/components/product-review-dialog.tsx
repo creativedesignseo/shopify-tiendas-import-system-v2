@@ -118,6 +118,12 @@ export function ProductReviewDialog({
     }, 1200)
 
     try {
+      const provider = localStorage.getItem("ai_provider") || "gemini"
+      const modelVersion =
+        provider === "openai"
+          ? (localStorage.getItem("ai_openai_model_version") || localStorage.getItem("ai_model_version") || "gpt-4o-mini")
+          : (localStorage.getItem("ai_gemini_model_version") || localStorage.getItem("ai_model_version") || "gemini-2.5-flash")
+
       const res = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -128,9 +134,9 @@ export function ProductReviewDialog({
             Tamaño: product.size
           },
           htmlTemplate: masterData?.htmlTemplate || "",
-          provider: localStorage.getItem("ai_provider") || "gemini",
+          provider,
           apiKey: localStorage.getItem("ai_api_key") || "",
-          modelVersion: localStorage.getItem("ai_model_version") || "gemini-2.5-flash"
+          modelVersion
         })
       })
 

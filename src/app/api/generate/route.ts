@@ -122,10 +122,11 @@ Responde solo JSON valido, sin markdown:
 
     if (provider === "openai") {
       const openai = new OpenAI({ apiKey: activeApiKey });
-      console.log("Generating with OpenAI (gpt-4o-mini) for:", product.Nombre);
+      const activeModel = modelVersion || "gpt-4o-mini";
+      console.log(`Generating with OpenAI (${activeModel}) for:`, product.Nombre);
 
       const completion = await openai.chat.completions.create({
-        model: "gpt-4o-mini",
+        model: activeModel,
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: "Genera el contenido en JSON." }
@@ -137,7 +138,7 @@ Responde solo JSON valido, sin markdown:
       if (!content) throw new Error("Empty response from OpenAI");
 
       const jsonResponse = JSON.parse(content);
-      jsonResponse.model_used = "gpt-4o-mini";
+      jsonResponse.model_used = activeModel;
       jsonResponse.title = normalizeGeneratedTitle(
         jsonResponse.title,
         product.Nombre,

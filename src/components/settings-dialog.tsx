@@ -20,7 +20,8 @@ export function SettingsDialog() {
   const [showSaveSuccessDialog, setShowSaveSuccessDialog] = React.useState(false)
   const [provider, setProvider] = React.useState("gemini")
   const [apiKey, setApiKey] = React.useState("")
-  const [modelVersion, setModelVersion] = React.useState("gemini-2.5-flash")
+  const [geminiModelVersion, setGeminiModelVersion] = React.useState("gemini-2.5-flash")
+  const [openaiModelVersion, setOpenaiModelVersion] = React.useState("gpt-4o-mini")
   const [showApiKey, setShowApiKey] = React.useState(false)
 
   // Shopify settings state
@@ -46,9 +47,12 @@ export function SettingsDialog() {
       const storedProvider = localStorage.getItem("ai_provider") || "gemini"
       const storedKey = localStorage.getItem("ai_api_key") || ""
       const storedModel = localStorage.getItem("ai_model_version") || "gemini-2.5-flash"
+      const storedGeminiModel = localStorage.getItem("ai_gemini_model_version") || storedModel || "gemini-2.5-flash"
+      const storedOpenAiModel = localStorage.getItem("ai_openai_model_version") || "gpt-4o-mini"
       setProvider(storedProvider)
       setApiKey(storedKey)
-      setModelVersion(storedModel)
+      setGeminiModelVersion(storedGeminiModel)
+      setOpenaiModelVersion(storedOpenAiModel)
 
       // Load Shopify settings
       const storedDomain = localStorage.getItem("shopify_shop_domain") || ""
@@ -91,7 +95,12 @@ export function SettingsDialog() {
     // Save AI settings
     localStorage.setItem("ai_provider", provider)
     localStorage.setItem("ai_api_key", apiKey)
-    localStorage.setItem("ai_model_version", modelVersion)
+    localStorage.setItem("ai_gemini_model_version", geminiModelVersion)
+    localStorage.setItem("ai_openai_model_version", openaiModelVersion)
+    localStorage.setItem(
+      "ai_model_version",
+      provider === "openai" ? openaiModelVersion : geminiModelVersion
+    )
 
     // Save Shopify settings
     localStorage.setItem("shopify_shop_domain", shopDomain)
@@ -285,8 +294,8 @@ export function SettingsDialog() {
                   <div className="col-span-3">
                       <select
                           id="model-version"
-                          value={modelVersion}
-                          onChange={(e) => setModelVersion(e.target.value)}
+                          value={geminiModelVersion}
+                          onChange={(e) => setGeminiModelVersion(e.target.value)}
                           className={selectClass}
                       >
                           <option value="gemini-2.5-flash">Gemini 2.5 Flash (Stable - Recomendado)</option>
@@ -294,6 +303,26 @@ export function SettingsDialog() {
                           <option value="gemini-2.0-flash">Gemini 2.0 Flash (Legacy)</option>
                           <option value="gemini-1.5-flash-latest">Gemini 1.5 Flash (Deprecated)</option>
                       </select>
+                  </div>
+                </div>
+              )}
+              {provider === "openai" && (
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="openai-model-version" className="text-right text-[#1A1A1A]">
+                    Versión
+                  </Label>
+                  <div className="col-span-3">
+                    <select
+                      id="openai-model-version"
+                      value={openaiModelVersion}
+                      onChange={(e) => setOpenaiModelVersion(e.target.value)}
+                      className={selectClass}
+                    >
+                      <option value="gpt-4o-mini">GPT-4o mini (Recomendado)</option>
+                      <option value="gpt-4.1-mini">GPT-4.1 mini</option>
+                      <option value="gpt-4o">GPT-4o</option>
+                      <option value="gpt-4.1">GPT-4.1</option>
+                    </select>
                   </div>
                 </div>
               )}
@@ -579,5 +608,6 @@ export function SettingsDialog() {
     </>
   )
 }
+
 
 
