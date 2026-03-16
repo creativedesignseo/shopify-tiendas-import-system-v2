@@ -1,6 +1,17 @@
 {
-  "current": "1.7.0",
+  "current": "1.9.0",
   "releases": [
+    {
+      "version": "1.9.0",
+      "date": "2026-03-15",
+      "entries": [
+        { "type": "added", "text": "Publicación Shopify Live alineada al export CSV (precio, costo, SEO, inventario y peso)." },
+        { "type": "added", "text": "Canales de venta: activar todos por defecto o seleccionar canales manualmente." },
+        { "type": "added", "text": "Inventario por defecto configurable desde Ajustes Shopify (ej. 10)." },
+        { "type": "added", "text": "Modal de publicación con preview de canales e inventario antes de confirmar." },
+        { "type": "added", "text": "Validación visual: bloqueo al publicar si modo canales manual no tiene selección." }
+      ]
+    },
     {
       "version": "1.7.0",
       "date": "2026-03-03",
