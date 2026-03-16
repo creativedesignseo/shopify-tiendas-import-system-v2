@@ -77,6 +77,10 @@ export function mapProductToShopify(
     .split(",")
     .map((t) => t.trim())
     .filter((t) => t.length > 0);
+  const vendorTag = (product.vendor || "").trim();
+  if (vendorTag && !tags.some((t) => t.toLowerCase() === vendorTag.toLowerCase())) {
+    tags.unshift(vendorTag);
+  }
 
   const images = product.images
     .filter((url) => url.length > 0)

@@ -603,6 +603,50 @@ export async function createShopifyProduct(
       }
     }
 
+    // Enforce tracked inventory at inventory-item level.
+    if (createdInventoryItemId && sourceVariant) {
+      const trackingInput: Record<string, unknown> = {
+        tracked: true,
+      };
+      if (sourceVariant.sku) trackingInput.sku = sourceVariant.sku;
+      if (sourceVariant.cost) trackingInput.cost = Number(sourceVariant.cost);
+      if (sourceVariant.requiresShipping !== undefined) {
+        trackingInput.requiresShipping = sourceVariant.requiresShipping;
+      }
+
+      const trackingResult = await shopifyGraphQL<{
+        inventoryItemUpdate: {
+          userErrors: Array<{ field?: string[]; message: string }>;
+        };
+      }>(
+        config,
+        `mutation inventoryItemUpdate($id: ID!, $input: InventoryItemInput!) {
+          inventoryItemUpdate(id: $id, input: $input) {
+            userErrors {
+              field
+              message
+            }
+          }
+        }`,
+        {
+          id: createdInventoryItemId,
+          input: trackingInput,
+        },
+      );
+
+      const trackingErrors = trackingResult.data?.inventoryItemUpdate?.userErrors;
+      if (trackingErrors && trackingErrors.length > 0) {
+        return {
+          barcode: input.variants[0]?.barcode || "",
+          title: input.title,
+          status: "failed",
+          error: `No se pudo activar seguimiento de inventario: ${trackingErrors
+            .map((e) => e.message)
+            .join(", ")}`,
+        };
+      }
+    }
+
     // Try to set default inventory quantity (strict).
     if (sourceVariant?.inventoryQuantity && !createdInventoryItemId) {
       return {
@@ -719,6 +763,17 @@ export async function createShopifyProduct(
           title: input.title,
           status: "failed",
           error: "Inventario sin seguimiento (tracked=false) despues de crear.",
+        };
+      }
+
+      const expectedBarcode = (sourceVariant?.barcode || "").trim();
+      const actualBarcode = (variant?.barcode || "").trim();
+      if (expectedBarcode && actualBarcode !== expectedBarcode) {
+        return {
+          barcode: input.variants[0]?.barcode || "",
+          title: input.title,
+          status: "failed",
+          error: `Barcode no aplicado correctamente. Esperado: ${expectedBarcode}, recibido: ${actualBarcode || "vacio"}.`,
         };
       }
     }
