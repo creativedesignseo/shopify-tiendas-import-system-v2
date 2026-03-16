@@ -603,7 +603,15 @@ export async function createShopifyProduct(
       }
     }
 
-    // Try to set default inventory quantity (10) on first location.
+    // Try to set default inventory quantity (strict).
+    if (sourceVariant?.inventoryQuantity && !createdInventoryItemId) {
+      return {
+        barcode: input.variants[0]?.barcode || "",
+        title: input.title,
+        status: "failed",
+        error: "No se pudo obtener inventoryItemId para activar tracking e inventario.",
+      };
+    }
     if (createdInventoryItemId && sourceVariant?.inventoryQuantity) {
       try {
         const locationResult = await shopifyGraphQL<{
@@ -643,17 +651,70 @@ export async function createShopifyProduct(
 
           const invErrors = inventoryResult.data?.inventoryAdjustQuantities?.userErrors;
           if (invErrors && invErrors.length > 0) {
-            postCreateWarnings.push(
-              `Inventario no ajustado: ${invErrors.map((e) => e.message).join(", ")}`,
-            );
+            return {
+              barcode: input.variants[0]?.barcode || "",
+              title: input.title,
+              status: "failed",
+              error: `Inventario no ajustado: ${invErrors.map((e) => e.message).join(", ")}`,
+            };
           }
         } else {
-          postCreateWarnings.push("Inventario no ajustado: no se encontro location activa.");
+          return {
+            barcode: input.variants[0]?.barcode || "",
+            title: input.title,
+            status: "failed",
+            error: "Inventario no ajustado: no se encontro location activa.",
+          };
         }
       } catch (inventoryError: unknown) {
         const inventoryMessage =
           inventoryError instanceof Error ? inventoryError.message : "Error desconocido de inventario";
-        postCreateWarnings.push(`Inventario no ajustado: ${inventoryMessage}`);
+        return {
+          barcode: input.variants[0]?.barcode || "",
+          title: input.title,
+          status: "failed",
+          error: `Inventario no ajustado: ${inventoryMessage}`,
+        };
+      }
+    }
+
+    // Strict post-check: tracked + sku/barcode must be present.
+    if (createdInventoryItemId) {
+      const verifyResult = await shopifyGraphQL<{
+        inventoryItem: {
+          tracked: boolean;
+          sku?: string | null;
+          barcode?: string | null;
+        } | null;
+      }>(
+        config,
+        `query verifyInventoryItem($id: ID!) {
+          inventoryItem(id: $id) {
+            tracked
+            sku
+            barcode
+          }
+        }`,
+        { id: createdInventoryItemId },
+      );
+
+      if (verifyResult.errors?.length) {
+        return {
+          barcode: input.variants[0]?.barcode || "",
+          title: input.title,
+          status: "failed",
+          error: `No se pudo verificar inventario: ${verifyResult.errors.map((e) => e.message).join(", ")}`,
+        };
+      }
+
+      const inv = verifyResult.data?.inventoryItem;
+      if (!inv?.tracked) {
+        return {
+          barcode: input.variants[0]?.barcode || "",
+          title: input.title,
+          status: "failed",
+          error: "Inventario sin seguimiento (tracked=false) despues de crear.",
+        };
       }
     }
 

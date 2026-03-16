@@ -6,6 +6,12 @@ import { ProcessedProduct } from "@/lib/product-processor";
 
 export const maxDuration = 300;
 
+function toPositiveNumber(value: string | undefined): number {
+  if (!value) return 0;
+  const parsed = Number(String(value).replace(",", "."));
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
 export async function POST(req: Request) {
   try {
     const {
@@ -72,6 +78,29 @@ export async function POST(req: Request) {
         continue;
       }
 
+      const shopifyInput = mapProductToShopify(product);
+      if (shopifyInput.variants[0]) {
+        shopifyInput.variants[0].inventoryQuantity = inventoryQty;
+      }
+
+      const variant = shopifyInput.variants[0];
+      const priceNumber = toPositiveNumber(variant?.price);
+      const costNumber = toPositiveNumber(variant?.cost);
+      const hasBarcode = !!(variant?.barcode || "").trim();
+      const hasInventoryQty = Number(variant?.inventoryQuantity || 0) > 0;
+
+      if (!hasBarcode || priceNumber <= 0 || costNumber <= 0 || !hasInventoryQty) {
+        results.push({
+          barcode: product.barcode,
+          title: product.generatedTitle || product.title,
+          status: "failed",
+          error:
+            "Datos obligatorios invalidos para Shopify Live (barcode, precio > 0, costo > 0, inventario > 0).",
+        });
+        failed++;
+        continue;
+      }
+
       // Dry run: validate only, don't create
       if (dryRun) {
         results.push({
@@ -84,10 +113,6 @@ export async function POST(req: Request) {
       }
 
       // Live: create product in Shopify
-      const shopifyInput = mapProductToShopify(product);
-      if (shopifyInput.variants[0]) {
-        shopifyInput.variants[0].inventoryQuantity = inventoryQty;
-      }
       const result = await createShopifyProduct(config, shopifyInput, {
         publicationMode: safePublicationMode,
         publicationIds: safePublicationIds,
