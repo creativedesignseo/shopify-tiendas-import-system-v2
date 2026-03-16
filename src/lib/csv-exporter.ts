@@ -88,6 +88,8 @@ export const generateCSV = (products: ProcessedProduct[], masterHeaders: string[
             if (target === "Unit Price Base Measure" && n.includes("base") && n.includes("measure") && !n.endsWith("unit")) return true;
             if (target === "Unit Price Base Measure Unit" && n.includes("base") && n.includes("measure") && n.endsWith("unit")) return true;
             if (target === "Variant Barcode" && n.includes("variant") && n.includes("barcode")) return true;
+            if (target === "Cost per item" && (n.includes("costperitem") || (n.includes("cost") && n.includes("item")))) return true;
+            if (target === "Variant Cost" && n.includes("variant") && n.includes("cost")) return true;
             
             // Metafields (Complex Shopify Headers)
             if (target === "Ocasión" && n.includes("ocasion") && n.includes("occasion")) return true;
@@ -134,6 +136,12 @@ export const generateCSV = (products: ProcessedProduct[], masterHeaders: string[
     mapField("Unit Price Base Measure", "1");
     mapField("Unit Price Base Measure Unit", product.unitPrice.totalMeasureUnit);
     
+    // Cost per item
+    if (product.costPerItem) {
+      mapField("Cost per item", product.costPerItem);
+      mapField("Variant Cost", product.costPerItem);
+    }
+
     // Barcode
     const cleanBarcode = product.barcode.startsWith("'") ? product.barcode.slice(1) : product.barcode;
     mapField("Variant Barcode", cleanBarcode);

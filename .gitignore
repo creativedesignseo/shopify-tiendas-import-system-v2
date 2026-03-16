@@ -42,3 +42,9 @@ next-env.d.ts
 
 # Local Netlify folder
 .netlify
+
+# Test data (screenshots, CSVs, ZIPs)
+Test/
+
+# Claude Code session
+.claude/
