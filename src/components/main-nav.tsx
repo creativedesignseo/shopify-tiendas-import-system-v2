@@ -4,9 +4,13 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Sparkles, FileText } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { UserMenu } from "@/components/user-menu"
 
 export function MainNav() {
   const pathname = usePathname()
+
+  // Don't show nav on login page
+  if (pathname === "/login") return null
 
   const linkClass = (active: boolean) => cn(
     "flex items-center gap-2 text-[13px] font-medium h-full border-b-2 px-1 transition-colors duration-200",
@@ -18,15 +22,18 @@ export function MainNav() {
   return (
     <div className="bg-[#0F0F0F]">
       <div className="max-w-6xl mx-auto px-8">
-        <div className="flex h-12 items-center gap-8">
-          <Link href="/" className={linkClass(pathname === "/")}>
-            <Sparkles className="h-3.5 w-3.5" />
-            Importador IA
-          </Link>
-          <Link href="/mayorista" className={linkClass(pathname === "/mayorista")}>
-            <FileText className="h-3.5 w-3.5" />
-            Catálogo Mayorista
-          </Link>
+        <div className="flex h-12 items-center justify-between">
+          <div className="flex items-center gap-8 h-full">
+            <Link href="/" className={linkClass(pathname === "/")}>
+              <Sparkles className="h-3.5 w-3.5" />
+              Importador IA
+            </Link>
+            <Link href="/mayorista" className={linkClass(pathname === "/mayorista")}>
+              <FileText className="h-3.5 w-3.5" />
+              Catálogo Mayorista
+            </Link>
+          </div>
+          <UserMenu />
         </div>
       </div>
     </div>
