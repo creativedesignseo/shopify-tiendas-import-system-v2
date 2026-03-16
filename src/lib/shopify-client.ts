@@ -524,9 +524,11 @@ export async function createShopifyProduct(
         inventoryPolicy: sourceVariant.inventoryPolicy || "DENY",
       };
 
+      // barcode is a direct variant field, NOT inside inventoryItem
+      if (sourceVariant.barcode) variantInputCritical.barcode = sourceVariant.barcode;
+
       const inventoryItem: Record<string, unknown> = {};
       if (sourceVariant.sku) inventoryItem.sku = sourceVariant.sku;
-      if (sourceVariant.barcode) inventoryItem.barcode = sourceVariant.barcode;
       if (sourceVariant.cost) inventoryItem.cost = Number(sourceVariant.cost);
       if (sourceVariant.requiresShipping !== undefined) {
         inventoryItem.requiresShipping = sourceVariant.requiresShipping;
