@@ -16,11 +16,38 @@ function ensureBrandFirstTag(tags: string | undefined, brand: string): string {
   return [brandClean, ...filtered].join(", ");
 }
 
-function normalizeGeneratedTitle(rawTitle: string | undefined, productName: string): string {
+function toTitleCase(text: string): string {
+  return text
+    .split(" ")
+    .map((word) => (word ? word.charAt(0).toUpperCase() + word.slice(1).toLowerCase() : ""))
+    .join(" ")
+    .trim();
+}
+
+function normalizeGeneratedTitle(
+  rawTitle: string | undefined,
+  productName: string,
+  brand: string,
+  size?: string,
+): string {
   const cleanName = (productName || "").trim();
-  if (!cleanName) return (rawTitle || "").trim();
-  // Business rule: title should be only the perfume name.
-  return cleanName;
+  const cleanBrand = (brand || "").trim();
+  const cleanSize = (size || "").trim();
+
+  // Preferred: keep model output if meaningful and SEO-oriented.
+  const candidate = (rawTitle || "").trim();
+  if (candidate.length >= 8) {
+    const fixed = candidate
+      .replace(/\s+/g, " ")
+      .replace(/[|]{2,}/g, "|")
+      .trim();
+    return fixed.length > 70 ? fixed.slice(0, 70).trim() : fixed;
+  }
+
+  // Fallback SEO title pattern
+  const base = [cleanName, cleanBrand].filter(Boolean).join(" - ");
+  const withSize = cleanSize ? `${base} ${cleanSize}` : base;
+  return toTitleCase((withSize || cleanName || "Perfume").trim());
 }
 
 export async function POST(req: Request) {
@@ -62,13 +89,13 @@ ${htmlTemplate || "<!-- Sin plantilla, usa estructura estandar de descripcion de
 
 REGLAS CRITICAS:
 - Responde 100% en espanol.
-- "title" debe ser SOLO el nombre del perfume, sin slogans y sin marca repetida.
+- "title" debe ser SEO-friendly, natural y claro (nombre + marca + tamano/tipo si aplica), maximo 70 caracteres.
 - No uses frases en ingles tipo "Experience..." o "Discover...".
 - "body_html" debe hablar unicamente de "${product.Nombre}" de "${product.Marca}".
 - Si la plantilla menciona otros productos, ignoralos.
 
 REQUISITOS DE SALIDA:
-1) title: exactamente "${product.Nombre}".
+1) title: titulo SEO en espanol para e-commerce (evita relleno; prioriza claridad y conversion).
 2) body_html: HTML original en espanol, con notas olfativas y recomendaciones.
 3) seo_title: titulo SEO (max 60 caracteres).
 4) seo_description: meta descripcion (max 160 caracteres).
@@ -116,7 +143,12 @@ Responde solo JSON valido, sin markdown:
 
       const jsonResponse = JSON.parse(content);
       jsonResponse.model_used = "gpt-4o-mini";
-      jsonResponse.title = normalizeGeneratedTitle(jsonResponse.title, product.Nombre);
+      jsonResponse.title = normalizeGeneratedTitle(
+        jsonResponse.title,
+        product.Nombre,
+        product.Marca,
+        product.Tamaño,
+      );
       jsonResponse.tags = ensureBrandFirstTag(jsonResponse.tags, product.Marca);
       return NextResponse.json(jsonResponse);
     }
@@ -137,7 +169,12 @@ Responde solo JSON valido, sin markdown:
     const response = await result.response;
     const jsonResponse = JSON.parse(response.text());
     jsonResponse.model_used = activeModel;
-    jsonResponse.title = normalizeGeneratedTitle(jsonResponse.title, product.Nombre);
+    jsonResponse.title = normalizeGeneratedTitle(
+      jsonResponse.title,
+      product.Nombre,
+      product.Marca,
+      product.Tamaño,
+    );
     jsonResponse.tags = ensureBrandFirstTag(jsonResponse.tags, product.Marca);
     return NextResponse.json(jsonResponse);
 
