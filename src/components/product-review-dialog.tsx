@@ -518,6 +518,9 @@ export function ProductReviewDialog({
                        <TabsTrigger value="seo" className="h-9 data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none rounded-none bg-transparent">
                           SEO
                        </TabsTrigger>
+                       <TabsTrigger value="shopify" className="h-9 data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none rounded-none bg-transparent">
+                          Shopify
+                       </TabsTrigger>
                     </TabsList>
                  </div>
 
@@ -834,6 +837,109 @@ export function ProductReviewDialog({
                              </div>
                           </div>
                        </div>
+                    </TabsContent>
+
+                    <TabsContent value="shopify" className="p-6 m-0 h-full">
+                      <div className="max-w-3xl mx-auto space-y-6">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-1">
+                            <Label>SKU</Label>
+                            <Input
+                              value={product.shopifySku || ""}
+                              onChange={(e) => onUpdate(product.id, "shopifySku", e.target.value)}
+                              placeholder="SKU (por defecto barcode)"
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <Label>Barcode Shopify</Label>
+                            <Input
+                              value={product.shopifyBarcode || product.barcode || ""}
+                              onChange={(e) => onUpdate(product.id, "shopifyBarcode", e.target.value)}
+                              placeholder="Barcode para variante"
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <Label>Inventario Inicial</Label>
+                            <Input
+                              type="number"
+                              min={0}
+                              value={product.shopifyInventoryQuantity ?? 10}
+                              onChange={(e) =>
+                                onUpdate(product.id, "shopifyInventoryQuantity", Number(e.target.value || 0))
+                              }
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <Label>Peso (gramos)</Label>
+                            <Input
+                              type="number"
+                              min={0}
+                              value={product.shopifyWeightGrams ?? 350}
+                              onChange={(e) =>
+                                onUpdate(product.id, "shopifyWeightGrams", Number(e.target.value || 0))
+                              }
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <Label>Estado Shopify</Label>
+                            <select
+                              value={product.shopifyStatus || "ACTIVE"}
+                              onChange={(e) =>
+                                onUpdate(product.id, "shopifyStatus", e.target.value as "ACTIVE" | "DRAFT")
+                              }
+                              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                            >
+                              <option value="ACTIVE">ACTIVE</option>
+                              <option value="DRAFT">DRAFT</option>
+                            </select>
+                          </div>
+                          <div className="space-y-1">
+                            <Label>Tipo de Producto Shopify</Label>
+                            <Input
+                              value={product.shopifyProductType || "Eau de Parfum"}
+                              onChange={(e) => onUpdate(product.id, "shopifyProductType", e.target.value)}
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <Label>Requiere Envío</Label>
+                            <select
+                              value={String(product.shopifyRequiresShipping ?? true)}
+                              onChange={(e) =>
+                                onUpdate(product.id, "shopifyRequiresShipping", e.target.value === "true")
+                              }
+                              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                            >
+                              <option value="true">Sí</option>
+                              <option value="false">No</option>
+                            </select>
+                          </div>
+                          <div className="space-y-1">
+                            <Label>Gravable</Label>
+                            <select
+                              value={String(product.shopifyTaxable ?? true)}
+                              onChange={(e) => onUpdate(product.id, "shopifyTaxable", e.target.value === "true")}
+                              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                            >
+                              <option value="true">Sí</option>
+                              <option value="false">No</option>
+                            </select>
+                          </div>
+                          <div className="space-y-1 col-span-2">
+                            <Label>Unit Price Base Measure (ML)</Label>
+                            <Input
+                              type="number"
+                              min={1}
+                              value={product.shopifyUnitPriceReferenceValue ?? 1}
+                              onChange={(e) =>
+                                onUpdate(product.id, "shopifyUnitPriceReferenceValue", Number(e.target.value || 1))
+                              }
+                            />
+                          </div>
+                        </div>
+                        <p className="text-xs text-[#8C8C8C]">
+                          Estos campos se usan directamente al publicar en Shopify. Precio, costo, tags, SEO y metafields se toman de esta misma ficha.
+                        </p>
+                      </div>
                     </TabsContent>
                  </div>
               </Tabs>

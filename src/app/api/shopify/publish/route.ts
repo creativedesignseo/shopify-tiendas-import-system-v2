@@ -8,7 +8,11 @@ export const maxDuration = 300;
 
 function toPositiveNumber(value: string | undefined): number {
   if (!value) return 0;
-  const parsed = Number(String(value).replace(",", "."));
+  const normalized = String(value)
+    .replace(/[^\d,.-]/g, "")
+    .replace(/\s/g, "")
+    .replace(",", ".");
+  const parsed = Number(normalized);
   return Number.isFinite(parsed) ? parsed : 0;
 }
 
@@ -80,7 +84,10 @@ export async function POST(req: Request) {
 
       const shopifyInput = mapProductToShopify(product);
       if (shopifyInput.variants[0]) {
-        shopifyInput.variants[0].inventoryQuantity = inventoryQty;
+        const currentQty = Number(shopifyInput.variants[0].inventoryQuantity || 0);
+        if (!Number.isFinite(currentQty) || currentQty <= 0) {
+          shopifyInput.variants[0].inventoryQuantity = inventoryQty;
+        }
       }
 
       const variant = shopifyInput.variants[0];

@@ -57,6 +57,17 @@ export interface ProcessedProduct {
   errorDetails?: string;
   modelUsed?: string;
 
+  // Shopify editable params (per product)
+  shopifySku?: string;
+  shopifyBarcode?: string;
+  shopifyInventoryQuantity?: number;
+  shopifyWeightGrams?: number;
+  shopifyRequiresShipping?: boolean;
+  shopifyTaxable?: boolean;
+  shopifyStatus?: "ACTIVE" | "DRAFT";
+  shopifyProductType?: string;
+  shopifyUnitPriceReferenceValue?: number;
+
   // Shopify live dedupe results (populated after "Verificar Duplicados" action)
   shopifyDupeMatchType?: "barcode" | "title" | null;
   shopifyDupeExistingTitle?: string;
@@ -237,6 +248,15 @@ export const processNewProducts = (
             isDuplicate: false, // We filtered them out
             isChecked: true,
             status: "pending",
+            shopifySku: barcode,
+            shopifyBarcode: barcode,
+            shopifyInventoryQuantity: 10,
+            shopifyWeightGrams: 350,
+            shopifyRequiresShipping: true,
+            shopifyTaxable: true,
+            shopifyStatus: "ACTIVE",
+            shopifyProductType: "Eau de Parfum",
+            shopifyUnitPriceReferenceValue: 1,
           });
         });
         
