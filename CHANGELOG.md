@@ -10,6 +10,12 @@
 - **Shopify Summary UX**: Connected store name and product count moved outside CSV Maestro card.
 - **Settings Save UX**: Replaced generic browser alert with styled success modal.
 - **Shopify-Only Flow**: AI generation and product prep work now operate without requiring master CSV in Shopify modes.
+- **Barcode Verification Fix**: Inventory verification now checks barcode on `productVariant` (not `inventoryItem`).
+- **Tracked Inventory Enforcement**: Added explicit `inventoryItemUpdate(tracked: true)` before strict verification.
+- **Publish Input Normalization**: Robust price/cost parser for formats with currency symbols and comma decimals.
+- **Vendor Tag Rule**: Brand/vendor is auto-added to tags when missing.
+- **Product Review UI**: Added editable `Shopify` tab in product dialog (SKU, barcode, qty, weight, status, shipping, taxable, product type, unit price base).
+- **Netlify MCP Operations**: Verified project access, deploy reads, and manual deploy trigger from MCP workflow.
 
 ## [1.8.0] - 2026-03-03
 ### Changed

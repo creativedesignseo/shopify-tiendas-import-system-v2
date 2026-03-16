@@ -9,7 +9,12 @@
         { "type": "added", "text": "Canales de venta: activar todos por defecto o seleccionar canales manualmente." },
         { "type": "added", "text": "Inventario por defecto configurable desde Ajustes Shopify (ej. 10)." },
         { "type": "added", "text": "Modal de publicación con preview de canales e inventario antes de confirmar." },
-        { "type": "added", "text": "Validación visual: bloqueo al publicar si modo canales manual no tiene selección." }
+        { "type": "added", "text": "Validación visual: bloqueo al publicar si modo canales manual no tiene selección." },
+        { "type": "fixed", "text": "Verificación de barcode corregida para Shopify GraphQL: ahora se valida en productVariant." },
+        { "type": "fixed", "text": "Forzado de inventario con seguimiento (tracked=true) antes de verificar/publicar." },
+        { "type": "fixed", "text": "Normalización robusta de precio y coste (ej: 29,04 EUR) en Shopify Live." },
+        { "type": "added", "text": "Pestaña Shopify en ficha de producto para editar SKU, barcode, inventario, peso, estado y campos de publicación." },
+        { "type": "changed", "text": "Tag de marca automático: se añade vendor a etiquetas si no existe." }
       ]
     },
     {
@@ -107,3 +112,4 @@
     }
   ]
 }
+

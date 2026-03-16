@@ -1,6 +1,6 @@
 # Agent Memory / Handoff
 
-Last updated: 2026-03-15
+Last updated: 2026-03-16
 
 ## Objetivo
 Contexto tecnico unico para que cualquier agente (Claude Code, Antigravity/Gemini, Codex) continue sin perder estado.
@@ -21,14 +21,17 @@ Contexto tecnico unico para que cualquier agente (Claude Code, Antigravity/Gemin
 - Export flow: `src/app/page.tsx`.
 
 ## Cambios Recientes (ultimo bloque)
-- Conexion Shopify ahora guarda nombre y productsCount en localStorage.
-- Resumen de tienda conectado se muestra en card separada (no dentro de CSV Maestro).
-- Settings save usa modal visual (sin alert generico).
-- Boton IA habilitado en Shopify mode sin CSV maestro.
-- `/api/generate` forzado a salida en espanol y title normalizado a nombre del perfume.
-- `productCreate` actualizado a schema moderno (`ProductCreateInput + media`).
-- Post-create update de variant para precio / sku / barcode / cost.
-- Intento de inventario por defecto en 10 (si location/permisos lo permiten).
+- Netlify MCP operativo en Codex: listado de sitios, lectura de proyecto y despliegue manual.
+- Conexion Shopify guarda y sincroniza `shop_name` y `products_count` automaticamente (snapshot + refresh).
+- Card de tienda conectada separada del bloque CSV Maestro.
+- Flujo Shopify-only sin CSV Maestro para carga/generacion IA.
+- `/api/generate` forzado a salida en espanol y titulo estilo catalogo (no slogan).
+- Publicacion Shopify migrada a schema moderno (`ProductCreateInput + media`) + update de variante.
+- Fix GraphQL: verificacion de barcode en `productVariant` (no `inventoryItem`).
+- Inventario: intento estricto de activar tracking + ajuste de stock + verificacion post-create.
+- Etiqueta de marca automatica: `vendor` se agrega a tags si falta.
+- Nueva pestaña `Shopify` en la ficha de producto para editar campos antes de publicar.
+- Normalizacion robusta de precio/coste en API publish para formatos con `€`, comas y espacios.
 
 ## LocalStorage Keys
 
@@ -46,6 +49,10 @@ Contexto tecnico unico para que cualquier agente (Claude Code, Antigravity/Gemin
 - `shopify_connected`
 - `shopify_shop_name`
 - `shopify_products_count`
+- `shopify_publication_mode`
+- `shopify_publication_ids`
+- `shopify_publications_cache`
+- `shopify_default_inventory_qty`
 
 ## Archivos Criticos
 - `src/app/page.tsx`
@@ -55,11 +62,15 @@ Contexto tecnico unico para que cualquier agente (Claude Code, Antigravity/Gemin
 - `src/lib/shopify-client.ts`
 - `src/lib/shopify-mapper.ts`
 - `src/app/api/generate/route.ts`
+- `src/app/api/shopify/publications/route.ts`
+- `src/components/shopify-publish-dialog.tsx`
+- `src/data/version.json`
 
 ## Pendientes Conocidos
-- Verificar en export Shopify post-fix que variant quede con campos completos en todos los casos de tienda.
-- Si inventario no aplica por location/permisos, agregar seleccion de `locationId` en Settings.
-- Decidir si mover secretos de localStorage a server-side secure storage (fuera de alcance actual).
+- QA E2E en nube con lote real (precio, coste, barcode, inventario, peso, SEO, unit price).
+- Si alguna tienda no permite ajuste por location/permisos: agregar selector explicito de `locationId`.
+- Endurecer manejo de errores de inventario para reintento automatico por producto.
+- Decidir mover secretos de localStorage a storage server-side (fuera de alcance actual).
 
 ## Regla de Colaboracion
 - No sobrescribir cambios locales del usuario no relacionados.
