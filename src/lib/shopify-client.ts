@@ -679,23 +679,27 @@ export async function createShopifyProduct(
     }
 
     // Strict post-check: tracked + sku/barcode must be present.
-    if (createdInventoryItemId) {
+    if (createdInventoryItemId && createdVariantId) {
       const verifyResult = await shopifyGraphQL<{
-        inventoryItem: {
-          tracked: boolean;
-          sku?: string | null;
+        productVariant: {
           barcode?: string | null;
+          inventoryItem: {
+            tracked: boolean;
+            sku?: string | null;
+          } | null;
         } | null;
       }>(
         config,
-        `query verifyInventoryItem($id: ID!) {
-          inventoryItem(id: $id) {
-            tracked
-            sku
+        `query verifyVariantInventory($id: ID!) {
+          productVariant(id: $id) {
             barcode
+            inventoryItem {
+              tracked
+              sku
+            }
           }
         }`,
-        { id: createdInventoryItemId },
+        { id: createdVariantId },
       );
 
       if (verifyResult.errors?.length) {
@@ -707,7 +711,8 @@ export async function createShopifyProduct(
         };
       }
 
-      const inv = verifyResult.data?.inventoryItem;
+      const variant = verifyResult.data?.productVariant;
+      const inv = variant?.inventoryItem;
       if (!inv?.tracked) {
         return {
           barcode: input.variants[0]?.barcode || "",
