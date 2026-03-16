@@ -8,10 +8,10 @@ const DEFAULT_OPENAI_KEY = process.env.OPENAI_API_KEY || "";
 function ensureBrandFirstTag(tags: string | undefined, brand: string): string {
   if (!brand) return tags || "";
 
-  const brandClean = brand.trim();
+  const brandClean = toTitleCase(brand.trim());
   if (!tags || !tags.trim()) return brandClean;
 
-  const tagList = tags.split(",").map((t) => t.trim()).filter(Boolean);
+  const tagList = tags.split(",").map((t) => toTitleCase(t.trim())).filter(Boolean);
   const filtered = tagList.filter((t) => t.toLowerCase() !== brandClean.toLowerCase());
   return [brandClean, ...filtered].join(", ");
 }
