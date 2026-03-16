@@ -1,6 +1,6 @@
 
 import * as React from "react"
-import { Settings, Save, Eye, EyeOff, Loader2, CheckCircle, XCircle, Store } from "lucide-react"
+import { Settings, Save, Eye, EyeOff, Loader2, CheckCircle, XCircle, Store, RefreshCw } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -30,6 +30,11 @@ export function SettingsDialog() {
   const [shopProfileName, setShopProfileName] = React.useState("")
   const [shopOutputMode, setShopOutputMode] = React.useState("csv_only")
   const [showShopToken, setShowShopToken] = React.useState(false)
+  const [defaultInventoryQty, setDefaultInventoryQty] = React.useState("10")
+  const [publicationMode, setPublicationMode] = React.useState<"all" | "custom">("all")
+  const [publications, setPublications] = React.useState<Array<{ id: string; name: string }>>([])
+  const [selectedPublicationIds, setSelectedPublicationIds] = React.useState<string[]>([])
+  const [isLoadingPublications, setIsLoadingPublications] = React.useState(false)
 
   // Connection test state
   const [connectionStatus, setConnectionStatus] = React.useState<"idle" | "testing" | "connected" | "error">("idle")
@@ -51,11 +56,29 @@ export function SettingsDialog() {
       const storedVersion = localStorage.getItem("shopify_api_version") || "2025-01"
       const storedProfile = localStorage.getItem("shopify_profile_name") || ""
       const storedMode = localStorage.getItem("shopify_output_mode") || "csv_only"
+      const storedInventoryQty = localStorage.getItem("shopify_default_inventory_qty") || "10"
+      const storedPublicationMode = localStorage.getItem("shopify_publication_mode") || "all"
+      const storedPublicationIds = localStorage.getItem("shopify_publication_ids")
+      const storedPublications = localStorage.getItem("shopify_publications_cache")
       setShopDomain(storedDomain)
       setShopAccessToken(storedToken)
       setShopApiVersion(storedVersion)
       setShopProfileName(storedProfile)
       setShopOutputMode(storedMode)
+      setDefaultInventoryQty(storedInventoryQty)
+      setPublicationMode(storedPublicationMode === "custom" ? "custom" : "all")
+      try {
+        const parsedIds = storedPublicationIds ? JSON.parse(storedPublicationIds) : []
+        setSelectedPublicationIds(Array.isArray(parsedIds) ? parsedIds : [])
+      } catch {
+        setSelectedPublicationIds([])
+      }
+      try {
+        const parsedPublications = storedPublications ? JSON.parse(storedPublications) : []
+        setPublications(Array.isArray(parsedPublications) ? parsedPublications : [])
+      } catch {
+        setPublications([])
+      }
 
       // Reset connection status on open
       const wasConnected = localStorage.getItem("shopify_connected") === "true"
@@ -76,9 +99,56 @@ export function SettingsDialog() {
     localStorage.setItem("shopify_api_version", shopApiVersion)
     localStorage.setItem("shopify_profile_name", shopProfileName)
     localStorage.setItem("shopify_output_mode", shopOutputMode)
+    localStorage.setItem("shopify_default_inventory_qty", defaultInventoryQty || "10")
+    localStorage.setItem("shopify_publication_mode", publicationMode)
+    localStorage.setItem("shopify_publication_ids", JSON.stringify(selectedPublicationIds))
+    localStorage.setItem("shopify_publications_cache", JSON.stringify(publications))
 
     setOpen(false)
     setShowSaveSuccessDialog(true)
+  }
+
+  const handleLoadPublications = async () => {
+    if (!shopDomain || !shopAccessToken) {
+      setConnectionStatus("error")
+      setConnectionInfo("Primero completa dominio y token de Shopify")
+      return
+    }
+
+    setIsLoadingPublications(true)
+    try {
+      const res = await fetch("/api/shopify/publications", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          shopDomain,
+          accessToken: shopAccessToken,
+          apiVersion: shopApiVersion,
+        }),
+      })
+      const data = await res.json()
+      if (!data.success) {
+        setConnectionStatus("error")
+        setConnectionInfo(data.error || "No se pudieron cargar los canales")
+        return
+      }
+
+      const channels: Array<{ id: string; name: string }> = data.publications || []
+      setPublications(channels)
+
+      if (channels.length > 0) {
+        const existing = new Set(selectedPublicationIds)
+        const validExisting = channels.filter((c) => existing.has(c.id)).map((c) => c.id)
+        setSelectedPublicationIds(validExisting.length > 0 ? validExisting : channels.map((c) => c.id))
+      } else {
+        setSelectedPublicationIds([])
+      }
+    } catch (err: any) {
+      setConnectionStatus("error")
+      setConnectionInfo(err.message || "No se pudieron cargar los canales")
+    } finally {
+      setIsLoadingPublications(false)
+    }
   }
 
   const handleTestConnection = async () => {
@@ -110,6 +180,7 @@ export function SettingsDialog() {
         localStorage.setItem("shopify_connected", "true")
         localStorage.setItem("shopify_shop_name", data.shop.name || "")
         localStorage.setItem("shopify_products_count", String(data.shop.productsCount ?? 0))
+        await handleLoadPublications()
       } else {
         setConnectionStatus("error")
         setConnectionInfo(data.error || "Error de conexión")
@@ -383,6 +454,94 @@ export function SettingsDialog() {
                   </label>
                 </div>
               </div>
+
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="shop-inventory" className="text-right text-[#1A1A1A]">
+                  Inventario
+                </Label>
+                <div className="col-span-3">
+                  <Input
+                    id="shop-inventory"
+                    type="number"
+                    min={0}
+                    value={defaultInventoryQty}
+                    onChange={(e) => setDefaultInventoryQty(e.target.value)}
+                    placeholder="10"
+                  />
+                  <p className="text-[10px] text-[#8C8C8C] mt-1">
+                    Cantidad por defecto para productos nuevos.
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-4 gap-4">
+                <Label className="text-right text-[#1A1A1A] pt-2">Canales</Label>
+                <div className="col-span-3 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleLoadPublications}
+                      disabled={isLoadingPublications}
+                    >
+                      {isLoadingPublications ? (
+                        <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
+                      ) : (
+                        <RefreshCw className="w-3.5 h-3.5 mr-1.5" />
+                      )}
+                      Cargar canales
+                    </Button>
+                    <span className="text-[10px] text-[#8C8C8C]">Todos activos por defecto.</span>
+                  </div>
+
+                  <label className="flex items-center gap-2 text-sm cursor-pointer">
+                    <input
+                      type="radio"
+                      name="publicationMode"
+                      checked={publicationMode === "all"}
+                      onChange={() => setPublicationMode("all")}
+                      className="accent-[#D6F45B]"
+                    />
+                    Activar todos los canales
+                  </label>
+                  <label className="flex items-center gap-2 text-sm cursor-pointer">
+                    <input
+                      type="radio"
+                      name="publicationMode"
+                      checked={publicationMode === "custom"}
+                      onChange={() => setPublicationMode("custom")}
+                      className="accent-[#D6F45B]"
+                    />
+                    Elegir canales manualmente
+                  </label>
+
+                  {publicationMode === "custom" && (
+                    <div className="max-h-32 overflow-y-auto border border-[#E5E7EB] rounded-xl p-2 space-y-1">
+                      {publications.length === 0 && (
+                        <p className="text-xs text-[#8C8C8C]">Carga los canales para seleccionarlos.</p>
+                      )}
+                      {publications.map((channel) => (
+                        <label key={channel.id} className="flex items-center gap-2 text-xs cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={selectedPublicationIds.includes(channel.id)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setSelectedPublicationIds((prev) => [...prev, channel.id])
+                              } else {
+                                setSelectedPublicationIds((prev) => prev.filter((id) => id !== channel.id))
+                              }
+                            }}
+                            className="accent-[#D6F45B]"
+                          />
+                          {channel.name}
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           </TabsContent>
         </Tabs>
@@ -420,3 +579,5 @@ export function SettingsDialog() {
     </>
   )
 }
+
+

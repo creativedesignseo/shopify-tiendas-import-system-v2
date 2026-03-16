@@ -8,7 +8,16 @@ export const maxDuration = 300;
 
 export async function POST(req: Request) {
   try {
-    const { shopDomain, accessToken, apiVersion, products, dryRun } = await req.json();
+    const {
+      shopDomain,
+      accessToken,
+      apiVersion,
+      products,
+      dryRun,
+      defaultInventoryQuantity,
+      publicationMode,
+      publicationIds,
+    } = await req.json();
 
     if (!shopDomain || !accessToken || !apiVersion) {
       return NextResponse.json(
@@ -27,6 +36,15 @@ export async function POST(req: Request) {
     const config = { shopDomain, accessToken, apiVersion };
     const results: CreateProductResult[] = [];
     let created = 0, skipped = 0, failed = 0;
+
+    const inventoryQty =
+      typeof defaultInventoryQuantity === "number" && defaultInventoryQuantity >= 0
+        ? Math.floor(defaultInventoryQuantity)
+        : 10;
+    const safePublicationMode = publicationMode === "custom" ? "custom" : "all";
+    const safePublicationIds = Array.isArray(publicationIds)
+      ? publicationIds.filter((id) => typeof id === "string" && id.trim().length > 0)
+      : [];
 
     for (const product of products as ProcessedProduct[]) {
       // Skip duplicates detected by Cycle 1 dedupe
@@ -67,7 +85,13 @@ export async function POST(req: Request) {
 
       // Live: create product in Shopify
       const shopifyInput = mapProductToShopify(product);
-      const result = await createShopifyProduct(config, shopifyInput);
+      if (shopifyInput.variants[0]) {
+        shopifyInput.variants[0].inventoryQuantity = inventoryQty;
+      }
+      const result = await createShopifyProduct(config, shopifyInput, {
+        publicationMode: safePublicationMode,
+        publicationIds: safePublicationIds,
+      });
       results.push(result);
 
       if (result.status === "created") created++;

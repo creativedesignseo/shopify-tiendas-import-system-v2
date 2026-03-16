@@ -57,6 +57,17 @@ export function ShopifyPublishDialog({
     const shopDomain = localStorage.getItem("shopify_shop_domain") || "";
     const accessToken = localStorage.getItem("shopify_access_token") || "";
     const apiVersion = localStorage.getItem("shopify_api_version") || "2025-01";
+    const publicationMode = (localStorage.getItem("shopify_publication_mode") || "all") as "all" | "custom";
+    const publicationIds = (() => {
+      try {
+        const raw = localStorage.getItem("shopify_publication_ids");
+        const parsed = raw ? JSON.parse(raw) : [];
+        return Array.isArray(parsed) ? parsed : [];
+      } catch {
+        return [];
+      }
+    })();
+    const defaultInventoryQuantity = Number(localStorage.getItem("shopify_default_inventory_qty") || "10");
 
     if (!shopDomain || !accessToken) {
       setError("Faltan credenciales de Shopify. Configúralas en Ajustes.");
@@ -79,6 +90,9 @@ export function ShopifyPublishDialog({
           apiVersion,
           products,
           dryRun,
+          publicationMode,
+          publicationIds,
+          defaultInventoryQuantity,
         }),
       });
 

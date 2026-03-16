@@ -32,6 +32,11 @@ export interface ShopInfo {
   productsCount: number;
 }
 
+export interface ShopifyPublication {
+  id: string;
+  name: string;
+}
+
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
@@ -181,6 +186,26 @@ export async function testShopifyConnection(
       success: true,
       shop: { name, email, domain: primaryDomain.url, productsCount },
     };
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+    return { success: false, error: message };
+  }
+}
+
+export async function listShopifyPublications(
+  config: ShopifyClientConfig,
+): Promise<{ success: true; publications: ShopifyPublication[] } | { success: false; error: string }> {
+  try {
+    const result = await shopifyGraphQL<{
+      publications: { nodes: Array<{ id: string; name: string }> };
+    }>(config, `query { publications(first: 50) { nodes { id name } } }`);
+
+    if (result.errors?.length) {
+      return { success: false, error: result.errors.map((e) => e.message).join("; ") };
+    }
+
+    const publications = result.data?.publications?.nodes || [];
+    return { success: true, publications };
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : String(err);
     return { success: false, error: message };
@@ -388,6 +413,10 @@ export interface CreateProductResult {
 export async function createShopifyProduct(
   config: ShopifyClientConfig,
   input: ShopifyProductInput,
+  options?: {
+    publicationMode?: "all" | "custom";
+    publicationIds?: string[];
+  },
 ): Promise<CreateProductResult> {
   const mutation = `
     mutation productCreate($product: ProductCreateInput!, $media: [CreateMediaInput!]) {
@@ -595,14 +624,21 @@ export async function createShopifyProduct(
     // Publish to all available channels by default.
     if (createdProductId) {
       try {
-        const publicationsResult = await shopifyGraphQL<{
-          publications: { nodes: Array<{ id: string }> };
-        }>(
-          config,
-          `query { publications(first: 50) { nodes { id } } }`,
-        );
+        let publicationIds: string[] = [];
+        const publicationMode = options?.publicationMode || "all";
 
-        const publicationIds = publicationsResult.data?.publications?.nodes?.map((p) => p.id) || [];
+        if (publicationMode === "custom") {
+          publicationIds = options?.publicationIds || [];
+        } else {
+          const publicationsResult = await shopifyGraphQL<{
+            publications: { nodes: Array<{ id: string }> };
+          }>(
+            config,
+            `query { publications(first: 50) { nodes { id } } }`,
+          );
+          publicationIds = publicationsResult.data?.publications?.nodes?.map((p) => p.id) || [];
+        }
+
         if (publicationIds.length > 0) {
           const publishMutation = `
             mutation publishablePublish($id: ID!, $input: [PublicationInput!]!) {
@@ -631,7 +667,11 @@ export async function createShopifyProduct(
             );
           }
         } else {
-          postCreateWarnings.push("No se encontraron canales de venta para publicar automaticamente.");
+          postCreateWarnings.push(
+            publicationMode === "custom"
+              ? "No se seleccionaron canales para publicar."
+              : "No se encontraron canales de venta para publicar automaticamente.",
+          );
         }
       } catch (publishError: unknown) {
         const publishMessage =
