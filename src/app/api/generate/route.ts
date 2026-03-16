@@ -98,6 +98,9 @@ REQUISITOS DE SALIDA:
 6) metafields: objeto con claves: acorde, genero, notas_salida, ocasion, estacion, aroma, sexo_objetivo.
 7) image_url: cadena vacia "".
 8) size_ml: numero en ml (100, 50, 200). Si no se puede inferir, usa 0.
+9) weight_grams: peso estimado del producto en gramos, incluyendo frasco y empaque.
+   Guia aproximada: 30ml ≈ 180g, 50ml ≈ 250g, 75ml ≈ 300g, 100ml ≈ 350g, 125ml ≈ 400g, 150ml ≈ 450g, 200ml ≈ 550g.
+   Si no puedes inferir el tamano, usa 350.
 
 FORMATO:
 Responde solo JSON valido, sin markdown:
@@ -109,6 +112,7 @@ Responde solo JSON valido, sin markdown:
   "tags": "string",
   "image_url": "",
   "size_ml": 100,
+  "weight_grams": 350,
   "metafields": {
     "acorde": "string",
     "genero": "string",

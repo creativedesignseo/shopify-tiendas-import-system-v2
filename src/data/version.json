@@ -1,6 +1,16 @@
 {
-  "current": "1.9.1",
+  "current": "1.9.2",
   "releases": [
+    {
+      "version": "1.9.2",
+      "date": "2026-03-16",
+      "entries": [
+        { "type": "added", "text": "Estimación de peso por IA: la generación de copy ahora estima el peso del perfume según tamaño y lo envía a Shopify." },
+        { "type": "fixed", "text": "Barcode movido a campo directo de variante en Shopify (antes se perdía dentro de inventoryItem)." },
+        { "type": "fixed", "text": "Protección anti-duplicados en vivo: verifica barcode en Shopify antes de crear producto." },
+        { "type": "fixed", "text": "Categoría removida del input (Shopify la auto-asigna desde productType)." }
+      ]
+    },
     {
       "version": "1.9.1",
       "date": "2026-03-16",

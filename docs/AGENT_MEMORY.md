@@ -32,11 +32,14 @@ Contexto tecnico unico para que cualquier agente (Claude Code, Antigravity/Gemin
 - Etiqueta de marca automatica: `vendor` se agrega a tags si falta.
 - Nueva pestaña `Shopify` en la ficha de producto para editar campos antes de publicar.
 - Normalizacion robusta de precio/coste en API publish para formatos con `€`, comas y espacios.
-- Sanitizacion de barcode en publish route con `sanitizeBarcode()` (strip Excel quotes, decimals).
-- Costo por producto ahora opcional en validacion de publish (no bloquea sin costPerItem).
+- Sanitizacion de barcode en publish route con `sanitizeBarcode()`.
+- Costo por producto opcional en validacion de publish.
 - Soporte "Cost per item" / "Variant Cost" en CSV exporter.
-- `.gitignore` actualizado: Test/ y .claude/ excluidos.
-- Version bump a v1.9.1.
+- Barcode movido a campo directo de variante (no `inventoryItem`) en Shopify GraphQL.
+- Proteccion anti-duplicados en vivo via `findProductByBarcode()` antes de crear producto.
+- Categoria removida del input — Shopify auto-asigna desde `productType`.
+- Estimacion de peso por IA: `weight_grams` en prompt de generacion, se aplica a `shopifyWeightGrams`.
+- Version bump a v1.9.2.
 
 ## LocalStorage Keys
 

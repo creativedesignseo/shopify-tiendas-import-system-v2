@@ -170,7 +170,12 @@ export function ProductReviewDialog({
       
       // If CSV had no size but AI detected it, use AI's suggestion
       const aiSize = aiData.size_ml ? `${aiData.size_ml} ml` : ""
-      
+
+      // Use AI-estimated weight if available and user hasn't manually set it
+      const aiWeight = aiData.weight_grams && Number(aiData.weight_grams) > 0
+        ? Number(aiData.weight_grams)
+        : undefined;
+
       onUpdate(product.id, {
         status: "complete",
         generatedTitle: aiData.title || product.generatedTitle || product.title,
@@ -182,6 +187,8 @@ export function ProductReviewDialog({
         size: product.size || aiSize,
         // Only set images from AI if user hasn't manually added any
         images: hasExistingImages ? product.images : (aiImages.length > 0 ? aiImages : product.images),
+        // Only set weight from AI if user hasn't manually changed it from default
+        ...(aiWeight && (!product.shopifyWeightGrams || product.shopifyWeightGrams === 350) ? { shopifyWeightGrams: aiWeight } : {}),
         metafields: {
            acorde: product.metafields.acorde || aiData.metafields?.acorde || "",
            genero: product.metafields.genero || aiData.metafields?.genero || "",
