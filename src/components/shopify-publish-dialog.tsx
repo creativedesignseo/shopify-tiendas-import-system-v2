@@ -163,6 +163,7 @@ export function ShopifyPublishDialog({
       .map((id) => publicationNames[id] || id)
       .join(", ");
   }, [publicationMode, selectedPublicationIds, publicationNames]);
+  const hasChannelSelectionIssue = publicationMode === "custom" && selectedPublicationIds.length === 0;
 
   const handleDownloadReport = () => {
     const lines = [
@@ -212,6 +213,14 @@ export function ShopifyPublishDialog({
               <p><strong>Canales:</strong> {publicationPreview}</p>
               <p><strong>Inventario por defecto:</strong> {defaultInventoryQty}</p>
             </div>
+            {hasChannelSelectionIssue && (
+              <div className="flex items-start gap-2 rounded-xl border border-yellow-300 bg-yellow-50 p-3 text-xs text-yellow-800">
+                <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
+                <span>
+                  Tienes modo manual de canales, pero no hay ninguno seleccionado. Ve a Ajustes Shopify y marca al menos uno.
+                </span>
+              </div>
+            )}
 
             <label className="flex items-center gap-3 cursor-pointer text-sm">
               <input
@@ -319,7 +328,11 @@ export function ShopifyPublishDialog({
               <Button variant="outline" onClick={() => onOpenChange(false)} className="flex-1">
                 Cancelar
               </Button>
-              <Button onClick={handlePublish} className="flex-1 bg-[#1A1A1A] hover:bg-[#333] text-white">
+              <Button
+                onClick={handlePublish}
+                disabled={hasChannelSelectionIssue}
+                className="flex-1 bg-[#1A1A1A] hover:bg-[#333] text-white disabled:opacity-50 disabled:cursor-not-allowed"
+              >
                 <Rocket className="w-4 h-4 mr-2" />
                 {dryRun ? "Simular" : "Publicar"}
               </Button>
