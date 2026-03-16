@@ -38,6 +38,30 @@ export function ShopifyPublishDialog({
   const [publicationNames, setPublicationNames] = React.useState<Record<string, string>>({});
   const [defaultInventoryQty, setDefaultInventoryQty] = React.useState(10);
 
+  // Success chime (same as product generation)
+  const playSuccessSound = React.useCallback(() => {
+    try {
+      const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AudioContext) return;
+      const ctx = new AudioContext();
+      const playTone = (freq: number, startTime: number) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.type = "sine";
+        osc.frequency.value = freq;
+        gain.gain.setValueAtTime(0, startTime);
+        gain.gain.linearRampToValueAtTime(0.15, startTime + 0.05);
+        gain.gain.exponentialRampToValueAtTime(0.001, startTime + 1.5);
+        osc.start(startTime);
+        osc.stop(startTime + 1.5);
+      };
+      playTone(523.25, ctx.currentTime);     // C5
+      playTone(659.25, ctx.currentTime + 0.15); // E5
+    } catch { /* ignore audio errors */ }
+  }, []);
+
   // Reset state when dialog opens
   React.useEffect(() => {
     if (open) {
@@ -141,6 +165,7 @@ export function ShopifyPublishDialog({
       setResults(data.results);
       setProgress(products.length);
       setPhase("complete");
+      playSuccessSound();
       onPublishComplete(data.results);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Error de conexión";

@@ -324,7 +324,7 @@ export function ProductReviewDialog({
                  {/* Images Section */}
                  <div className="space-y-3">
                     <Label className="text-xs font-semibold uppercase text-[#8C8C8C] flex items-center gap-2">
-                       <ImageIcon className="w-3 h-3" /> Imágenes ({product.images.filter(Boolean).length}/3)
+                       <ImageIcon className="w-3 h-3" /> Imágenes ({product.images.filter(Boolean).length}/5)
                     </Label>
                     
                     {/* Image cards */}
@@ -416,14 +416,14 @@ export function ProductReviewDialog({
 
                     {/* Add image + Search buttons */}
                     <div className="flex gap-2">
-                       {product.images.filter(Boolean).length < 3 && (
+                       {product.images.filter(Boolean).length < 5 && (
                         <Button 
                           variant="outline" 
                           size="sm" 
                           className="flex-[0.4] text-[11px] rounded-lg px-2"
                           onClick={() => {
                             const newImgs = [...product.images]
-                            if (newImgs.length < 3) {
+                            if (newImgs.length < 5) {
                               newImgs.push("")
                               onUpdate(product.id, "images", newImgs)
                             }
