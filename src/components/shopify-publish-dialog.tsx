@@ -33,6 +33,10 @@ export function ShopifyPublishDialog({
   const [progress, setProgress] = React.useState(0);
   const [currentProduct, setCurrentProduct] = React.useState("");
   const [error, setError] = React.useState("");
+  const [publicationMode, setPublicationMode] = React.useState<"all" | "custom">("all");
+  const [selectedPublicationIds, setSelectedPublicationIds] = React.useState<string[]>([]);
+  const [publicationNames, setPublicationNames] = React.useState<Record<string, string>>({});
+  const [defaultInventoryQty, setDefaultInventoryQty] = React.useState(10);
 
   // Reset state when dialog opens
   React.useEffect(() => {
@@ -43,6 +47,33 @@ export function ShopifyPublishDialog({
       setProgress(0);
       setCurrentProduct("");
       setError("");
+      const storedMode = (localStorage.getItem("shopify_publication_mode") || "all") as "all" | "custom";
+      const storedIdsRaw = localStorage.getItem("shopify_publication_ids");
+      const storedChannelsRaw = localStorage.getItem("shopify_publications_cache");
+      const storedQty = Number(localStorage.getItem("shopify_default_inventory_qty") || "10");
+
+      setPublicationMode(storedMode === "custom" ? "custom" : "all");
+      try {
+        const parsedIds = storedIdsRaw ? JSON.parse(storedIdsRaw) : [];
+        setSelectedPublicationIds(Array.isArray(parsedIds) ? parsedIds : []);
+      } catch {
+        setSelectedPublicationIds([]);
+      }
+      try {
+        const parsedChannels = storedChannelsRaw ? JSON.parse(storedChannelsRaw) : [];
+        const names: Record<string, string> = {};
+        if (Array.isArray(parsedChannels)) {
+          parsedChannels.forEach((channel: { id?: string; name?: string }) => {
+            if (channel?.id && channel?.name) {
+              names[channel.id] = channel.name;
+            }
+          });
+        }
+        setPublicationNames(names);
+      } catch {
+        setPublicationNames({});
+      }
+      setDefaultInventoryQty(Number.isFinite(storedQty) && storedQty >= 0 ? Math.floor(storedQty) : 10);
     }
   }, [open]);
 
@@ -125,6 +156,14 @@ export function ShopifyPublishDialog({
     return { created, skipped, failed };
   }, [results]);
 
+  const publicationPreview = React.useMemo(() => {
+    if (publicationMode === "all") return "Todos los canales disponibles";
+    if (selectedPublicationIds.length === 0) return "Ninguno seleccionado";
+    return selectedPublicationIds
+      .map((id) => publicationNames[id] || id)
+      .join(", ");
+  }, [publicationMode, selectedPublicationIds, publicationNames]);
+
   const handleDownloadReport = () => {
     const lines = [
       `Reporte de Publicación — ${new Date().toLocaleString("es-ES")}`,
@@ -170,6 +209,8 @@ export function ShopifyPublishDialog({
             <div className="bg-[#F9F9F9] rounded-xl p-4 text-sm space-y-2">
               <p><strong>Tienda:</strong> {shopName}</p>
               <p><strong>Productos:</strong> {products.length}</p>
+              <p><strong>Canales:</strong> {publicationPreview}</p>
+              <p><strong>Inventario por defecto:</strong> {defaultInventoryQty}</p>
             </div>
 
             <label className="flex items-center gap-3 cursor-pointer text-sm">
