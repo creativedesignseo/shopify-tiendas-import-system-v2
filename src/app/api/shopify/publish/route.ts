@@ -1,6 +1,6 @@
 // src/app/api/shopify/publish/route.ts
 import { NextResponse } from "next/server";
-import { createShopifyProduct, CreateProductResult } from "@/lib/shopify-client";
+import { createShopifyProduct, CreateProductResult, findProductByBarcode } from "@/lib/shopify-client";
 import { mapProductToShopify, validateForShopify } from "@/lib/shopify-mapper";
 import { ProcessedProduct } from "@/lib/product-processor";
 import { sanitizeBarcode } from "@/lib/barcode-utils";
@@ -86,6 +86,26 @@ export async function POST(req: Request) {
       // Sanitize barcode before mapping (strip Excel quotes, whitespace, trailing decimals)
       product.barcode = sanitizeBarcode(product.barcode);
       if (product.shopifyBarcode) product.shopifyBarcode = sanitizeBarcode(product.shopifyBarcode);
+
+      // Live duplicate check: search Shopify for existing product with same barcode
+      const effectiveBarcode = (product.shopifyBarcode || product.barcode || "").trim();
+      if (effectiveBarcode) {
+        try {
+          const existingProduct = await findProductByBarcode(config, effectiveBarcode);
+          if (existingProduct) {
+            results.push({
+              barcode: effectiveBarcode,
+              title: product.generatedTitle || product.title,
+              status: "skipped",
+              error: `Ya existe en Shopify: "${existingProduct.title}" (barcode ${effectiveBarcode})`,
+            });
+            skipped++;
+            continue;
+          }
+        } catch {
+          // If lookup fails, proceed with creation (don't block on network errors)
+        }
+      }
 
       const shopifyInput = mapProductToShopify(product);
       if (shopifyInput.variants[0]) {
