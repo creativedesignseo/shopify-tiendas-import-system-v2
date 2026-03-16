@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { createShopifyProduct, CreateProductResult } from "@/lib/shopify-client";
 import { mapProductToShopify, validateForShopify } from "@/lib/shopify-mapper";
 import { ProcessedProduct } from "@/lib/product-processor";
+import { sanitizeBarcode } from "@/lib/barcode-utils";
 
 export const maxDuration = 300;
 
@@ -82,6 +83,10 @@ export async function POST(req: Request) {
         continue;
       }
 
+      // Sanitize barcode before mapping (strip Excel quotes, whitespace, trailing decimals)
+      product.barcode = sanitizeBarcode(product.barcode);
+      if (product.shopifyBarcode) product.shopifyBarcode = sanitizeBarcode(product.shopifyBarcode);
+
       const shopifyInput = mapProductToShopify(product);
       if (shopifyInput.variants[0]) {
         const currentQty = Number(shopifyInput.variants[0].inventoryQuantity || 0);
@@ -92,17 +97,16 @@ export async function POST(req: Request) {
 
       const variant = shopifyInput.variants[0];
       const priceNumber = toPositiveNumber(variant?.price);
-      const costNumber = toPositiveNumber(variant?.cost);
       const hasBarcode = !!(variant?.barcode || "").trim();
       const hasInventoryQty = Number(variant?.inventoryQuantity || 0) > 0;
 
-      if (!hasBarcode || priceNumber <= 0 || costNumber <= 0 || !hasInventoryQty) {
+      if (!hasBarcode || priceNumber <= 0 || !hasInventoryQty) {
         results.push({
           barcode: product.barcode,
           title: product.generatedTitle || product.title,
           status: "failed",
           error:
-            "Datos obligatorios invalidos para Shopify Live (barcode, precio > 0, costo > 0, inventario > 0).",
+            "Datos obligatorios invalidos para Shopify Live (barcode, precio > 0, inventario > 0).",
         });
         failed++;
         continue;

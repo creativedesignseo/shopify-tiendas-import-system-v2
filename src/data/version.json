@@ -1,6 +1,15 @@
 {
-  "current": "1.9.0",
+  "current": "1.9.1",
   "releases": [
+    {
+      "version": "1.9.1",
+      "date": "2026-03-16",
+      "entries": [
+        { "type": "fixed", "text": "Sanitización de barcode en publicación Shopify Live (limpia prefijos Excel y formatos numéricos)." },
+        { "type": "fixed", "text": "Costo por producto ahora es opcional al publicar en Shopify (no bloquea productos sin precio de costo)." },
+        { "type": "added", "text": "Soporte Cost per item / Variant Cost en exportación CSV." }
+      ]
+    },
     {
       "version": "1.9.0",
       "date": "2026-03-15",
