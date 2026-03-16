@@ -615,6 +615,19 @@ export async function createShopifyProduct(
       if (sourceVariant.requiresShipping !== undefined) {
         trackingInput.requiresShipping = sourceVariant.requiresShipping;
       }
+      // Include weight measurement so it's not lost by this update
+      if (sourceVariant.weight !== undefined && sourceVariant.weightUnit) {
+        const weightInKg =
+          sourceVariant.weightUnit === "GRAMS"
+            ? sourceVariant.weight / 1000
+            : sourceVariant.weight;
+        trackingInput.measurement = {
+          weight: {
+            value: weightInKg,
+            unit: "KILOGRAMS",
+          },
+        };
+      }
 
       const trackingResult = await shopifyGraphQL<{
         inventoryItemUpdate: {
