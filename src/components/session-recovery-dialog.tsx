@@ -165,7 +165,7 @@ export function SessionRecoveryDialog({
           <button
             type="button"
             onClick={onAbandon}
-            className="w-full sm:flex-1 inline-flex items-center justify-center rounded-xl border-2 border-[#FF4D4D] bg-white text-[#FF4D4D] hover:bg-[#FF4D4D] hover:text-white font-semibold text-sm h-11 sm:h-10 transition-all focus:outline-none"
+            className="w-full sm:flex-1 inline-flex items-center justify-center rounded-xl border-2 border-[#FF4D4D] bg-white text-[#FF4D4D] hover:bg-[#FF4D4D] hover:text-white font-semibold text-sm h-11 sm:h-10 transition-all outline-none focus:outline-none focus-visible:outline-none"
           >
             <Trash2 className="mr-2 h-4 w-4 stroke-[2.5]" />
             Abandonar
@@ -175,7 +175,7 @@ export function SessionRecoveryDialog({
             type="button"
             disabled={completed === 0}
             onClick={onDownloadPartial}
-            className="w-full sm:flex-1 inline-flex items-center justify-center rounded-xl border-2 border-[#E5E7EB] bg-white text-[#0F0F0F] hover:bg-[#EBEBEB] font-semibold text-sm h-11 sm:h-10 transition-all focus:outline-none disabled:opacity-50 disabled:pointer-events-none"
+            className="w-full sm:flex-1 inline-flex items-center justify-center rounded-xl border-2 border-[#E5E7EB] bg-white text-[#0F0F0F] hover:bg-[#EBEBEB] font-semibold text-sm h-11 sm:h-10 transition-all outline-none focus:outline-none focus-visible:outline-none disabled:opacity-50 disabled:pointer-events-none"
           >
             <Download className="mr-2 h-4 w-4 stroke-[2.5]" />
             CSV Parcial ({completed})
@@ -184,7 +184,7 @@ export function SessionRecoveryDialog({
           <button
             type="button"
             onClick={onRestore}
-            className="w-full sm:flex-1 inline-flex items-center justify-center rounded-xl bg-[#0F0F0F] hover:bg-[#2A2A2A] text-white font-semibold text-sm h-12 sm:h-10 transition-all focus:outline-none"
+            className="w-full sm:flex-1 inline-flex items-center justify-center rounded-xl bg-[#0F0F0F] hover:bg-[#2A2A2A] text-white font-semibold text-sm h-12 sm:h-10 transition-all outline-none focus:outline-none focus-visible:outline-none"
           >
             <RotateCcw className="mr-2 h-4 w-4 stroke-[2.5]" />
             Restaurar Sesión
