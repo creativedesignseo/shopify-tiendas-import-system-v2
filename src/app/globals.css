@@ -38,7 +38,7 @@
 
   --border: #E5E7EB;
   --input: #E5E7EB;
-  --ring: #D6F45B;
+  --ring: #0F0F0F;
 
   --radius: 1rem;
 
@@ -100,6 +100,6 @@ button, a, input, select, textarea, [role="button"], [tabindex] {
 
 input:focus, textarea:focus, select:focus {
   border-color: var(--ring) !important;
-  box-shadow: 0 0 0 2px rgba(214, 244, 91, 0.2) !important;
+  box-shadow: 0 0 0 2px rgba(15, 15, 15, 0.1) !important;
   outline: none;
 }
