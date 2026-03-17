@@ -161,33 +161,35 @@ export function SessionRecoveryDialog({
         </div>
 
         {/* Actions */}
-        <div className="px-4 sm:px-6 py-4 sm:py-6 bg-[#F5F6F7] border-t border-[#E5E7EB] flex flex-col sm:flex-row items-stretch gap-2 sm:gap-3">
-          <Button
-            variant="outline"
-            className="w-full sm:flex-1 rounded-xl border-2 border-[#FF4D4D] text-[#FF4D4D] hover:bg-[#FF4D4D] hover:text-white font-semibold h-10 shadow-none focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 transition-all"
-            onClick={onAbandon}
-          >
-            <Trash2 className="mr-2 h-4 w-4 stroke-[2.5]" />
-            Abandonar
-          </Button>
-
-          <Button
-            variant="outline"
-            disabled={completed === 0}
-            onClick={onDownloadPartial}
-            className="w-full sm:flex-1 rounded-xl border-2 border-[#E5E7EB] text-[#0F0F0F] bg-white hover:bg-[#EBEBEB] font-semibold h-10 shadow-none focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 transition-all"
-          >
-            <Download className="mr-2 h-4 w-4 stroke-[2.5]" />
-            CSV Parcial ({completed})
-          </Button>
-
+        <div className="px-4 sm:px-6 py-4 sm:py-6 bg-[#F5F6F7] border-t border-[#E5E7EB] flex flex-col items-stretch gap-2">
           <Button
             onClick={onRestore}
-            className="w-full sm:flex-1 rounded-xl bg-[#0F0F0F] hover:bg-[#2A2A2A] text-white font-semibold h-10 shadow-none focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 transition-all"
+            className="w-full rounded-xl bg-[#0F0F0F] hover:bg-[#2A2A2A] text-white font-semibold h-11 shadow-none focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 transition-all"
           >
             <RotateCcw className="mr-2 h-4 w-4 stroke-[2.5]" />
             Restaurar Sesión
           </Button>
+
+          <div className="flex items-stretch gap-2">
+            <Button
+              variant="outline"
+              className="flex-1 rounded-xl border-2 border-[#FF4D4D] text-[#FF4D4D] hover:bg-[#FF4D4D] hover:text-white font-semibold h-10 shadow-none focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 transition-all"
+              onClick={onAbandon}
+            >
+              <Trash2 className="mr-2 h-4 w-4 stroke-[2.5]" />
+              Abandonar
+            </Button>
+
+            <Button
+              variant="outline"
+              disabled={completed === 0}
+              onClick={onDownloadPartial}
+              className="flex-1 rounded-xl border-2 border-[#E5E7EB] text-[#0F0F0F] bg-white hover:bg-[#EBEBEB] font-semibold h-10 shadow-none focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 transition-all"
+            >
+              <Download className="mr-2 h-4 w-4 stroke-[2.5]" />
+              CSV Parcial ({completed})
+            </Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
