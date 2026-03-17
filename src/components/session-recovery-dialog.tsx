@@ -62,7 +62,7 @@ export function SessionRecoveryDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] w-[95vw] max-h-[90vh] overflow-y-auto p-0 gap-0 overflow-x-hidden rounded-2xl">
+      <DialogContent className="max-w-[1200px] w-[95vw] max-h-[90vh] overflow-y-auto p-0 gap-0 overflow-x-hidden rounded-2xl">
         {/* Header with gradient */}
         <div className="bg-gradient-to-r from-[#0F0F0F] via-[#1A1A1A] to-[#0F0F0F] px-4 sm:px-6 py-5 sm:py-6 text-white">
            <div className="flex items-center gap-4 mb-1">
