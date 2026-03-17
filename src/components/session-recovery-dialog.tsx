@@ -161,13 +161,13 @@ export function SessionRecoveryDialog({
         </div>
 
         {/* Actions */}
-        <div className="px-4 sm:px-6 py-4 sm:py-5 bg-[#F5F6F7] border-t border-[#E5E7EB] flex flex-col sm:flex-row items-stretch gap-2.5 sm:gap-3">
+        <div className="px-3 sm:px-6 py-4 sm:py-5 bg-[#F5F6F7] border-t border-[#E5E7EB] flex flex-col sm:flex-row items-stretch gap-2 sm:gap-3 overflow-hidden">
           <button
             type="button"
             onClick={onAbandon}
-            className="w-full sm:flex-1 inline-flex items-center justify-center rounded-xl border-2 border-[#FF4D4D] bg-white text-[#FF4D4D] hover:bg-[#FF4D4D] hover:text-white font-semibold text-sm h-11 sm:h-10 transition-all outline-none focus:outline-none focus-visible:outline-none"
+            className="w-full min-w-0 sm:flex-1 inline-flex items-center justify-center rounded-xl border-2 border-[#FF4D4D] bg-white text-[#FF4D4D] hover:bg-[#FF4D4D] hover:text-white font-semibold text-[13px] sm:text-sm h-11 sm:h-10 transition-all outline-none focus:outline-none focus-visible:outline-none box-border"
           >
-            <Trash2 className="mr-2 h-4 w-4 stroke-[2.5]" />
+            <Trash2 className="mr-1.5 h-4 w-4 shrink-0 stroke-[2.5]" />
             Abandonar
           </button>
 
@@ -175,18 +175,18 @@ export function SessionRecoveryDialog({
             type="button"
             disabled={completed === 0}
             onClick={onDownloadPartial}
-            className="w-full sm:flex-1 inline-flex items-center justify-center rounded-xl border-2 border-[#E5E7EB] bg-white text-[#0F0F0F] hover:bg-[#EBEBEB] font-semibold text-sm h-11 sm:h-10 transition-all outline-none focus:outline-none focus-visible:outline-none disabled:opacity-50 disabled:pointer-events-none"
+            className="w-full min-w-0 sm:flex-1 inline-flex items-center justify-center rounded-xl border-2 border-[#E5E7EB] bg-white text-[#0F0F0F] hover:bg-[#EBEBEB] font-semibold text-[13px] sm:text-sm h-11 sm:h-10 transition-all outline-none focus:outline-none focus-visible:outline-none disabled:opacity-50 disabled:pointer-events-none box-border"
           >
-            <Download className="mr-2 h-4 w-4 stroke-[2.5]" />
+            <Download className="mr-1.5 h-4 w-4 shrink-0 stroke-[2.5]" />
             CSV Parcial ({completed})
           </button>
 
           <button
             type="button"
             onClick={onRestore}
-            className="w-full sm:flex-1 inline-flex items-center justify-center rounded-xl bg-[#0F0F0F] hover:bg-[#2A2A2A] text-white font-semibold text-sm h-12 sm:h-10 transition-all outline-none focus:outline-none focus-visible:outline-none"
+            className="w-full min-w-0 sm:flex-1 inline-flex items-center justify-center rounded-xl bg-[#0F0F0F] hover:bg-[#2A2A2A] text-white font-semibold text-[13px] sm:text-sm h-12 sm:h-10 transition-all outline-none focus:outline-none focus-visible:outline-none box-border"
           >
-            <RotateCcw className="mr-2 h-4 w-4 stroke-[2.5]" />
+            <RotateCcw className="mr-1.5 h-4 w-4 shrink-0 stroke-[2.5]" />
             Restaurar Sesión
           </button>
         </div>
