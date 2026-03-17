@@ -65,23 +65,32 @@ export function SettingsDialog() {
     }
   }, [open, settings])
 
-  const handleSave = async () => {
-    await updateSettings({
-      ai_provider: provider,
-      ai_api_key: apiKey,
-      ai_gemini_model: geminiModelVersion,
-      ai_openai_model: openaiModelVersion,
-      shopify_domain: shopDomain,
-      shopify_access_token: shopAccessToken,
-      shopify_api_version: shopApiVersion,
-      output_mode: shopOutputMode,
-      default_inventory_qty: Number(defaultInventoryQty) || 10,
-      publication_mode: publicationMode,
-      publication_ids: selectedPublicationIds,
-    })
+  const getCurrentFormData = () => ({
+    ai_provider: provider,
+    ai_api_key: apiKey,
+    ai_gemini_model: geminiModelVersion,
+    ai_openai_model: openaiModelVersion,
+    shopify_domain: shopDomain,
+    shopify_access_token: shopAccessToken,
+    shopify_api_version: shopApiVersion,
+    output_mode: shopOutputMode,
+    default_inventory_qty: Number(defaultInventoryQty) || 10,
+    publication_mode: publicationMode,
+    publication_ids: selectedPublicationIds,
+  })
 
+  const handleSave = async () => {
+    await updateSettings(getCurrentFormData())
     setOpen(false)
     setShowSaveSuccessDialog(true)
+  }
+
+  // Auto-save when dialog closes (so data isn't lost if user leaves to copy something)
+  const handleOpenChange = async (isOpen: boolean) => {
+    if (!isOpen && open) {
+      await updateSettings(getCurrentFormData())
+    }
+    setOpen(isOpen)
   }
 
   const handleLoadPublications = async () => {
@@ -174,7 +183,7 @@ export function SettingsDialog() {
 
   return (
     <>
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button variant="ghost" size="icon" className="rounded-xl">
           <Settings className="h-5 w-5" />
