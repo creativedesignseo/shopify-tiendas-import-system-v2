@@ -189,7 +189,7 @@ export function SettingsDialog() {
           <Settings className="h-5 w-5" />
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[550px] rounded-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="w-[95vw] max-w-[550px] rounded-2xl max-h-[85vh] overflow-y-auto p-4 sm:p-6">
         <DialogHeader>
           <DialogTitle>Configuración</DialogTitle>
           <DialogDescription>
@@ -558,19 +558,19 @@ export function SettingsDialog() {
     </Dialog>
 
     <Dialog open={showSaveSuccessDialog} onOpenChange={setShowSaveSuccessDialog}>
-      <DialogContent className="max-w-md rounded-2xl border-[#E5E7EB] text-center p-8 sm:p-10 [&>button]:hidden">
-        <div className="flex flex-col items-center justify-center space-y-5">
-          <div className="h-20 w-20 rounded-full bg-[#D6F45B] flex items-center justify-center mb-2 shadow-lg shadow-[#D6F45B]/20">
-            <CheckCircle className="h-10 w-10 text-[#0F0F0F]" />
+      <DialogContent className="w-[90vw] max-w-sm rounded-2xl border-[#E5E7EB] text-center p-6 sm:p-8 [&>button]:hidden">
+        <div className="flex flex-col items-center justify-center space-y-4">
+          <div className="h-16 w-16 sm:h-20 sm:w-20 rounded-full bg-[#D6F45B] flex items-center justify-center mb-1">
+            <CheckCircle className="h-8 w-8 sm:h-10 sm:w-10 text-[#0F0F0F]" />
           </div>
-          <DialogTitle className="text-3xl font-bold tracking-tight text-[#0F0F0F]">
+          <DialogTitle className="text-2xl sm:text-3xl font-bold tracking-tight text-[#0F0F0F]">
             ¡Guardado!
           </DialogTitle>
-          <DialogDescription className="text-[#8C8C8C] text-lg font-medium max-w-[280px] mx-auto">
+          <DialogDescription className="text-[#8C8C8C] text-base sm:text-lg font-medium max-w-[280px] mx-auto">
             La configuración se guardó correctamente.
           </DialogDescription>
           <Button
-            className="mt-6 w-full rounded-xl bg-[#0F0F0F] text-[#D6F45B] hover:bg-[#1A1A1A] py-5 text-base font-semibold shadow-sm"
+            className="mt-4 w-full rounded-xl bg-[#0F0F0F] text-white hover:bg-[#2A2A2A] py-4 sm:py-5 text-base font-semibold focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0F0F0F] focus-visible:ring-offset-2"
             onClick={() => setShowSaveSuccessDialog(false)}
           >
             Continuar
