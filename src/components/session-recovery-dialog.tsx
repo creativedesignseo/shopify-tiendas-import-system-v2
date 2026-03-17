@@ -62,9 +62,9 @@ export function SessionRecoveryDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] w-[95vw] p-0 gap-0 overflow-hidden rounded-2xl">
+      <DialogContent className="sm:max-w-[600px] w-[95vw] max-h-[90vh] overflow-y-auto p-0 gap-0 overflow-x-hidden rounded-2xl">
         {/* Header with gradient */}
-        <div className="bg-gradient-to-r from-[#0F0F0F] via-[#1A1A1A] to-[#0F0F0F] px-6 py-6 text-white">
+        <div className="bg-gradient-to-r from-[#0F0F0F] via-[#1A1A1A] to-[#0F0F0F] px-4 sm:px-6 py-5 sm:py-6 text-white">
            <div className="flex items-center gap-4 mb-1">
             <div className="bg-white/20 rounded-full p-2.5">
               <RotateCcw className="h-6 w-6 text-white stroke-[2.5]" />
@@ -81,9 +81,9 @@ export function SessionRecoveryDialog({
         </div>
 
         {/* Session Info Card */}
-        <div className="px-6 py-6 space-y-6">
+        <div className="px-4 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6">
           {/* File Info */}
-          <div className="bg-[#F5F6F7] rounded-xl border border-[#E5E7EB] p-5 space-y-4 shadow-sm">
+          <div className="bg-[#F5F6F7] rounded-xl border border-[#E5E7EB] p-3 sm:p-5 space-y-3 sm:space-y-4 shadow-sm">
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-3 flex-1 min-w-0">
                 <FileSpreadsheet className="h-6 w-6 text-[#0F0F0F] shrink-0 stroke-[2.5]" />
@@ -128,27 +128,27 @@ export function SessionRecoveryDialog({
             </div>
 
             {/* Stats Pills */}
-            <div className="grid grid-cols-3 gap-3 pt-3">
-              <div className="flex flex-col justify-center gap-1 bg-[#F5F6F7] rounded-xl px-4 py-3 border-2 border-transparent">
-                <div className="flex items-center gap-1.5">
-                  <Check className="h-4 w-4 text-[#0F0F0F] stroke-[3]" />
-                  <span className="text-lg font-bold text-[#0F0F0F]">{completed}</span>
+            <div className="grid grid-cols-3 gap-2 sm:gap-3 pt-3">
+              <div className="flex flex-col justify-center gap-1 bg-[#F5F6F7] rounded-xl px-2 sm:px-4 py-3 border-2 border-transparent">
+                <div className="flex items-center gap-1">
+                  <Check className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-[#0F0F0F] stroke-[3]" />
+                  <span className="text-base sm:text-lg font-bold text-[#0F0F0F]">{completed}</span>
                 </div>
-                <p className="text-[10px] font-bold text-[#5C5C5C] uppercase tracking-wider">Completados</p>
+                <p className="text-[9px] sm:text-[10px] font-bold text-[#5C5C5C] uppercase tracking-wider">Completados</p>
               </div>
-              <div className="flex flex-col justify-center gap-1 bg-[#FFF0F0] rounded-xl px-4 py-3 border-2 border-transparent">
-                <div className="flex items-center gap-1.5">
-                  <AlertCircle className="h-4 w-4 text-[#FF4D4D] stroke-[3]" />
-                  <span className="text-lg font-bold text-[#FF4D4D]">{errors}</span>
+              <div className="flex flex-col justify-center gap-1 bg-[#FFF0F0] rounded-xl px-2 sm:px-4 py-3 border-2 border-transparent">
+                <div className="flex items-center gap-1">
+                  <AlertCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-[#FF4D4D] stroke-[3]" />
+                  <span className="text-base sm:text-lg font-bold text-[#FF4D4D]">{errors}</span>
                 </div>
-                <p className="text-[10px] font-bold text-[#FF4D4D] uppercase tracking-wider">Errores</p>
+                <p className="text-[9px] sm:text-[10px] font-bold text-[#FF4D4D] uppercase tracking-wider">Errores</p>
               </div>
-              <div className="flex flex-col justify-center gap-1 bg-[#F5F6F7] rounded-xl px-4 py-3 border-2 border-[#E5E7EB]">
-                <div className="flex items-center gap-1.5">
-                  <Loader2 className="h-4 w-4 text-[#8C8C8C] stroke-[3]" />
-                  <span className="text-lg font-bold text-[#0F0F0F]">{pending}</span>
+              <div className="flex flex-col justify-center gap-1 bg-[#F5F6F7] rounded-xl px-2 sm:px-4 py-3 border-2 border-[#E5E7EB]">
+                <div className="flex items-center gap-1">
+                  <Loader2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-[#8C8C8C] stroke-[3]" />
+                  <span className="text-base sm:text-lg font-bold text-[#0F0F0F]">{pending}</span>
                 </div>
-                <p className="text-[10px] font-bold text-[#8C8C8C] uppercase tracking-wider">Pendientes</p>
+                <p className="text-[9px] sm:text-[10px] font-bold text-[#8C8C8C] uppercase tracking-wider">Pendientes</p>
               </div>
             </div>
           </div>
@@ -160,11 +160,11 @@ export function SessionRecoveryDialog({
           </p>
         </div>
 
-        {/* Actions - Thick SaaS Pills layout */}
-        <div className="px-6 py-6 bg-[#F5F6F7] border-t border-[#E5E7EB] flex flex-col sm:flex-row items-center justify-between gap-3">
+        {/* Actions */}
+        <div className="px-4 sm:px-6 py-4 sm:py-6 bg-[#F5F6F7] border-t border-[#E5E7EB] flex flex-col sm:flex-row items-stretch gap-2 sm:gap-3">
           <Button
             variant="outline"
-            className="w-full sm:flex-1 rounded-xl border-2 border-[#FF4D4D] text-[#FF4D4D] hover:bg-[#FF4D4D] hover:text-white font-semibold h-10 shadow-none ring-0 outline-none focus:ring-0 focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 ring-offset-0 transition-all"
+            className="w-full sm:flex-1 rounded-xl border-2 border-[#FF4D4D] text-[#FF4D4D] hover:bg-[#FF4D4D] hover:text-white font-semibold h-10 shadow-none focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 transition-all"
             onClick={onAbandon}
           >
             <Trash2 className="mr-2 h-4 w-4 stroke-[2.5]" />
@@ -175,7 +175,7 @@ export function SessionRecoveryDialog({
             variant="outline"
             disabled={completed === 0}
             onClick={onDownloadPartial}
-            className="w-full sm:flex-1 rounded-xl border-2 border-[#E5E7EB] text-[#0F0F0F] bg-white hover:bg-[#EBEBEB] hover:text-[#0F0F0F] font-semibold h-10 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:outline-none transition-all"
+            className="w-full sm:flex-1 rounded-xl border-2 border-[#E5E7EB] text-[#0F0F0F] bg-white hover:bg-[#EBEBEB] font-semibold h-10 shadow-none focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 transition-all"
           >
             <Download className="mr-2 h-4 w-4 stroke-[2.5]" />
             CSV Parcial ({completed})
@@ -183,7 +183,7 @@ export function SessionRecoveryDialog({
 
           <Button
             onClick={onRestore}
-            className="w-full sm:flex-1 rounded-xl bg-[#0F0F0F] hover:bg-[#1A1A1A] text-[#D6F45B] font-semibold h-10 shadow-md focus-visible:ring-0 focus-visible:ring-offset-0 focus:outline-none transition-transform active:scale-95"
+            className="w-full sm:flex-1 rounded-xl bg-[#0F0F0F] hover:bg-[#2A2A2A] text-white font-semibold h-10 shadow-none focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 transition-all"
           >
             <RotateCcw className="mr-2 h-4 w-4 stroke-[2.5]" />
             Restaurar Sesión
