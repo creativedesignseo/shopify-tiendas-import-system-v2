@@ -1,3 +1,29 @@
+## [3.1.0] - 2026-03-31
+### Added
+- **Copy Engine v2 (Datos Estructurados)**: La IA ahora devuelve campos JSON planos y el backend ensambla el HTML desde una plantilla fija (`buildProductHTML()`), garantizando estructura 100% consistente en todos los productos.
+- **Plantilla HTML Fija**: Secciones inmutables: Headline → Hook → Notas Olfativas (Salida/Corazón/Fondo) → ¿Por qué elegirlo? (Carácter/Ideal para/Sensación).
+- **Grounding exclusivo Fragrantica**: Búsqueda con `site:fragrantica.com`, extrayendo hasta 3 snippets para máximo contexto.
+- **Feedback de error en Auditor**: Alertas visibles cuando la IA falla (antes se quedaba en spinner infinito).
+- **Plan de mejoras Auditor v3.1**: Documento `docs/AUDITOR_V3_IMPROVEMENTS.md` con las fases de batch overview, búsqueda selectiva y persistencia.
+
+### Fixed
+- **ShieldCheck import faltante** en `page.tsx` — causaba RuntimeError al cargar el dashboard.
+- **Supabase env crash**: `middleware.ts`, `client.ts` y `server.ts` usaban `!` assertion sin fallback, crasheando sin `.env.local`.
+- **Auditor no usaba settings globales**: Hardcodeaba `provider: "gemini"` sin enviar la API key del usuario → Error 401.
+- **Copy mobile-first**: Prompt reescrito para eliminar "muros de texto" — máximo 150 palabras, gancho de 40 palabras.
+
+### Changed
+- **Prompt de IA**: Reescrito para copy compacto, escaneable y mobile-first con pirámide invertida.
+- **"Notas Olfativas"** reemplaza a "Pirámide Olfativa" en todas las descripciones generadas.
+
+## [3.0.0] - 2026-03-31
+### Added
+- **Módulo de Auditoría de Salud (Cycle 3)**: Nueva arquitectura para auditar productos vivos directamente desde Shopify.
+- **Grounding con Fragrantica**: Integración de búsqueda web en vivo para obtener notas olfativas reales y eliminar alucinaciones de la IA.
+- **Persistencia de Auditoría**: Tabla `audit_logs` en Supabase para seguimiento histórico de correcciones masivas.
+- **UI de Comparativa Dry-Run**: Panel visual "Antes vs Después" para aprobación manual de cambios antes de impactar Shopify.
+- **Actualización en Vivo (GraphQL)**: Capacidad de sobreescribir títulos y descripciones directamente en la nube de Shopify sin usar archivos CSV.
+
 ## [Unreleased]
 ### Added
 - **Multi-Agent Handoff Pack**: Added/updated `README.md`, `docs/AGENT_MEMORY.md`, and `docs/CONVERSATION_MEMORY.md` so Claude Code, Antigravity/Gemini, and Codex can continue as one team.

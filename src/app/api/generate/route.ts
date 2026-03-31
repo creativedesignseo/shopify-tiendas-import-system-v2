@@ -1,4 +1,4 @@
-﻿import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NextResponse } from "next/server";
 import OpenAI from "openai";
 
@@ -40,8 +40,30 @@ function normalizeGeneratedTitle(
   brand: string,
   size?: string,
 ): string {
-  // En modo catalogo estricto usamos titulo deterministico (paridad con CSV).
   return buildCatalogTitle(productName, brand, size);
+}
+
+// ============================================================================
+// PLANTILLA HTML FIJA — Garantiza estructura idéntica en todos los productos
+// ============================================================================
+function buildProductHTML(data: {
+  headline: string;
+  hook: string;
+  notas_salida: string;
+  notas_corazon: string;
+  notas_fondo: string;
+  caracter: string;
+  ideal_para: string;
+  sensacion: string;
+}): string {
+  return `<h2>${data.headline}</h2>
+<p>${data.hook}</p>
+<h3>Notas Olfativas</h3>
+<p><strong>Salida:</strong> ${data.notas_salida}</p>
+<p><strong>Corazón:</strong> ${data.notas_corazon}</p>
+<p><strong>Fondo:</strong> ${data.notas_fondo}</p>
+<h3>¿Por qué elegirlo?</h3>
+<p><strong>Carácter:</strong> ${data.caracter}<br/><strong>Ideal para:</strong> ${data.ideal_para}<br/><strong>Sensación:</strong> ${data.sensacion}</p>`;
 }
 
 export async function POST(req: Request) {
@@ -60,69 +82,114 @@ export async function POST(req: Request) {
       );
     }
 
+    // --- GROUNDING: Búsqueda exclusiva en Fragrantica ---
+    let webContext = "";
+    try {
+      const q = encodeURIComponent(`site:fragrantica.com ${product.Marca} ${product.Nombre}`);
+      const ddgRes = await fetch(`https://html.duckduckgo.com/html/?q=${q}`, {
+         headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36' },
+         signal: AbortSignal.timeout(5000)
+      });
+      if (ddgRes.ok) {
+         const html = await ddgRes.text();
+         // Extract snippets from Fragrantica results
+         const snippets: string[] = [];
+         const regex = /<a class="result__snippet[^>]*>(.*?)<\/a>/gis;
+         let match;
+         while ((match = regex.exec(html)) !== null && snippets.length < 3) {
+           snippets.push(match[1].replace(/<\/?b>/gi, '').trim());
+         }
+         if (snippets.length > 0) {
+           webContext = snippets.join(" | ");
+         }
+      }
+    } catch(e) { 
+      console.log("Grounding: Fragrantica info no extraída a tiempo."); 
+    }
+    
+    const contextPrompt = webContext 
+      ? `\nNOTAS REALES DE FRAGRANTICA (FUENTE ÚNICA DE VERDAD — usa SOLO estas notas):\n"${webContext}"\n` 
+      : "\nNo se encontró info en Fragrantica. Describe el carácter general de la marca SIN inventar notas específicas.\n";
+
+    // --- PROMPT: La IA devuelve SOLO datos estructurados, NO HTML ---
     const systemPrompt = `
-Eres un catalogador tecnico para e-commerce de perfumeria.
+Eres un Copywriter Senior de Perfumería de Lujo para E-commerce.
+
+PRODUCTO:
+- Nombre: "${product.Nombre}"
+- Marca: "${product.Marca}"
+- Tamaño: ${product.Tamaño || "No especificado"}
+${contextPrompt}
 
 TAREA:
-Genera contenido tecnico y claro para un perfume especifico.
-Todo el contenido debe estar en espanol neutro.
+Devuelve SOLO un JSON con los campos estructurados de abajo. NO generes HTML.
+El backend ensamblará el HTML desde una plantilla fija.
 
-PRODUCTO OBJETIVO:
-- Nombre del producto: "${product.Nombre}"
-- Marca: "${product.Marca}"
-- Tamano: ${product.Tamaño || "No especificado (intenta detectarlo del nombre, por ejemplo 100ml o 50 ml)"}
+CAMPOS A RELLENAR:
 
-REFERENCIA HTML:
-Usa la referencia SOLO para copiar estructura HTML.
-No copies frases, nombres ni notas del ejemplo.
+1) "headline": "${product.Nombre}: [Frase emocional de max 8 palabras]"
+   Ejemplo: "Seasons Rise: Evolución aromática cautivadora"
 
-Referencia:
-\`\`\`html
-${htmlTemplate || "<!-- Sin plantilla, usa estructura estandar de descripcion de perfume -->"}
-\`\`\`
+2) "hook": Gancho de 2-3 líneas. Describe la EXPERIENCIA sensorial, no las notas.
+   Menciona marca y nombre de forma natural. Tono elegante, conciso, mobile-first.
+   MÁXIMO 40 palabras.
 
-REGLAS CRITICAS:
-- Responde 100% en espanol.
-- No uses tono comercial exagerado, claims de marketing ni frases en ingles.
-- Evita palabras de venta como: "descubre", "experimenta", "lujo inigualable", "irresistible", etc.
-- Usa estilo de ficha tecnica: preciso, informativo y neutral.
-- "body_html" debe hablar unicamente de "${product.Nombre}" de "${product.Marca}".
-- Si la plantilla menciona otros productos, ignoralos.
+3) "notas_salida": Notas de salida REALES de Fragrantica, separadas por coma.
+   Si no las conoces, pon "Información no disponible".
 
-REQUISITOS DE SALIDA:
-1) title: usa exactamente este formato: "${product.Nombre} - ${product.Marca}${product.Tamaño ? ` ${product.Tamaño}` : ""}" (max 70).
-2) body_html: HTML en espanol con estructura limpia y factual (descripcion, notas, uso recomendado).
-3) seo_title: titulo SEO (max 60 caracteres).
-4) seo_description: meta descripcion (max 160 caracteres).
-5) tags: la PRIMERA etiqueta debe ser "${product.Marca}", luego 4-7 etiquetas relevantes.
-6) metafields: objeto con claves: acorde, genero, notas_salida, ocasion, estacion, aroma, sexo_objetivo.
-7) image_url: cadena vacia "".
-8) size_ml: numero en ml (100, 50, 200). Si no se puede inferir, usa 0.
-9) weight_grams: peso estimado del producto en gramos, incluyendo frasco y empaque.
-   Guia aproximada: 30ml ≈ 180g, 50ml ≈ 250g, 75ml ≈ 300g, 100ml ≈ 350g, 125ml ≈ 400g, 150ml ≈ 450g, 200ml ≈ 550g.
-   Si no puedes inferir el tamano, usa 350.
+4) "notas_corazon": Notas de corazón REALES de Fragrantica, separadas por coma.
+   Si no las conoces, pon "Información no disponible".
 
-FORMATO:
-Responde solo JSON valido, sin markdown:
+5) "notas_fondo": Notas de fondo REALES de Fragrantica, separadas por coma.
+   Si no las conoces, pon "Información no disponible".
+
+6) "caracter": Descripción del carácter en max 6 palabras (ej: "Gourmand floral con alma envolvente")
+
+7) "ideal_para": Ocasión/estación en max 8 palabras (ej: "Otoño e invierno, ocasiones especiales")
+
+8) "sensacion": Sensación en max 5 palabras (ej: "Calidez, elegancia y sofisticación")
+
+9) "seo_title": Título SEO vendedor (max 60 caracteres)
+10) "seo_description": Meta descripción con gancho emocional (max 160 caracteres)
+11) "tags": PRIMERA etiqueta "${product.Marca}", luego 4-7 relevantes (ej: Amaderado, Gourmand)
+12) "acorde": Acorde principal (ej: Amaderado, Floral, Oriental)
+13) "genero": Masculino / Femenino / Unisex
+14) "ocasion": Ocasión recomendada
+15) "estacion": Estación recomendada
+16) "aroma": Familia aromática
+17) "sexo_objetivo": Hombre / Mujer / Unisex
+18) "size_ml": Número en ml (0 si no se puede inferir)
+19) "weight_grams": Peso estimado en gramos (100ml ≈ 350g)
+
+REGLAS CRÍTICAS:
+- NUNCA inventes notas olfativas. Solo usa las de Fragrantica.
+- Si no hay info de Fragrantica, escribe "Información no disponible" en las notas.
+- Español neutro, tono premium pero conciso.
+- Responde SOLO JSON válido.
+
 {
-  "title": "string",
-  "body_html": "string (HTML)",
-  "seo_title": "string",
-  "seo_description": "string",
-  "tags": "string",
-  "image_url": "",
-  "size_ml": 100,
-  "weight_grams": 350,
-  "metafields": {
-    "acorde": "string",
-    "genero": "string",
-    "notas_salida": "string",
-    "ocasion": "string",
-    "estacion": "string",
-    "aroma": "string",
-    "sexo_objetivo": "string"
-  }
+  "headline": "",
+  "hook": "",
+  "notas_salida": "",
+  "notas_corazon": "",
+  "notas_fondo": "",
+  "caracter": "",
+  "ideal_para": "",
+  "sensacion": "",
+  "seo_title": "",
+  "seo_description": "",
+  "tags": "",
+  "acorde": "",
+  "genero": "",
+  "ocasion": "",
+  "estacion": "",
+  "aroma": "",
+  "sexo_objetivo": "",
+  "size_ml": 0,
+  "weight_grams": 0
 }`;
+
+    let jsonResponse: any;
 
     if (provider === "openai") {
       const openai = new OpenAI({ apiKey: activeApiKey });
@@ -133,49 +200,71 @@ Responde solo JSON valido, sin markdown:
         model: activeModel,
         messages: [
           { role: "system", content: systemPrompt },
-          { role: "user", content: "Genera el contenido en JSON." }
+          { role: "user", content: "Genera el JSON estructurado." }
         ],
         response_format: { type: "json_object" }
       });
 
       const content = completion.choices[0].message.content;
       if (!content) throw new Error("Empty response from OpenAI");
-
-      const jsonResponse = JSON.parse(content);
+      jsonResponse = JSON.parse(content);
       jsonResponse.model_used = activeModel;
-      jsonResponse.title = normalizeGeneratedTitle(
-        jsonResponse.title,
-        product.Nombre,
-        product.Marca,
-        product.Tamaño,
-      );
-      jsonResponse.tags = ensureBrandFirstTag(jsonResponse.tags, product.Marca);
-      return NextResponse.json(jsonResponse);
+    } else {
+      const genAI = new GoogleGenerativeAI(activeApiKey);
+      const activeModel = modelVersion || "gemini-2.5-flash";
+
+      const model = genAI.getGenerativeModel({
+        model: activeModel,
+        generationConfig: { responseMimeType: "application/json" }
+      });
+
+      console.log(`Generating with ${activeModel} for:`, product.Nombre);
+      const result = await model.generateContent({
+        contents: [{ role: "user", parts: [{ text: systemPrompt + "\n\nGenera JSON:" }] }],
+      });
+
+      const response = await result.response;
+      jsonResponse = JSON.parse(response.text());
+      jsonResponse.model_used = activeModel;
     }
 
-    const genAI = new GoogleGenerativeAI(activeApiKey);
-    const activeModel = modelVersion || "gemini-2.5-flash";
-
-    const model = genAI.getGenerativeModel({
-      model: activeModel,
-      generationConfig: { responseMimeType: "application/json" }
+    // ============================================================
+    // ENSAMBLAJE: HTML desde plantilla fija (la IA NO toca el HTML)
+    // ============================================================
+    jsonResponse.body_html = buildProductHTML({
+      headline: jsonResponse.headline || `${product.Nombre}: Fragancia Premium`,
+      hook: jsonResponse.hook || `Descubre ${product.Nombre} de ${product.Marca}.`,
+      notas_salida: jsonResponse.notas_salida || "Información no disponible",
+      notas_corazon: jsonResponse.notas_corazon || "Información no disponible",
+      notas_fondo: jsonResponse.notas_fondo || "Información no disponible",
+      caracter: jsonResponse.caracter || "Premium",
+      ideal_para: jsonResponse.ideal_para || "Todas las ocasiones",
+      sensacion: jsonResponse.sensacion || "Elegancia y distinción",
     });
 
-    console.log(`Generating with ${activeModel} for:`, product.Nombre);
-    const result = await model.generateContent({
-      contents: [{ role: "user", parts: [{ text: systemPrompt + "\n\nGenera JSON:" }] }],
-    });
-
-    const response = await result.response;
-    const jsonResponse = JSON.parse(response.text());
-    jsonResponse.model_used = activeModel;
+    // Título determinístico
     jsonResponse.title = normalizeGeneratedTitle(
       jsonResponse.title,
       product.Nombre,
       product.Marca,
       product.Tamaño,
     );
+
+    // Tags con marca primero
     jsonResponse.tags = ensureBrandFirstTag(jsonResponse.tags, product.Marca);
+
+    // Metafields legacy compatibility
+    jsonResponse.metafields = {
+      acorde: jsonResponse.acorde || "",
+      genero: jsonResponse.genero || "",
+      notas_salida: jsonResponse.notas_salida || "",
+      ocasion: jsonResponse.ocasion || "",
+      estacion: jsonResponse.estacion || "",
+      aroma: jsonResponse.aroma || "",
+      sexo_objetivo: jsonResponse.sexo_objetivo || "",
+    };
+    jsonResponse.image_url = "";
+
     return NextResponse.json(jsonResponse);
 
   } catch (error: any) {

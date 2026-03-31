@@ -1,13 +1,15 @@
-# Shopify Tiendas Import System v2
+# Shopify Tiendas Import & Auditor System v3
 
-Herramienta interna para importar, enriquecer, deduplicar y publicar productos en Shopify.
+Herramienta interna premium para importar, auditar, enriquecer, deduplicar y publicar productos en Shopify.
 
-## Estado del Proyecto (2026-03-15)
+## Estado del Proyecto (2026-03-31)
 
 - Cycle 1: Implementado (Settings Shopify, test de conexion, dedupe live).
 - Cycle 2: Implementado (publish live, output modes, dialogo de publicacion).
+- Cycle 3: EN DESARROLLO (Módulo de Auditoría en Vivo y Corrección Premium via Supabase).
 - Flujo Shopify Live sin CSV maestro: activo.
-- Soporte multi-agente: Claude Code + Antigravity/Gemini + Codex.
+- Soporte multi-agente: Antigravity/Gemini (V3 Lead).
+- Grounding: Integración con Fragrantica en progreso.
 
 ## Archivos de Handoff (OBLIGATORIO leer)
 

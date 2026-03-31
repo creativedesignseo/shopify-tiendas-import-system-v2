@@ -1,0 +1,193 @@
+import { shopifyGraphQL, ShopifyClientConfig } from "./shopify-client";
+
+// ============================================================================
+// Types
+// ============================================================================
+
+export interface AuditableProduct {
+  id: string;
+  title: string;
+  handle: string;
+  bodyHtml: string;
+  vendor: string;
+  tags: string[];
+  productType: string;
+  status: string;
+  variants: Array<{
+    id: string;
+    title: string;
+    barcode: string;
+    price: string;
+  }>;
+  seo: {
+    title: string;
+    description: string;
+  };
+}
+
+// ============================================================================
+// Funciones de Lectura (Fetcher para la Auditoría)
+// ============================================================================
+
+/**
+ * Trae un lote de productos de Shopify. El cursor sirve para paginación si se quiere barrer todo el catálogo.
+ */
+export async function fetchAuditableProducts(
+  config: ShopifyClientConfig,
+  limit: number = 50,
+  cursor: string | null = null
+): Promise<{ products: AuditableProduct[]; hasNextPage: boolean; endCursor: string | null; error?: string }> {
+  const query = `
+    query getProductsForAudit($first: Int!, $after: String) {
+      products(first: $first, after: $after, sortKey: UPDATED_AT, reverse: false) {
+        pageInfo {
+          hasNextPage
+          endCursor
+        }
+        edges {
+          node {
+            id
+            title
+            handle
+            bodyHtml
+            vendor
+            tags
+            productType
+            status
+            seo {
+              title
+              description
+            }
+            variants(first: 1) {
+              edges {
+                node {
+                  id
+                  title
+                  barcode
+                  price
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  `;
+
+  try {
+    const result = await shopifyGraphQL<any>(config, query, {
+      first: limit,
+      after: cursor,
+    });
+
+    if (result.errors?.length) {
+      return { products: [], hasNextPage: false, endCursor: null, error: result.errors[0].message };
+    }
+
+    const connection = result.data?.products;
+    if (!connection) {
+       return { products: [], hasNextPage: false, endCursor: null };
+    }
+
+    const products: AuditableProduct[] = connection.edges.map((edge: any) => {
+      const node = edge.node;
+      return {
+        id: node.id,
+        title: node.title,
+        handle: node.handle,
+        bodyHtml: node.bodyHtml || "",
+        vendor: node.vendor || "",
+        tags: node.tags || [],
+        productType: node.productType || "",
+        status: node.status,
+        seo: {
+          title: node.seo?.title || "",
+          description: node.seo?.description || "",
+        },
+        variants: node.variants.edges.map((v: any) => ({
+          id: v.node.id,
+          title: v.node.title,
+          barcode: v.node.barcode || "",
+          price: v.node.price || "0.00",
+        })),
+      };
+    });
+
+    return {
+      products,
+      hasNextPage: connection.pageInfo.hasNextPage,
+      endCursor: connection.pageInfo.endCursor,
+    };
+  } catch (error: any) {
+    return { products: [], hasNextPage: false, endCursor: null, error: error.message };
+  }
+}
+
+// ============================================================================
+// Funciones de Escritura (Actualización en Vivo)
+// ============================================================================
+
+export interface ProductUpdateData {
+  title?: string;
+  bodyHtml?: string;
+  seoTitle?: string;
+  seoDescription?: string;
+  tags?: string[];
+}
+
+/**
+ * Actualiza el producto directamente en Shopify (Módulo de Auditoría V3).
+ */
+export async function updateShopifyProduct(
+  config: ShopifyClientConfig,
+  productId: string,
+  updateData: ProductUpdateData
+): Promise<{ success: boolean; error?: string }> {
+  
+  // 1. Actualizar datos base del producto
+  const updateProductMutation = `
+    mutation productUpdate($input: ProductInput!) {
+      productUpdate(input: $input) {
+        product {
+          id
+        }
+        userErrors {
+          field
+          message
+        }
+      }
+    }
+  `;
+
+  const productInput: Record<string, any> = { id: productId };
+  if (updateData.title) productInput.title = updateData.title;
+  if (updateData.bodyHtml) productInput.bodyHtml = updateData.bodyHtml;
+  if (updateData.tags) productInput.tags = updateData.tags;
+  
+  // SEO Metafields requerirán input en productUpdate
+  if (updateData.seoTitle !== undefined || updateData.seoDescription !== undefined) {
+     productInput.seo = {
+        title: updateData.seoTitle,
+        description: updateData.seoDescription
+     };
+  }
+
+  try {
+    const result = await shopifyGraphQL<any>(config, updateProductMutation, {
+      input: productInput
+    });
+
+    if (result.errors?.length) {
+      return { success: false, error: result.errors[0].message };
+    }
+
+    const userErrors = result.data?.productUpdate?.userErrors;
+    if (userErrors && userErrors.length > 0) {
+      return { success: false, error: userErrors.map((e: any) => e.message).join(", ") };
+    }
+
+    return { success: true };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}

@@ -13,7 +13,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { MasterData, parseMasterCSV } from "@/lib/csv-parser"
 import { ProcessedProduct, processNewProducts, SkippedProduct } from "@/lib/product-processor"
 import { generateCSV } from "@/lib/csv-exporter"
-import { Download, Trash2, FileSpreadsheet, UploadCloud, AlertTriangle, CheckCircle2, Store } from "lucide-react"
+import { Download, Trash2, FileSpreadsheet, UploadCloud, AlertTriangle, CheckCircle2, Store, ShieldCheck } from "lucide-react"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { cn, generateUUID } from "@/lib/utils"
@@ -446,8 +446,14 @@ Cabeceras Requeridas (Aceptamos variaciones):
              >
                v{versionData.current}
              </Link>
+             <Link
+               href="/auditor"
+               className="ml-4 inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold bg-[#1A1A1A] text-[#D6F45B] shadow-md hover:-translate-y-0.5 transition-all no-underline border border-[#D6F45B]/30"
+             >
+               <ShieldCheck className="w-4 h-4" /> Ir al Auditor v3
+             </Link>
            </div>
-           <p className="text-[#8C8C8C]">Filtro de duplicados, precios UE y enriquecimiento con IA.</p>
+           <p className="text-[#8C8C8C] mt-2">Filtro de duplicados, precios UE y enriquecimiento con IA.</p>
         </div>
         <div className="flex flex-wrap gap-2 items-center">
             <div className="relative">
