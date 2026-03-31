@@ -82,29 +82,57 @@ export async function POST(req: Request) {
       );
     }
 
-    // --- GROUNDING: Búsqueda exclusiva en Fragrantica ---
+    // --- GROUNDING: Multi-estrategia en cascada para Fragrantica ---
     let webContext = "";
-    try {
-      const q = encodeURIComponent(`site:fragrantica.com ${product.Marca} ${product.Nombre}`);
-      const ddgRes = await fetch(`https://html.duckduckgo.com/html/?q=${q}`, {
-         headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36' },
-         signal: AbortSignal.timeout(5000)
-      });
-      if (ddgRes.ok) {
-         const html = await ddgRes.text();
-         // Extract snippets from Fragrantica results
-         const snippets: string[] = [];
-         const regex = /<a class="result__snippet[^>]*>(.*?)<\/a>/gis;
-         let match;
-         while ((match = regex.exec(html)) !== null && snippets.length < 3) {
-           snippets.push(match[1].replace(/<\/?b>/gi, '').trim());
-         }
-         if (snippets.length > 0) {
-           webContext = snippets.join(" | ");
-         }
+    
+    // Limpiar nombre del producto para mejorar búsqueda
+    const cleanName = (product.Nombre || "")
+      .replace(/\b(by|de|pour|for|eau|edp|edt|parfum)\b/gi, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+    const cleanBrand = (product.Marca || "").trim();
+
+    // Función helper de búsqueda en DuckDuckGo
+    async function searchDDG(query: string): Promise<string[]> {
+      try {
+        const q = encodeURIComponent(query);
+        const res = await fetch(`https://html.duckduckgo.com/html/?q=${q}`, {
+          headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36' },
+          signal: AbortSignal.timeout(5000)
+        });
+        if (!res.ok) return [];
+        const html = await res.text();
+        const snippets: string[] = [];
+        const regex = /<a class="result__snippet[^>]*>(.*?)<\/a>/gis;
+        let match;
+        while ((match = regex.exec(html)) !== null && snippets.length < 5) {
+          const clean = match[1].replace(/<\/?b>/gi, '').trim();
+          if (clean.length > 20) snippets.push(clean);
+        }
+        return snippets;
+      } catch {
+        return [];
       }
-    } catch(e) { 
-      console.log("Grounding: Fragrantica info no extraída a tiempo."); 
+    }
+
+    // Estrategia 1: site:fragrantica.com con marca y nombre
+    let snippets = await searchDDG(`site:fragrantica.com ${cleanBrand} ${cleanName}`);
+    
+    // Estrategia 2: solo el nombre del producto (la marca en Shopify a veces difiere de Fragrantica)
+    if (snippets.length === 0) {
+      snippets = await searchDDG(`fragrantica ${cleanName} notas`);
+    }
+    
+    // Estrategia 3: nombre + marca + "notas de salida" (más específico)
+    if (snippets.length === 0) {
+      snippets = await searchDDG(`fragrantica "${cleanName}" ${cleanBrand} "notas de salida"`);
+    }
+
+    if (snippets.length > 0) {
+      webContext = snippets.join(" | ");
+      console.log(`Grounding OK: ${snippets.length} snippets encontrados para ${cleanName}`);
+    } else {
+      console.log(`Grounding FAIL: Sin resultados de Fragrantica para ${cleanName} (${cleanBrand})`);
     }
     
     const contextPrompt = webContext 

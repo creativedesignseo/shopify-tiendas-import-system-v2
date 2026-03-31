@@ -662,6 +662,26 @@ export default function AuditorPage() {
                   {isGenerating ? "Generando..." : "Generar con IA"}
                 </Button>
               )}
+              {(currentItem.status === "generated" || currentItem.status === "approved" || currentItem.status === "skipped") && (
+                <>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      setAuditItems(prev => prev.map((it, i) =>
+                        i === currentIndex ? { ...it, status: "pending", proposedData: null } : it
+                      ))
+                      // Auto-regenerar
+                      setTimeout(() => generateProposal(currentIndex), 100)
+                    }}
+                    disabled={isGenerating}
+                    className="rounded-xl border-amber-300 text-amber-700 hover:bg-amber-50"
+                  >
+                    <BrainCircuit className="w-4 h-4 mr-1.5" />
+                    {isGenerating ? "Regenerando..." : "Regenerar IA"}
+                  </Button>
+                </>
+              )}
               {currentItem.status === "generated" && (
                 <>
                   <Button size="sm" onClick={() => approveItem(currentIndex)} className="bg-green-600 text-white hover:bg-green-700 rounded-xl">
