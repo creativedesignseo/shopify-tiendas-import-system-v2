@@ -28,6 +28,26 @@ interface ProposedData {
   seoTitle: string
   seoDescription: string
   tags: string[]
+  // Raw editable fields
+  headline: string
+  hook: string
+  notas_salida: string
+  notas_corazon: string
+  notas_fondo: string
+  caracter: string
+  ideal_para: string
+  sensacion: string
+}
+
+function buildProductHTML(data: { headline: string; hook: string; notas_salida: string; notas_corazon: string; notas_fondo: string; caracter: string; ideal_para: string; sensacion: string }): string {
+  return `<h2>${data.headline}</h2>
+<p>${data.hook}</p>
+<h3>Notas Olfativas</h3>
+<p><strong>Salida:</strong> ${data.notas_salida}</p>
+<p><strong>Corazón:</strong> ${data.notas_corazon}</p>
+<p><strong>Fondo:</strong> ${data.notas_fondo}</p>
+<h3>¿Por qué elegirlo?</h3>
+<p><strong>Carácter:</strong> ${data.caracter}<br/><strong>Ideal para:</strong> ${data.ideal_para}<br/><strong>Sensación:</strong> ${data.sensacion}</p>`
 }
 
 type ViewMode = "setup" | "batch_overview" | "product_review"
@@ -196,7 +216,15 @@ export default function AuditorPage() {
               bodyHtml: aiResult.body_html,
               seoTitle: aiResult.seo_title,
               seoDescription: aiResult.seo_description,
-              tags: aiResult.tags ? aiResult.tags.split(",").map((s: string) => s.trim()) : []
+              tags: aiResult.tags ? aiResult.tags.split(",").map((s: string) => s.trim()) : [],
+              headline: aiResult.headline || aiResult.title,
+              hook: aiResult.hook || "",
+              notas_salida: aiResult.notas_salida || "Consultar en Fragrantica",
+              notas_corazon: aiResult.notas_corazon || "Consultar en Fragrantica",
+              notas_fondo: aiResult.notas_fondo || "Consultar en Fragrantica",
+              caracter: aiResult.caracter || "",
+              ideal_para: aiResult.ideal_para || "",
+              sensacion: aiResult.sensacion || "",
             }
           } : it
         ))
@@ -231,6 +259,17 @@ export default function AuditorPage() {
     setAuditItems(prev => prev.map((it, i) =>
       i === index ? { ...it, status: "skipped" } : it
     ))
+  }
+
+  // ─── Apply Approved to Shopify ────────────────────────────────
+  // ─── Update a single field in proposed data & rebuild HTML ─────
+  const updateProposedField = (index: number, field: string, value: string) => {
+    setAuditItems(prev => prev.map((it, i) => {
+      if (i !== index || !it.proposedData) return it
+      const updated = { ...it.proposedData, [field]: value }
+      updated.bodyHtml = buildProductHTML(updated)
+      return { ...it, proposedData: updated }
+    }))
   }
 
   // ─── Apply Approved to Shopify ────────────────────────────────
@@ -751,19 +790,127 @@ export default function AuditorPage() {
               <Card className="ring-2 ring-[#D6F45B]/40">
                 <CardHeader className="pb-2 pt-4">
                   <CardTitle className="text-sm text-[#D6F45B] uppercase tracking-wider flex items-center gap-1.5">
-                    <BrainCircuit className="w-3.5 h-3.5" /> Propuesta IA
+                    <BrainCircuit className="w-3.5 h-3.5" /> Propuesta IA (editable)
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <h3 className="font-semibold text-[#1A1A1A] mb-2">{currentItem.proposedData.title}</h3>
-                  <div
-                    className="prose prose-sm max-w-none text-[#6B7280]"
-                    dangerouslySetInnerHTML={{ __html: currentItem.proposedData.bodyHtml }}
-                  />
-                  <div className="mt-3 pt-3 border-t border-[#E5E7EB] space-y-1 text-xs text-[#8C8C8C]">
+                <CardContent className="space-y-3">
+                  {/* Headline & Hook */}
+                  <div>
+                    <label className="text-xs font-medium text-[#8C8C8C]">Headline</label>
+                    <input
+                      type="text"
+                      value={currentItem.proposedData.headline}
+                      onChange={e => updateProposedField(currentIndex, "headline", e.target.value)}
+                      className="w-full px-3 py-1.5 rounded-lg border border-[#E5E7EB] text-sm mt-1 focus:outline-none focus:ring-2 focus:ring-[#D6F45B]"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-[#8C8C8C]">Hook (gancho)</label>
+                    <textarea
+                      value={currentItem.proposedData.hook}
+                      onChange={e => updateProposedField(currentIndex, "hook", e.target.value)}
+                      rows={2}
+                      className="w-full px-3 py-1.5 rounded-lg border border-[#E5E7EB] text-sm mt-1 focus:outline-none focus:ring-2 focus:ring-[#D6F45B] resize-none"
+                    />
+                  </div>
+
+                  {/* Notas Olfativas */}
+                  <div className="border-t border-[#E5E7EB] pt-3">
+                    <p className="text-xs font-semibold text-[#1A1A1A] mb-2">Notas Olfativas</p>
+                    <div className="space-y-2">
+                      <div>
+                        <label className="text-xs font-medium text-[#8C8C8C]">Salida</label>
+                        <input
+                          type="text"
+                          value={currentItem.proposedData.notas_salida}
+                          onChange={e => updateProposedField(currentIndex, "notas_salida", e.target.value)}
+                          placeholder="Ej: Bergamota, Pimienta Rosa, Cardamomo"
+                          className={`w-full px-3 py-1.5 rounded-lg border text-sm mt-1 focus:outline-none focus:ring-2 focus:ring-[#D6F45B] ${
+                            currentItem.proposedData.notas_salida.includes("Consultar") || currentItem.proposedData.notas_salida.includes("no disponible")
+                              ? "border-amber-300 bg-amber-50"
+                              : "border-[#E5E7EB]"
+                          }`}
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-[#8C8C8C]">Corazón</label>
+                        <input
+                          type="text"
+                          value={currentItem.proposedData.notas_corazon}
+                          onChange={e => updateProposedField(currentIndex, "notas_corazon", e.target.value)}
+                          placeholder="Ej: Jazmín, Iris, Café"
+                          className={`w-full px-3 py-1.5 rounded-lg border text-sm mt-1 focus:outline-none focus:ring-2 focus:ring-[#D6F45B] ${
+                            currentItem.proposedData.notas_corazon.includes("Consultar") || currentItem.proposedData.notas_corazon.includes("no disponible")
+                              ? "border-amber-300 bg-amber-50"
+                              : "border-[#E5E7EB]"
+                          }`}
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-[#8C8C8C]">Fondo</label>
+                        <input
+                          type="text"
+                          value={currentItem.proposedData.notas_fondo}
+                          onChange={e => updateProposedField(currentIndex, "notas_fondo", e.target.value)}
+                          placeholder="Ej: Almizcle, Vainilla, Sándalo"
+                          className={`w-full px-3 py-1.5 rounded-lg border text-sm mt-1 focus:outline-none focus:ring-2 focus:ring-[#D6F45B] ${
+                            currentItem.proposedData.notas_fondo.includes("Consultar") || currentItem.proposedData.notas_fondo.includes("no disponible")
+                              ? "border-amber-300 bg-amber-50"
+                              : "border-[#E5E7EB]"
+                          }`}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Por qué elegirlo */}
+                  <div className="border-t border-[#E5E7EB] pt-3">
+                    <p className="text-xs font-semibold text-[#1A1A1A] mb-2">¿Por qué elegirlo?</p>
+                    <div className="grid grid-cols-1 gap-2">
+                      <div>
+                        <label className="text-xs font-medium text-[#8C8C8C]">Carácter</label>
+                        <input
+                          type="text"
+                          value={currentItem.proposedData.caracter}
+                          onChange={e => updateProposedField(currentIndex, "caracter", e.target.value)}
+                          className="w-full px-3 py-1.5 rounded-lg border border-[#E5E7EB] text-sm mt-1 focus:outline-none focus:ring-2 focus:ring-[#D6F45B]"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-[#8C8C8C]">Ideal para</label>
+                        <input
+                          type="text"
+                          value={currentItem.proposedData.ideal_para}
+                          onChange={e => updateProposedField(currentIndex, "ideal_para", e.target.value)}
+                          className="w-full px-3 py-1.5 rounded-lg border border-[#E5E7EB] text-sm mt-1 focus:outline-none focus:ring-2 focus:ring-[#D6F45B]"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-[#8C8C8C]">Sensación</label>
+                        <input
+                          type="text"
+                          value={currentItem.proposedData.sensacion}
+                          onChange={e => updateProposedField(currentIndex, "sensacion", e.target.value)}
+                          className="w-full px-3 py-1.5 rounded-lg border border-[#E5E7EB] text-sm mt-1 focus:outline-none focus:ring-2 focus:ring-[#D6F45B]"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* SEO & Tags */}
+                  <div className="border-t border-[#E5E7EB] pt-3 space-y-1 text-xs text-[#8C8C8C]">
                     <p><strong>SEO Title:</strong> {currentItem.proposedData.seoTitle}</p>
                     <p><strong>SEO Description:</strong> {currentItem.proposedData.seoDescription}</p>
                     <p><strong>Tags:</strong> {currentItem.proposedData.tags.join(", ")}</p>
+                  </div>
+
+                  {/* Live Preview */}
+                  <div className="border-t border-[#E5E7EB] pt-3">
+                    <p className="text-xs font-semibold text-[#1A1A1A] mb-2">Vista previa</p>
+                    <div
+                      className="prose prose-sm max-w-none text-[#6B7280] bg-[#FAFAFA] p-3 rounded-lg border border-[#E5E7EB]"
+                      dangerouslySetInnerHTML={{ __html: currentItem.proposedData.bodyHtml }}
+                    />
                   </div>
                 </CardContent>
               </Card>

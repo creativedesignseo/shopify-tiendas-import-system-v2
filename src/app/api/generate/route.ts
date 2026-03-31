@@ -136,8 +136,8 @@ export async function POST(req: Request) {
     }
     
     const contextPrompt = webContext 
-      ? `\nNOTAS REALES DE FRAGRANTICA (FUENTE ÚNICA DE VERDAD — usa SOLO estas notas):\n"${webContext}"\n` 
-      : "\nNo se encontró info en Fragrantica. Describe el carácter general de la marca SIN inventar notas específicas.\n";
+      ? `\nNOTAS REALES DE FRAGRANTICA (FUENTE PRIORITARIA — usa estas notas como base):\n"${webContext}"\n` 
+      : "\nNo se pudo consultar Fragrantica automáticamente. Usa tu conocimiento de perfumería para proveer las notas olfativas si conoces este perfume. Si genuinamente NO conoces este perfume específico, pon 'Consultar en Fragrantica' en las notas.\n";
 
     // --- PROMPT: La IA devuelve SOLO datos estructurados, NO HTML ---
     const systemPrompt = `
@@ -190,8 +190,9 @@ CAMPOS A RELLENAR:
 19) "weight_grams": Peso estimado en gramos (100ml ≈ 350g)
 
 REGLAS CRÍTICAS:
-- NUNCA inventes notas olfativas. Solo usa las de Fragrantica.
-- Si no hay info de Fragrantica, escribe "Información no disponible" en las notas.
+- PRIORIDAD 1: Usa las notas de Fragrantica si fueron proporcionadas arriba.
+- PRIORIDAD 2: Si no hay datos de Fragrantica pero CONOCES este perfume, usa tu conocimiento real.
+- PRIORIDAD 3: SOLO si genuinamente NO conoces este perfume, pon "Consultar en Fragrantica" en las notas.
 - Español neutro, tono premium pero conciso.
 - Responde SOLO JSON válido.
 
