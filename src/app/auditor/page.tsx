@@ -3,350 +3,792 @@
 export const dynamic = "force-dynamic";
 
 import Link from "next/link"
-import versionData from "@/data/version.json"
 import * as React from "react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { ShieldCheck, Activity, BrainCircuit, CloudUpload, ArrowRight, Play, ServerCrash, Store } from "lucide-react"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { ShieldCheck, Activity, BrainCircuit, ArrowRight, Play, Search, ArrowLeft, Check, X, Eye, ChevronLeft, ChevronRight, Package } from "lucide-react"
 import { useUserSettings } from "@/hooks/use-user-settings"
 import { AuditableProduct } from "@/lib/shopify-auditor"
 
-// Subcomponente de Comparativa
-const ProductDiff = ({ original, proposed, isApproving, onApprove, onSkip }: any) => {
-  return (
-    <div className="bg-[#0F0F0F] text-white rounded-xl p-6 shadow-2xl space-y-6">
-      <div className="flex justify-between items-center border-b border-white/10 pb-4">
-        <h3 className="text-xl font-bold tracking-tight text-[#D6F45B]">{original.title}</h3>
-        <span className="text-xs bg-white/10 px-3 py-1 rounded-full">{original.vendor}</span>
-      </div>
+// ============================================================================
+// Types
+// ============================================================================
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 relative">
-        {/* LINEA SEPARADORA */}
-        <div className="hidden md:block absolute left-1/2 top-0 bottom-0 w-px bg-gradient-to-b from-white/0 via-white/10 to-white/0 -translate-x-1/2" />
-        
-        {/* LADO VIEJO */}
-        <div className="space-y-4">
-          <div className="flex items-center gap-2 text-rose-400 font-semibold mb-2">
-            <ServerCrash className="h-4 w-4" /> Versión Actual (Shopify)
-          </div>
-          <div>
-            <span className="text-xs text-white/40 uppercase tracking-wider block mb-1">Título</span>
-            <p className="text-sm font-light text-white/80 border border-rose-500/20 bg-rose-500/5 p-3 rounded-lg opacity-80 line-through">
-              {original.title}
-            </p>
-          </div>
-          <div>
-            <span className="text-xs text-white/40 uppercase tracking-wider block mb-1">Cuerpo (HTML)</span>
-            <div className="text-sm font-light text-white/70 border border-white/10 bg-white/5 p-4 rounded-lg h-48 overflow-y-auto" dangerouslySetInnerHTML={{__html: original.bodyHtml || "Sin descripción"}} />
-          </div>
-        </div>
+type AuditStatus = "pending" | "generating" | "generated" | "approved" | "skipped"
 
-        {/* LADO NUEVO */}
-        <div className="space-y-4">
-          <div className="flex items-center gap-2 text-[#D6F45B] font-semibold mb-2">
-            <BrainCircuit className="h-4 w-4" /> Nueva Versión (IA Premium + Grounding)
-          </div>
-          <div>
-             <span className="text-xs text-white/40 uppercase tracking-wider block mb-1">Nuevo Título</span>
-             <p className="text-sm font-medium text-white border border-[#D6F45B]/30 bg-[#D6F45B]/10 p-3 rounded-lg shadow-inner">
-               {proposed.title}
-             </p>
-          </div>
-          <div>
-            <span className="text-xs text-white/40 uppercase tracking-wider block mb-1">Nuevo Cuerpo (HTML)</span>
-            <div className="text-sm text-white border border-[#D6F45B]/20 bg-[#D6F45B]/5 p-4 rounded-lg h-48 overflow-y-auto" dangerouslySetInnerHTML={{__html: proposed.bodyHtml}} />
-          </div>
-        </div>
-      </div>
-
-      <div className="flex justify-end gap-3 pt-6 border-t border-white/10 mt-6">
-         <Button 
-           variant="ghost" 
-           className="text-white hover:bg-white/10 hover:text-white"
-           onClick={onSkip}
-           disabled={isApproving}
-         >
-           Ignorar
-         </Button>
-         <Button 
-           className="bg-[#D6F45B] text-[#0F0F0F] hover:brightness-110 font-bold px-8 shadow-[0_0_20px_rgba(214,244,91,0.3)] transition-all"
-           onClick={onApprove}
-           disabled={isApproving}
-         >
-           {isApproving ? <span className="flex items-center gap-2"><div className="w-4 h-4 border-2 border-[#0F0F0F] border-t-transparent rounded-full animate-spin"/> Aplicando en Vivo...</span> : <span className="flex items-center gap-2"><CloudUpload className="w-4 h-4" /> Aprobar y Subir</span>}
-         </Button>
-      </div>
-    </div>
-  )
+interface AuditItem {
+  product: AuditableProduct
+  status: AuditStatus
+  proposedData: ProposedData | null
 }
 
-export default function AuditorDashboard() {
+interface ProposedData {
+  title: string
+  bodyHtml: string
+  seoTitle: string
+  seoDescription: string
+  tags: string[]
+}
+
+type ViewMode = "setup" | "batch_overview" | "product_review"
+type LoadMode = "batch" | "search"
+
+// ============================================================================
+// Helper: Extract short ID from Shopify GID
+// ============================================================================
+function shortId(gid: string): string {
+  const parts = gid.split("/")
+  return parts[parts.length - 1] || gid
+}
+
+// ============================================================================
+// Main Component
+// ============================================================================
+export default function AuditorPage() {
   const { settings } = useUserSettings()
-  
-  const [stats, setStats] = React.useState({ total_audited: 0, total_failed: 0, total_pending: 0 })
-  const [isFetchingStats, setIsFetchingStats] = React.useState(false)
-  
-  const [batchSize, setBatchSize] = React.useState(50)
-  const [cursor, setCursor] = React.useState<string | null>(null)
-  
-  const [productsQueue, setProductsQueue] = React.useState<AuditableProduct[]>([])
-  const [currentProductIndex, setCurrentProductIndex] = React.useState(0)
-  
-  const [proposedData, setProposedData] = React.useState<any>(null)
+
+  // State
+  const [viewMode, setViewMode] = React.useState<ViewMode>("setup")
+  const [loadMode, setLoadMode] = React.useState<LoadMode>("batch")
+  const [batchSize, setBatchSize] = React.useState(5)
+  const [isLoading, setIsLoading] = React.useState(false)
+  const [auditItems, setAuditItems] = React.useState<AuditItem[]>([])
+  const [currentIndex, setCurrentIndex] = React.useState(0)
   const [isGenerating, setIsGenerating] = React.useState(false)
-  const [isApproving, setIsApproving] = React.useState(false)
 
-  // 1. Fetch de Cola
-  const handleFetchBatch = async () => {
-    if (!settings.shopify_domain || !settings.shopify_access_token) {
-        alert("Configura tu dominio y token de Shopify en Ajustes primero.");
-        return;
-    }
+  // Search state
+  const [searchQuery, setSearchQuery] = React.useState("")
+  const [searchResults, setSearchResults] = React.useState<AuditableProduct[]>([])
+  const [isSearching, setIsSearching] = React.useState(false)
+  const [selectedProducts, setSelectedProducts] = React.useState<AuditableProduct[]>([])
 
-    setIsFetchingStats(true)
+  const shopifyConfig = {
+    shopDomain: settings.shopify_domain,
+    accessToken: settings.shopify_access_token,
+    apiVersion: settings.shopify_api_version || "2025-01",
+  }
+
+  const isShopifyConnected = Boolean(settings.shopify_domain && settings.shopify_access_token)
+
+  // ─── Load Batch ────────────────────────────────────────────────
+  const loadBatch = async () => {
+    setIsLoading(true)
     try {
       const res = await fetch("/api/shopify/audit/get-products", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-            shopDomain: settings.shopify_domain,
-            accessToken: settings.shopify_access_token,
-            apiVersion: settings.shopify_api_version,
-            limit: batchSize,
-            cursor: cursor
-        })
+        body: JSON.stringify({ ...shopifyConfig, limit: batchSize }),
       })
       const data = await res.json()
-      if (data.success) {
-          setProductsQueue(data.products)
-          setCurrentProductIndex(0)
-          setCursor(data.pageInfo.endCursor)
-          setStats({
-            total_audited: data.globalStats.total_audited,
-            total_failed: data.globalStats.total_failed,
-            total_pending: data.totalRemainingAtCurrentFetch
-          })
+      if (data.products?.length > 0) {
+        const items: AuditItem[] = data.products.map((p: AuditableProduct) => ({
+          product: p,
+          status: "pending" as AuditStatus,
+          proposedData: null,
+        }))
+        setAuditItems(items)
+        setCurrentIndex(0)
+        setViewMode("batch_overview")
       } else {
-          alert("Error al obtener lote: " + (data.error || "Desconocido"))
+        alert("No se encontraron productos para auditar.")
       }
     } catch (e) {
-      alert("Error de red");
+      alert("Error al cargar productos de Shopify.")
     } finally {
-      setIsFetchingStats(false)
+      setIsLoading(false)
     }
   }
 
-  // 2. Generar Propuesta de IA para el producto actual
-  const generateProposal = async (product: AuditableProduct) => {
+  // ─── Search Products ──────────────────────────────────────────
+  const handleSearch = async () => {
+    if (!searchQuery.trim()) return
+    setIsSearching(true)
+    try {
+      const res = await fetch("/api/shopify/audit/search", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...shopifyConfig, query: searchQuery }),
+      })
+      const data = await res.json()
+      setSearchResults(data.products || [])
+    } catch (e) {
+      alert("Error en la búsqueda.")
+    } finally {
+      setIsSearching(false)
+    }
+  }
+
+  const toggleSelectProduct = (product: AuditableProduct) => {
+    setSelectedProducts(prev => {
+      const exists = prev.find(p => p.id === product.id)
+      if (exists) return prev.filter(p => p.id !== product.id)
+      return [...prev, product]
+    })
+  }
+
+  const loadSelectedProducts = () => {
+    if (selectedProducts.length === 0) return
+    const items: AuditItem[] = selectedProducts.map(p => ({
+      product: p,
+      status: "pending" as AuditStatus,
+      proposedData: null,
+    }))
+    setAuditItems(items)
+    setCurrentIndex(0)
+    setSelectedProducts([])
+    setSearchResults([])
+    setSearchQuery("")
+    setViewMode("batch_overview")
+  }
+
+  // ─── Generate Proposal for a Product ──────────────────────────
+  const generateProposal = async (index: number) => {
+    const item = auditItems[index]
+    if (!item) return
+
     setIsGenerating(true)
-    setProposedData(null)
-    
-    // Extraer tamaño si existe en variante
+    setCurrentIndex(index)
+
+    // Update status
+    setAuditItems(prev => prev.map((it, i) =>
+      i === index ? { ...it, status: "generating" } : it
+    ))
+
+    const product = item.product
     const sizeMatch = product.title.match(/(\d+)\s*(ml|oz|g)/i)
-    const detectedSize = sizeMatch ? sizeMatch[0] : "";
+    const detectedSize = sizeMatch ? sizeMatch[0] : ""
 
     try {
-       const aiProvider = settings.ai_provider || "gemini";
-       const aiModel = aiProvider === "openai" 
-         ? (settings.ai_openai_model || "gpt-4o-mini")
-         : (settings.ai_gemini_model || "gemini-2.5-flash");
+      const aiProvider = settings.ai_provider || "gemini"
+      const aiModel = aiProvider === "openai"
+        ? (settings.ai_openai_model || "gpt-4o-mini")
+        : (settings.ai_gemini_model || "gemini-2.5-flash")
 
-       const res = await fetch("/api/generate", {
-         method: "POST",
-         headers: { "Content-Type" : "application/json" },
-         body: JSON.stringify({
-           provider: aiProvider, 
-           modelVersion: aiModel,
-           apiKey: settings.ai_api_key,
-           product: {
-               Nombre: product.title,
-               Marca: product.vendor,
-               Tamaño: detectedSize
-           },
-           htmlTemplate: product.bodyHtml
-         })
-       });
-       
-       const aiResult = await res.json()
-       if (aiResult.error) {
-           alert("Error de IA: " + aiResult.error + (aiResult.details ? "\nDetalle: " + JSON.stringify(aiResult.details) : ""))
-       } else {
-           setProposedData({
-               title: aiResult.title,
-               bodyHtml: aiResult.body_html,
-               seoTitle: aiResult.seo_title,
-               seoDescription: aiResult.seo_description,
-               tags: aiResult.tags ? aiResult.tags.split(",").map((s:string) => s.trim()) : []
-           })
-       }
+      const res = await fetch("/api/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          provider: aiProvider,
+          modelVersion: aiModel,
+          apiKey: settings.ai_api_key,
+          product: {
+            Nombre: product.title,
+            Marca: product.vendor,
+            Tamaño: detectedSize
+          },
+          htmlTemplate: product.bodyHtml
+        })
+      })
+
+      const aiResult = await res.json()
+      if (aiResult.error) {
+        alert("Error de IA: " + aiResult.error)
+        setAuditItems(prev => prev.map((it, i) =>
+          i === index ? { ...it, status: "pending" } : it
+        ))
+      } else {
+        setAuditItems(prev => prev.map((it, i) =>
+          i === index ? {
+            ...it,
+            status: "generated",
+            proposedData: {
+              title: aiResult.title,
+              bodyHtml: aiResult.body_html,
+              seoTitle: aiResult.seo_title,
+              seoDescription: aiResult.seo_description,
+              tags: aiResult.tags ? aiResult.tags.split(",").map((s: string) => s.trim()) : []
+            }
+          } : it
+        ))
+      }
     } catch (e) {
-       console.error("Fallo IA", e)
-       alert("Error de red al contactar la IA.")
+      alert("Error de red al contactar la IA.")
+      setAuditItems(prev => prev.map((it, i) =>
+        i === index ? { ...it, status: "pending" } : it
+      ))
     } finally {
-       setIsGenerating(false)
+      setIsGenerating(false)
     }
   }
 
-  // Autogenerar cuando cambia el indice
-  React.useEffect(() => {
-    if (productsQueue.length > 0 && currentProductIndex < productsQueue.length) {
-        generateProposal(productsQueue[currentProductIndex])
+  // ─── Generate All Pending ─────────────────────────────────────
+  const generateAll = async () => {
+    for (let i = 0; i < auditItems.length; i++) {
+      if (auditItems[i].status === "pending") {
+        await generateProposal(i)
+      }
     }
-  }, [currentProductIndex, productsQueue])
+  }
 
-  // 3. Aprobar y Subir
-  const handleApprove = async () => {
-    if (!proposedData) return;
-    setIsApproving(true)
-    
-    const currentProd = productsQueue[currentProductIndex]
+  // ─── Approve / Skip ───────────────────────────────────────────
+  const approveItem = (index: number) => {
+    setAuditItems(prev => prev.map((it, i) =>
+      i === index ? { ...it, status: "approved" } : it
+    ))
+  }
 
-    try {
+  const skipItem = (index: number) => {
+    setAuditItems(prev => prev.map((it, i) =>
+      i === index ? { ...it, status: "skipped" } : it
+    ))
+  }
+
+  // ─── Apply Approved to Shopify ────────────────────────────────
+  const applyApproved = async () => {
+    const approved = auditItems.filter(it => it.status === "approved" && it.proposedData)
+    if (approved.length === 0) {
+      alert("No hay productos aprobados para aplicar.")
+      return
+    }
+
+    setIsLoading(true)
+    let successCount = 0
+    let errorCount = 0
+
+    for (const item of approved) {
+      try {
         const res = await fetch("/api/shopify/audit/apply", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                shopDomain: settings.shopify_domain,
-                accessToken: settings.shopify_access_token,
-                productId: currentProd.id,
-                updateData: {
-                    title: proposedData.title,
-                    bodyHtml: proposedData.bodyHtml,
-                    seoTitle: proposedData.seoTitle,
-                    seoDescription: proposedData.seoDescription,
-                    tags: [...new Set([...currentProd.tags, ...proposedData.tags])]
-                }
-            })
-        });
-        
-        const rData = await res.json();
-        if (rData.success) {
-            // Ir al siguiente
-            setCurrentProductIndex(prev => prev + 1)
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            ...shopifyConfig,
+            productId: item.product.id,
+            updateData: {
+              title: item.proposedData!.title,
+              bodyHtml: item.proposedData!.bodyHtml,
+              seoTitle: item.proposedData!.seoTitle,
+              seoDescription: item.proposedData!.seoDescription,
+              tags: item.proposedData!.tags,
+            }
+          }),
+        })
+        const result = await res.json()
+        if (result.success) {
+          successCount++
         } else {
-            alert("Error al aplicar en Shopify: " + JSON.stringify(rData.error))
+          errorCount++
         }
-    } catch (e) {
-        alert("Error de red al aplicar.")
-    } finally {
-        setIsApproving(false)
+      } catch {
+        errorCount++
+      }
     }
+
+    alert(`Resultados: ${successCount} aplicados, ${errorCount} errores.`)
+    setIsLoading(false)
   }
 
-  const handleSkip = () => {
-     // TODO: Could also track "skipped" in Supabase so it stops asking.
-     setCurrentProductIndex(prev => prev + 1)
+  // ─── Stats ────────────────────────────────────────────────────
+  const stats = {
+    total: auditItems.length,
+    pending: auditItems.filter(i => i.status === "pending").length,
+    generating: auditItems.filter(i => i.status === "generating").length,
+    generated: auditItems.filter(i => i.status === "generated").length,
+    approved: auditItems.filter(i => i.status === "approved").length,
+    skipped: auditItems.filter(i => i.status === "skipped").length,
   }
 
-  const isQueueFinished = productsQueue.length > 0 && currentProductIndex >= productsQueue.length;
-  const activeProduct = productsQueue[currentProductIndex]
+  const currentItem = auditItems[currentIndex] || null
+
+  // ════════════════════════════════════════════════════════════════
+  // RENDER
+  // ════════════════════════════════════════════════════════════════
 
   return (
-    <main className="max-w-[1200px] mx-auto px-6 py-8 space-y-8 min-h-screen">
-      <div className="flex flex-wrap justify-between items-center gap-4">
+    <main className="max-w-[1400px] mx-auto px-6 py-8 space-y-6 min-h-screen">
+
+      {/* Header */}
+      <div className="flex flex-wrap justify-between items-start gap-4">
         <div>
-           <div className="flex items-center gap-3">
-             <h1 className="text-3xl font-bold tracking-tight text-[#1A1A1A]">Auditor Inteligente v3</h1>
-             <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-[#0F0F0F] text-[#D6F45B]">
-               Dry-Run Mode
-             </span>
-           </div>
-           <p className="text-[#8C8C8C]">Analiza tu catálogo en vivo, corrige alucinaciones y sube los cambios aprobados.</p>
+          <h1 className="text-3xl font-bold tracking-tight text-[#1A1A1A] flex items-center gap-3">
+            Auditor Inteligente v3
+            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-[#D6F45B] text-[#0F0F0F]">
+              Dry-Run Mode
+            </span>
+          </h1>
+          <p className="text-[#8C8C8C] mt-1">Analiza tu catálogo en vivo, corrige alucinaciones y sube los cambios aprobados.</p>
         </div>
-        <Link href="/">
-           <Button variant="outline" className="gap-2"><ArrowRight className="w-4 h-4 rotate-180" /> Volver al Importador</Button>
+        <Link
+          href="/"
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold bg-white border border-[#E5E7EB] text-[#1A1A1A] hover:-translate-y-0.5 transition-all no-underline shadow-sm"
+        >
+          <ArrowLeft className="w-4 h-4" /> Volver al Importador
         </Link>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="col-span-1 border-t-4 border-t-[#D6F45B] shadow-lg">
-           <CardHeader className="pb-2">
-             <CardTitle className="text-xl flex items-center gap-2"><Activity className="w-5 h-5 text-[#D6F45B]" /> Estado del Catálogo</CardTitle>
-           </CardHeader>
-           <CardContent className="space-y-4">
-             <div className="flex justify-between items-end border-b pb-2">
-                <span className="text-sm text-gray-500">Completados (Supabase)</span>
-                <span className="text-2xl font-bold font-mono">{stats.total_audited}</span>
-             </div>
-             <div className="flex justify-between items-end">
-                <span className="text-sm text-gray-500">Lote en Cola Restante</span>
-                <span className="text-2xl font-bold font-mono text-amber-500">{productsQueue.length === 0 ? "0" : (productsQueue.length - currentProductIndex)}</span>
-             </div>
-             
-             {productsQueue.length === 0 ? (
-                 <div className="pt-4 border-t flex flex-col gap-3">
-                     <label className="text-sm font-medium">Tamaño del Lote (Batch):</label>
-                     <input 
-                       type="number" 
-                       value={batchSize} 
-                       onChange={e=>setBatchSize(Number(e.target.value))}
-                       className="border rounded p-2"
-                     />
-                     <Button 
-                       onClick={handleFetchBatch} 
-                       disabled={isFetchingStats} 
-                       className="w-full bg-[#1A1A1A] hover:bg-[#D6F45B] hover:text-black transition-colors"
-                     >
-                        <Play className="w-4 h-4 mr-2" />
-                        {isFetchingStats ? "Cargando Lote..." : "Cargar Siguiente Lote"}
-                     </Button>
-                 </div>
-             ) : (
-                 <div className="pt-4 border-t">
-                     <p className="text-xs text-gray-500 text-center">Buscando notas reales en Fragrantica y reescribiendo descripciones...</p>
-                 </div>
-             )}
-           </CardContent>
-        </Card>
-        
-        <div className="col-span-1 md:col-span-2">
-           {productsQueue.length === 0 && !isFetchingStats && (
-              <div className="h-full border-2 border-dashed border-gray-200 rounded-2xl flex flex-col items-center justify-center p-12 text-center text-gray-500 space-y-4">
-                  <ShieldCheck className="w-16 h-16 text-gray-300" />
-                  <div>
-                      <h3 className="font-semibold text-lg text-gray-800">Carga un lote para empezar</h3>
-                      <p className="max-w-sm mt-1">El auditor traerá productos que nunca se hayan corregido y te mostrará un "Antes y Después" generado por IA.</p>
-                  </div>
-              </div>
-           )}
+      {/* ═══ SETUP VIEW ═══ */}
+      {viewMode === "setup" && (
+        <div className="space-y-6">
+          {!isShopifyConnected && (
+            <Card className="border-red-200 bg-red-50">
+              <CardContent className="pt-6">
+                <p className="text-red-700 font-medium">⚠️ Configura tu conexión a Shopify en Ajustes antes de usar el Auditor.</p>
+              </CardContent>
+            </Card>
+          )}
 
-           {isQueueFinished && (
-              <div className="h-full border-2 border-dashed border-[#D6F45B] bg-[#D6F45B]/5 rounded-2xl flex flex-col items-center justify-center p-12 text-center text-gray-800 space-y-4">
-                  <div className="w-16 h-16 bg-[#D6F45B] rounded-full flex items-center justify-center">
-                     <ShieldCheck className="w-8 h-8 text-black" />
-                  </div>
-                  <div>
-                      <h3 className="font-bold text-2xl">¡Lote Completado!</h3>
-                      <p className="max-w-sm mt-2 text-gray-600">Has revisado todos los productos de este batch. Carga el siguiente lote para continuar purificando el catálogo.</p>
-                  </div>
-              </div>
-           )}
+          {/* Mode Selector */}
+          <div className="flex bg-[#F0F0F0] rounded-lg p-1 max-w-md">
+            <button
+              onClick={() => setLoadMode("batch")}
+              className={`flex-1 text-sm font-medium py-2.5 px-4 rounded-md transition-all duration-200 ${
+                loadMode === "batch" ? "bg-[#D6F45B] text-[#0F0F0F] shadow-sm" : "text-[#8C8C8C] hover:text-[#1A1A1A]"
+              }`}
+            >
+              <Package className="w-4 h-4 inline mr-2" />Lote Automático
+            </button>
+            <button
+              onClick={() => setLoadMode("search")}
+              className={`flex-1 text-sm font-medium py-2.5 px-4 rounded-md transition-all duration-200 ${
+                loadMode === "search" ? "bg-[#D6F45B] text-[#0F0F0F] shadow-sm" : "text-[#8C8C8C] hover:text-[#1A1A1A]"
+              }`}
+            >
+              <Search className="w-4 h-4 inline mr-2" />Búsqueda Selectiva
+            </button>
+          </div>
 
-           {!isQueueFinished && activeProduct && (
-               <div className="space-y-4">
-                  <div className="flex justify-between items-center bg-white p-4 rounded-lg shadow-sm font-mono text-sm border border-gray-100">
-                      <span>Progreso del Batch: {currentProductIndex + 1} / {productsQueue.length}</span>
-                      <span className="text-gray-400">ID: {activeProduct.id.split("/").pop()}</span>
+          {/* Batch Mode */}
+          {loadMode === "batch" && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Activity className="h-5 w-5" /> Cargar Lote de Productos
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <label className="text-sm text-[#6B7280] font-medium">Tamaño del lote</label>
+                  <div className="flex gap-2 mt-2">
+                    {[5, 10, 15, 20].map(n => (
+                      <button
+                        key={n}
+                        onClick={() => setBatchSize(n)}
+                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                          batchSize === n
+                            ? "bg-[#0F0F0F] text-[#D6F45B] shadow"
+                            : "bg-[#F0F0F0] text-[#6B7280] hover:bg-[#E5E7EB]"
+                        }`}
+                      >
+                        {n} productos
+                      </button>
+                    ))}
                   </div>
+                </div>
+                <Button
+                  onClick={loadBatch}
+                  disabled={!isShopifyConnected || isLoading}
+                  className="bg-[#0F0F0F] text-[#D6F45B] hover:bg-[#1A1A1A] rounded-xl px-6"
+                >
+                  <Play className="w-4 h-4 mr-2" />
+                  {isLoading ? "Cargando..." : `Cargar ${batchSize} Productos`}
+                </Button>
+              </CardContent>
+            </Card>
+          )}
 
-                  {isGenerating ? (
-                      <div className="bg-[#0F0F0F] rounded-xl p-16 flex flex-col items-center justify-center space-y-4 shadow-2xl">
-                          <BrainCircuit className="w-12 h-12 text-[#D6F45B] animate-pulse" />
-                          <p className="text-[#D6F45B] font-medium tracking-wide">Scrapeando Fragrantica & Generando Copy Premium...</p>
-                      </div>
-                  ) : proposedData ? (
-                      <ProductDiff 
-                        original={activeProduct} 
-                        proposed={proposedData} 
-                        isApproving={isApproving}
-                        onApprove={handleApprove}
-                        onSkip={handleSkip}
-                      />
-                  ) : null}
-               </div>
-           )}
+          {/* Search Mode */}
+          {loadMode === "search" && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Search className="h-5 w-5" /> Buscar Productos
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={e => setSearchQuery(e.target.value)}
+                    onKeyDown={e => e.key === "Enter" && handleSearch()}
+                    placeholder='Ej: "Yara", "Oud", "Lattafa"...'
+                    className="flex-1 px-4 py-2.5 rounded-xl border border-[#E5E7EB] text-sm focus:outline-none focus:ring-2 focus:ring-[#D6F45B]"
+                  />
+                  <Button
+                    onClick={handleSearch}
+                    disabled={!isShopifyConnected || isSearching || !searchQuery.trim()}
+                    className="bg-[#0F0F0F] text-[#D6F45B] hover:bg-[#1A1A1A] rounded-xl px-6"
+                  >
+                    {isSearching ? "Buscando..." : "Buscar"}
+                  </Button>
+                </div>
+
+                {/* Search Results */}
+                {searchResults.length > 0 && (
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <p className="text-sm text-[#6B7280]">{searchResults.length} resultados encontrados</p>
+                      {selectedProducts.length > 0 && (
+                        <Button
+                          onClick={loadSelectedProducts}
+                          className="bg-[#D6F45B] text-[#0F0F0F] hover:brightness-95 rounded-xl px-4 text-sm"
+                        >
+                          Auditar {selectedProducts.length} seleccionado{selectedProducts.length !== 1 ? "s" : ""}
+                        </Button>
+                      )}
+                    </div>
+                    <div className="border border-[#E5E7EB] rounded-xl overflow-hidden max-h-[400px] overflow-y-auto">
+                      {searchResults.map(p => {
+                        const isSelected = selectedProducts.some(sp => sp.id === p.id)
+                        return (
+                          <button
+                            key={p.id}
+                            onClick={() => toggleSelectProduct(p)}
+                            className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-all border-b border-[#F0F0F0] last:border-b-0 ${
+                              isSelected ? "bg-[#D6F45B]/10" : "hover:bg-[#F5F6F7]"
+                            }`}
+                          >
+                            {p.featuredImage && (
+                              <img src={p.featuredImage} alt="" className="w-10 h-10 rounded-lg object-cover" />
+                            )}
+                            {!p.featuredImage && (
+                              <div className="w-10 h-10 rounded-lg bg-[#F0F0F0] flex items-center justify-center">
+                                <Package className="w-5 h-5 text-[#8C8C8C]" />
+                              </div>
+                            )}
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium text-[#1A1A1A] truncate">{p.title}</p>
+                              <p className="text-xs text-[#8C8C8C]">{p.vendor} · €{p.variants[0]?.price || "0"} · ID: {shortId(p.id)}</p>
+                            </div>
+                            <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                              isSelected ? "bg-[#D6F45B] border-[#D6F45B]" : "border-[#D1D5DB]"
+                            }`}>
+                              {isSelected && <Check className="w-3 h-3 text-[#0F0F0F]" />}
+                            </div>
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
         </div>
-      </div>
+      )}
+
+      {/* ═══ BATCH OVERVIEW VIEW ═══ */}
+      {viewMode === "batch_overview" && (
+        <div className="space-y-4">
+          {/* Progress Bar */}
+          <Card className="border-[#D6F45B]/30">
+            <CardContent className="pt-5 pb-4">
+              <div className="flex justify-between items-center mb-3">
+                <div className="flex gap-4 text-sm">
+                  <span className="text-[#8C8C8C]">Total: <strong className="text-[#1A1A1A]">{stats.total}</strong></span>
+                  <span className="text-amber-600">Pendientes: <strong>{stats.pending}</strong></span>
+                  <span className="text-blue-600">Generados: <strong>{stats.generated}</strong></span>
+                  <span className="text-green-600">Aprobados: <strong>{stats.approved}</strong></span>
+                  <span className="text-[#8C8C8C]">Ignorados: <strong>{stats.skipped}</strong></span>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => { setViewMode("setup"); setAuditItems([]); }}
+                    className="rounded-xl text-xs"
+                  >
+                    ← Nuevo lote
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={generateAll}
+                    disabled={isGenerating || stats.pending === 0}
+                    className="bg-[#0F0F0F] text-[#D6F45B] hover:bg-[#1A1A1A] rounded-xl text-xs"
+                  >
+                    <BrainCircuit className="w-3.5 h-3.5 mr-1.5" />
+                    {isGenerating ? "Generando..." : `Generar IA (${stats.pending})`}
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={applyApproved}
+                    disabled={isLoading || stats.approved === 0}
+                    className="bg-green-600 text-white hover:bg-green-700 rounded-xl text-xs"
+                  >
+                    <ShieldCheck className="w-3.5 h-3.5 mr-1.5" />
+                    Aplicar {stats.approved} a Shopify
+                  </Button>
+                </div>
+              </div>
+              <div className="h-2 bg-[#F0F0F0] rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-[#D6F45B] transition-all duration-500 rounded-full"
+                  style={{ width: `${stats.total > 0 ? ((stats.approved + stats.skipped) / stats.total) * 100 : 0}%` }}
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Products Table */}
+          <Card>
+            <CardContent className="pt-4 px-0">
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-[#E5E7EB] text-[#6B7280]">
+                      <th className="text-left px-4 py-2.5 font-medium">#</th>
+                      <th className="text-left px-4 py-2.5 font-medium">Producto</th>
+                      <th className="text-left px-4 py-2.5 font-medium">Marca</th>
+                      <th className="text-left px-4 py-2.5 font-medium">Precio</th>
+                      <th className="text-left px-4 py-2.5 font-medium">Barcode</th>
+                      <th className="text-left px-4 py-2.5 font-medium">ID</th>
+                      <th className="text-left px-4 py-2.5 font-medium">Status</th>
+                      <th className="text-left px-4 py-2.5 font-medium">Estado IA</th>
+                      <th className="text-right px-4 py-2.5 font-medium">Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {auditItems.map((item, idx) => (
+                      <tr
+                        key={item.product.id}
+                        className={`border-b border-[#F0F0F0] transition-colors ${
+                          idx === currentIndex ? "bg-[#D6F45B]/5" : "hover:bg-[#F5F6F7]"
+                        }`}
+                      >
+                        <td className="px-4 py-3 text-[#8C8C8C]">{idx + 1}</td>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-2">
+                            {item.product.featuredImage ? (
+                              <img src={item.product.featuredImage} alt="" className="w-8 h-8 rounded object-cover" />
+                            ) : (
+                              <div className="w-8 h-8 rounded bg-[#F0F0F0] flex items-center justify-center">
+                                <Package className="w-4 h-4 text-[#8C8C8C]" />
+                              </div>
+                            )}
+                            <span className="font-medium text-[#1A1A1A] max-w-[200px] truncate">{item.product.title}</span>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 text-[#6B7280]">{item.product.vendor}</td>
+                        <td className="px-4 py-3 font-mono text-[#1A1A1A]">€{item.product.variants[0]?.price || "—"}</td>
+                        <td className="px-4 py-3 font-mono text-xs text-[#8C8C8C]">{item.product.variants[0]?.barcode || "—"}</td>
+                        <td className="px-4 py-3 font-mono text-xs text-[#8C8C8C]">{shortId(item.product.id)}</td>
+                        <td className="px-4 py-3">
+                          <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${
+                            item.product.status === "ACTIVE" ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-600"
+                          }`}>
+                            {item.product.status}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3">
+                          <StatusBadge status={item.status} />
+                        </td>
+                        <td className="px-4 py-3 text-right">
+                          <div className="flex gap-1.5 justify-end">
+                            {item.status === "pending" && (
+                              <button
+                                onClick={() => generateProposal(idx)}
+                                disabled={isGenerating}
+                                className="text-xs px-2.5 py-1 rounded-lg bg-[#0F0F0F] text-[#D6F45B] hover:bg-[#1A1A1A] transition-all font-medium disabled:opacity-50"
+                              >
+                                <BrainCircuit className="w-3 h-3 inline mr-1" />IA
+                              </button>
+                            )}
+                            {(item.status === "generated" || item.status === "approved" || item.status === "skipped") && (
+                              <button
+                                onClick={() => { setCurrentIndex(idx); setViewMode("product_review"); }}
+                                className="text-xs px-2.5 py-1 rounded-lg bg-[#F0F0F0] text-[#1A1A1A] hover:bg-[#E5E7EB] transition-all font-medium"
+                              >
+                                <Eye className="w-3 h-3 inline mr-1" />Ver
+                              </button>
+                            )}
+                            {item.status === "generated" && (
+                              <>
+                                <button
+                                  onClick={() => approveItem(idx)}
+                                  className="text-xs px-2.5 py-1 rounded-lg bg-green-100 text-green-700 hover:bg-green-200 transition-all font-medium"
+                                >
+                                  <Check className="w-3 h-3 inline" />
+                                </button>
+                                <button
+                                  onClick={() => skipItem(idx)}
+                                  className="text-xs px-2.5 py-1 rounded-lg bg-red-50 text-red-500 hover:bg-red-100 transition-all font-medium"
+                                >
+                                  <X className="w-3 h-3 inline" />
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* ═══ PRODUCT REVIEW VIEW ═══ */}
+      {viewMode === "product_review" && currentItem && (
+        <div className="space-y-4">
+          {/* Navigation */}
+          <div className="flex justify-between items-center">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setViewMode("batch_overview")}
+              className="rounded-xl"
+            >
+              <ArrowLeft className="w-4 h-4 mr-1.5" /> Volver al Lote
+            </Button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setCurrentIndex(Math.max(0, currentIndex - 1))}
+                disabled={currentIndex === 0}
+                className="p-2 rounded-lg hover:bg-[#F0F0F0] disabled:opacity-30 transition-all"
+              >
+                <ChevronLeft className="w-5 h-5" />
+              </button>
+              <span className="text-sm font-medium text-[#6B7280]">
+                {currentIndex + 1} / {auditItems.length}
+              </span>
+              <button
+                onClick={() => setCurrentIndex(Math.min(auditItems.length - 1, currentIndex + 1))}
+                disabled={currentIndex === auditItems.length - 1}
+                className="p-2 rounded-lg hover:bg-[#F0F0F0] disabled:opacity-30 transition-all"
+              >
+                <ChevronRight className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="flex gap-2">
+              {currentItem.status === "pending" && (
+                <Button
+                  size="sm"
+                  onClick={() => generateProposal(currentIndex)}
+                  disabled={isGenerating}
+                  className="bg-[#0F0F0F] text-[#D6F45B] hover:bg-[#1A1A1A] rounded-xl"
+                >
+                  <BrainCircuit className="w-4 h-4 mr-1.5" />
+                  {isGenerating ? "Generando..." : "Generar con IA"}
+                </Button>
+              )}
+              {currentItem.status === "generated" && (
+                <>
+                  <Button size="sm" onClick={() => approveItem(currentIndex)} className="bg-green-600 text-white hover:bg-green-700 rounded-xl">
+                    <Check className="w-4 h-4 mr-1.5" /> Aprobar
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => skipItem(currentIndex)} className="rounded-xl text-red-500 border-red-200 hover:bg-red-50">
+                    <X className="w-4 h-4 mr-1.5" /> Ignorar
+                  </Button>
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* Product Info Card */}
+          <Card>
+            <CardHeader className="pb-3 border-b border-[#E5E7EB]">
+              <div className="flex items-start gap-4">
+                {currentItem.product.featuredImage ? (
+                  <img src={currentItem.product.featuredImage} alt="" className="w-16 h-16 rounded-xl object-cover" />
+                ) : (
+                  <div className="w-16 h-16 rounded-xl bg-[#F0F0F0] flex items-center justify-center">
+                    <Package className="w-8 h-8 text-[#8C8C8C]" />
+                  </div>
+                )}
+                <div className="flex-1">
+                  <CardTitle className="text-lg">{currentItem.product.title}</CardTitle>
+                  <div className="flex flex-wrap gap-x-6 gap-y-1 mt-2 text-sm text-[#6B7280]">
+                    <span><strong>Marca:</strong> {currentItem.product.vendor}</span>
+                    <span><strong>Precio:</strong> €{currentItem.product.variants[0]?.price || "—"}</span>
+                    <span><strong>Barcode:</strong> {currentItem.product.variants[0]?.barcode || "—"}</span>
+                    <span><strong>Tipo:</strong> {currentItem.product.productType || "—"}</span>
+                    <span><strong>Status:</strong> {currentItem.product.status}</span>
+                    <span><strong>ID:</strong> {shortId(currentItem.product.id)}</span>
+                  </div>
+                  {currentItem.product.tags.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mt-2">
+                      {currentItem.product.tags.slice(0, 8).map(tag => (
+                        <span key={tag} className="inline-flex px-2 py-0.5 rounded-full text-xs bg-[#F0F0F0] text-[#6B7280]">{tag}</span>
+                      ))}
+                      {currentItem.product.tags.length > 8 && (
+                        <span className="text-xs text-[#8C8C8C]">+{currentItem.product.tags.length - 8} más</span>
+                      )}
+                    </div>
+                  )}
+                </div>
+                <StatusBadge status={currentItem.status} />
+              </div>
+            </CardHeader>
+          </Card>
+
+          {/* Comparison: Original vs Proposed */}
+          {currentItem.proposedData && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Card>
+                <CardHeader className="pb-2 pt-4">
+                  <CardTitle className="text-sm text-[#8C8C8C] uppercase tracking-wider">Original</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <h3 className="font-semibold text-[#1A1A1A] mb-2">{currentItem.product.title}</h3>
+                  <div
+                    className="prose prose-sm max-w-none text-[#6B7280]"
+                    dangerouslySetInnerHTML={{ __html: currentItem.product.bodyHtml || "<p class='italic text-[#8C8C8C]'>Sin descripción</p>" }}
+                  />
+                </CardContent>
+              </Card>
+
+              <Card className="ring-2 ring-[#D6F45B]/40">
+                <CardHeader className="pb-2 pt-4">
+                  <CardTitle className="text-sm text-[#D6F45B] uppercase tracking-wider flex items-center gap-1.5">
+                    <BrainCircuit className="w-3.5 h-3.5" /> Propuesta IA
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <h3 className="font-semibold text-[#1A1A1A] mb-2">{currentItem.proposedData.title}</h3>
+                  <div
+                    className="prose prose-sm max-w-none text-[#6B7280]"
+                    dangerouslySetInnerHTML={{ __html: currentItem.proposedData.bodyHtml }}
+                  />
+                  <div className="mt-3 pt-3 border-t border-[#E5E7EB] space-y-1 text-xs text-[#8C8C8C]">
+                    <p><strong>SEO Title:</strong> {currentItem.proposedData.seoTitle}</p>
+                    <p><strong>SEO Description:</strong> {currentItem.proposedData.seoDescription}</p>
+                    <p><strong>Tags:</strong> {currentItem.proposedData.tags.join(", ")}</p>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
+          {/* Generating State */}
+          {currentItem.status === "generating" && (
+            <Card className="border-[#D6F45B]/30">
+              <CardContent className="py-12 text-center">
+                <BrainCircuit className="w-8 h-8 text-[#D6F45B] mx-auto animate-pulse mb-3" />
+                <p className="text-sm text-[#6B7280]">Buscando notas en Fragrantica y generando propuesta...</p>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Pending State */}
+          {currentItem.status === "pending" && (
+            <Card>
+              <CardContent className="py-12 text-center">
+                <p className="text-sm text-[#8C8C8C]">Haz click en &quot;Generar con IA&quot; para crear una propuesta de mejora.</p>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      )}
     </main>
+  )
+}
+
+// ============================================================================
+// StatusBadge Component
+// ============================================================================
+function StatusBadge({ status }: { status: AuditStatus }) {
+  const config = {
+    pending: { label: "Pendiente", bg: "bg-gray-100", text: "text-gray-600" },
+    generating: { label: "Generando...", bg: "bg-amber-100", text: "text-amber-700" },
+    generated: { label: "Generado", bg: "bg-blue-100", text: "text-blue-700" },
+    approved: { label: "Aprobado", bg: "bg-green-100", text: "text-green-700" },
+    skipped: { label: "Ignorado", bg: "bg-red-50", text: "text-red-500" },
+  }
+  const c = config[status]
+  return (
+    <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${c.bg} ${c.text}`}>
+      {c.label}
+    </span>
   )
 }

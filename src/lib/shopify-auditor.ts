@@ -13,6 +13,8 @@ export interface AuditableProduct {
   tags: string[];
   productType: string;
   status: string;
+  updatedAt: string;
+  featuredImage: string;
   variants: Array<{
     id: string;
     title: string;
@@ -29,8 +31,60 @@ export interface AuditableProduct {
 // Funciones de Lectura (Fetcher para la Auditoría)
 // ============================================================================
 
+const PRODUCT_FIELDS = `
+  id
+  title
+  handle
+  bodyHtml
+  vendor
+  tags
+  productType
+  status
+  updatedAt
+  featuredImage { url }
+  seo {
+    title
+    description
+  }
+  variants(first: 1) {
+    edges {
+      node {
+        id
+        title
+        barcode
+        price
+      }
+    }
+  }
+`;
+
+function mapProduct(node: any): AuditableProduct {
+  return {
+    id: node.id,
+    title: node.title,
+    handle: node.handle,
+    bodyHtml: node.bodyHtml || "",
+    vendor: node.vendor || "",
+    tags: node.tags || [],
+    productType: node.productType || "",
+    status: node.status,
+    updatedAt: node.updatedAt || "",
+    featuredImage: node.featuredImage?.url || "",
+    seo: {
+      title: node.seo?.title || "",
+      description: node.seo?.description || "",
+    },
+    variants: node.variants.edges.map((v: any) => ({
+      id: v.node.id,
+      title: v.node.title,
+      barcode: v.node.barcode || "",
+      price: v.node.price || "0.00",
+    })),
+  };
+}
+
 /**
- * Trae un lote de productos de Shopify. El cursor sirve para paginación si se quiere barrer todo el catálogo.
+ * Trae un lote de productos de Shopify por fecha.
  */
 export async function fetchAuditableProducts(
   config: ShopifyClientConfig,
@@ -46,28 +100,7 @@ export async function fetchAuditableProducts(
         }
         edges {
           node {
-            id
-            title
-            handle
-            bodyHtml
-            vendor
-            tags
-            productType
-            status
-            seo {
-              title
-              description
-            }
-            variants(first: 1) {
-              edges {
-                node {
-                  id
-                  title
-                  barcode
-                  price
-                }
-              }
-            }
+            ${PRODUCT_FIELDS}
           }
         }
       }
@@ -89,29 +122,7 @@ export async function fetchAuditableProducts(
        return { products: [], hasNextPage: false, endCursor: null };
     }
 
-    const products: AuditableProduct[] = connection.edges.map((edge: any) => {
-      const node = edge.node;
-      return {
-        id: node.id,
-        title: node.title,
-        handle: node.handle,
-        bodyHtml: node.bodyHtml || "",
-        vendor: node.vendor || "",
-        tags: node.tags || [],
-        productType: node.productType || "",
-        status: node.status,
-        seo: {
-          title: node.seo?.title || "",
-          description: node.seo?.description || "",
-        },
-        variants: node.variants.edges.map((v: any) => ({
-          id: v.node.id,
-          title: v.node.title,
-          barcode: v.node.barcode || "",
-          price: v.node.price || "0.00",
-        })),
-      };
-    });
+    const products: AuditableProduct[] = connection.edges.map((edge: any) => mapProduct(edge.node));
 
     return {
       products,
@@ -120,6 +131,48 @@ export async function fetchAuditableProducts(
     };
   } catch (error: any) {
     return { products: [], hasNextPage: false, endCursor: null, error: error.message };
+  }
+}
+
+/**
+ * Busca productos por nombre (autocomplete) via GraphQL query filter.
+ */
+export async function searchProducts(
+  config: ShopifyClientConfig,
+  searchQuery: string,
+  limit: number = 20
+): Promise<{ products: AuditableProduct[]; error?: string }> {
+  const query = `
+    query searchProducts($queryStr: String!, $first: Int!) {
+      products(first: $first, query: $queryStr) {
+        edges {
+          node {
+            ${PRODUCT_FIELDS}
+          }
+        }
+      }
+    }
+  `;
+
+  try {
+    const result = await shopifyGraphQL<any>(config, query, {
+      queryStr: `title:*${searchQuery}*`,
+      first: limit,
+    });
+
+    if (result.errors?.length) {
+      return { products: [], error: result.errors[0].message };
+    }
+
+    const connection = result.data?.products;
+    if (!connection) {
+       return { products: [] };
+    }
+
+    const products: AuditableProduct[] = connection.edges.map((edge: any) => mapProduct(edge.node));
+    return { products };
+  } catch (error: any) {
+    return { products: [], error: error.message };
   }
 }
 
@@ -144,7 +197,6 @@ export async function updateShopifyProduct(
   updateData: ProductUpdateData
 ): Promise<{ success: boolean; error?: string }> {
   
-  // 1. Actualizar datos base del producto
   const updateProductMutation = `
     mutation productUpdate($input: ProductInput!) {
       productUpdate(input: $input) {
@@ -164,7 +216,6 @@ export async function updateShopifyProduct(
   if (updateData.bodyHtml) productInput.bodyHtml = updateData.bodyHtml;
   if (updateData.tags) productInput.tags = updateData.tags;
   
-  // SEO Metafields requerirán input en productUpdate
   if (updateData.seoTitle !== undefined || updateData.seoDescription !== undefined) {
      productInput.seo = {
         title: updateData.seoTitle,
@@ -191,3 +242,4 @@ export async function updateShopifyProduct(
     return { success: false, error: error.message };
   }
 }
+
