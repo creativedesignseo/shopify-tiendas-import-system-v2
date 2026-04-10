@@ -191,6 +191,7 @@ export default function AuditorPage() {
           provider: aiProvider,
           modelVersion: aiModel,
           apiKey: settings.ai_api_key,
+          fragellaApiKey: settings.fragella_api_key,
           product: {
             Nombre: product.title,
             Marca: product.vendor,

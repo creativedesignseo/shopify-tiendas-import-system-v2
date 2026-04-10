@@ -14,6 +14,7 @@ export interface UserSettings {
   ai_api_key: string;
   ai_gemini_model: string;
   ai_openai_model: string;
+  fragella_api_key: string;
   default_inventory_qty: number;
   publication_mode: string;
   publication_ids: string[];
@@ -30,6 +31,7 @@ const DEFAULT_SETTINGS: UserSettings = {
   ai_api_key: "",
   ai_gemini_model: "gemini-2.5-flash",
   ai_openai_model: "gpt-4o-mini",
+  fragella_api_key: "",
   default_inventory_qty: 10,
   publication_mode: "all",
   publication_ids: [],
@@ -75,6 +77,7 @@ export function useUserSettings() {
           ai_api_key: data.ai_api_key || "",
           ai_gemini_model: data.ai_gemini_model || "gemini-2.5-flash",
           ai_openai_model: data.ai_openai_model || "gpt-4o-mini",
+          fragella_api_key: data.fragella_api_key || "",
           default_inventory_qty: data.default_inventory_qty || 10,
           publication_mode: data.publication_mode || "all",
           publication_ids: data.publication_ids || [],
@@ -118,6 +121,7 @@ function migrateFromLocalStorage(): Partial<UserSettings> | null {
     ai_api_key: localStorage.getItem("ai_api_key") || "",
     ai_gemini_model: localStorage.getItem("ai_gemini_model_version") || "gemini-2.5-flash",
     ai_openai_model: localStorage.getItem("ai_openai_model_version") || "gpt-4o-mini",
+    fragella_api_key: localStorage.getItem("fragella_api_key") || "",
     default_inventory_qty: Number(localStorage.getItem("shopify_default_inventory_qty") || "10"),
     publication_mode: localStorage.getItem("shopify_publication_mode") || "all",
     output_mode: localStorage.getItem("shopify_output_mode") || "csv_only",
@@ -130,7 +134,7 @@ function migrateFromLocalStorage(): Partial<UserSettings> | null {
     "shopify_profile_name", "shopify_output_mode", "shopify_default_inventory_qty",
     "shopify_publication_mode", "shopify_publication_ids", "shopify_publications_cache",
     "ai_provider", "ai_api_key", "ai_model_version",
-    "ai_gemini_model_version", "ai_openai_model_version",
+    "ai_gemini_model_version", "ai_openai_model_version", "fragella_api_key"
   ];
   keysToRemove.forEach((k) => localStorage.removeItem(k));
 

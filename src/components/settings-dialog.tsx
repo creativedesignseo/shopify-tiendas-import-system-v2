@@ -24,6 +24,8 @@ export function SettingsDialog() {
   const [geminiModelVersion, setGeminiModelVersion] = React.useState("gemini-2.5-flash")
   const [openaiModelVersion, setOpenaiModelVersion] = React.useState("gpt-4o-mini")
   const [showApiKey, setShowApiKey] = React.useState(false)
+  const [fragellaApiKey, setFragellaApiKey] = React.useState("")
+  const [showFragellaKey, setShowFragellaKey] = React.useState(false)
 
   // Shopify settings state
   const [shopDomain, setShopDomain] = React.useState("")
@@ -49,6 +51,7 @@ export function SettingsDialog() {
       setApiKey(settings.ai_api_key)
       setGeminiModelVersion(settings.ai_gemini_model)
       setOpenaiModelVersion(settings.ai_openai_model)
+      setFragellaApiKey(settings.fragella_api_key)
       setShopDomain(settings.shopify_domain)
       setShopAccessToken(settings.shopify_access_token)
       setShopApiVersion(settings.shopify_api_version)
@@ -70,6 +73,7 @@ export function SettingsDialog() {
     ai_api_key: apiKey,
     ai_gemini_model: geminiModelVersion,
     ai_openai_model: openaiModelVersion,
+    fragella_api_key: fragellaApiKey,
     shopify_domain: shopDomain,
     shopify_access_token: shopAccessToken,
     shopify_api_version: shopApiVersion,
@@ -200,6 +204,7 @@ export function SettingsDialog() {
         <Tabs defaultValue="ia" className="w-full">
           <TabsList className="w-full">
             <TabsTrigger value="ia" className="flex-1">IA</TabsTrigger>
+            <TabsTrigger value="fragella" className="flex-1">Fragella API</TabsTrigger>
             <TabsTrigger value="shopify" className="flex-1">
               <Store className="w-4 h-4 mr-1.5" />
               Shopify
@@ -299,6 +304,43 @@ export function SettingsDialog() {
                   </div>
                 </div>
               )}
+            </div>
+          </TabsContent>
+
+          {/* Fragella Tab */}
+          <TabsContent value="fragella">
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="fragella-key" className="text-right text-[#1A1A1A]">
+                  API Key
+                </Label>
+                <div className="col-span-3 relative">
+                    <Input
+                      id="fragella-key"
+                      value={fragellaApiKey}
+                      onChange={(e) => setFragellaApiKey(e.target.value)}
+                      type={showFragellaKey ? "text" : "password"}
+                      className="pr-10"
+                      placeholder="6d2caa..."
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                      onClick={() => setShowFragellaKey(!showFragellaKey)}
+                    >
+                      {showFragellaKey ? (
+                        <EyeOff className="h-4 w-4 text-[#8C8C8C]" />
+                      ) : (
+                        <Eye className="h-4 w-4 text-[#8C8C8C]" />
+                      )}
+                    </Button>
+                </div>
+                <p className="text-[10px] text-[#8C8C8C] col-span-4 text-right">
+                  Clave para Fragella DB. Opcional, pero recomendada para obtener notas olfativas ultra-precisas.
+                </p>
+              </div>
             </div>
           </TabsContent>
 

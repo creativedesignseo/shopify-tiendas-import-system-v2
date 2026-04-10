@@ -138,6 +138,7 @@ export function ProductReviewDialog({
           htmlTemplate: masterData?.htmlTemplate || "",
           provider,
           apiKey: settings.ai_api_key || "",
+          fragellaApiKey: settings.fragella_api_key || "",
           modelVersion
         })
       })

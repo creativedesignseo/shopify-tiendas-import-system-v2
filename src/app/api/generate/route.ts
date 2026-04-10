@@ -71,7 +71,7 @@ export async function POST(req: Request) {
 
   try {
     body = await req.json();
-    const { product, htmlTemplate, provider = "gemini", apiKey, modelVersion } = body;
+    const { product, htmlTemplate, provider = "gemini", apiKey, modelVersion, fragellaApiKey } = body;
 
     const activeApiKey = apiKey || (provider === "openai" ? DEFAULT_OPENAI_KEY : DEFAULT_GEMINI_KEY);
 
@@ -82,7 +82,9 @@ export async function POST(req: Request) {
       );
     }
 
-    // --- GROUNDING: Multi-estrategia en cascada para Fragrantica ---
+    // --- GROUNDING: Fragella API (Primary) -> DuckDuckGo/Fragrantica (Fallback) ---
+    let contextPrompt = "";
+    let fragellaImage = "";
     let webContext = "";
     
     // Limpiar nombre del producto para mejorar búsqueda
@@ -91,6 +93,23 @@ export async function POST(req: Request) {
       .replace(/\s+/g, ' ')
       .trim();
     const cleanBrand = (product.Marca || "").trim();
+
+    async function fetchFragella(key: string, query: string) {
+       try {
+         const res = await fetch(`https://api.fragella.com/api/v1/fragrances?search=${encodeURIComponent(query)}`, {
+           headers: { 'x-api-key': key },
+           signal: AbortSignal.timeout(6000)
+         });
+         if (!res.ok) return null;
+         const data = await res.json();
+         if (data && Array.isArray(data) && data.length > 0) {
+            return data[0];
+         }
+       } catch(e) {
+           console.error("Fragella API error:", e);
+       }
+       return null;
+    }
 
     // Función helper de búsqueda en DuckDuckGo
     async function searchDDG(query: string): Promise<string[]> {
@@ -115,29 +134,72 @@ export async function POST(req: Request) {
       }
     }
 
-    // Estrategia 1: site:fragrantica.com con marca y nombre
-    let snippets = await searchDDG(`site:fragrantica.com ${cleanBrand} ${cleanName}`);
-    
-    // Estrategia 2: solo el nombre del producto (la marca en Shopify a veces difiere de Fragrantica)
-    if (snippets.length === 0) {
-      snippets = await searchDDG(`fragrantica ${cleanName} notas`);
-    }
-    
-    // Estrategia 3: nombre + marca + "notas de salida" (más específico)
-    if (snippets.length === 0) {
-      snippets = await searchDDG(`fragrantica "${cleanName}" ${cleanBrand} "notas de salida"`);
+    let useFallback = true;
+
+    if (fragellaApiKey) {
+      console.log(`Buscando en Fragella API: ${cleanBrand} ${cleanName}`);
+      let fragData = await fetchFragella(fragellaApiKey, `${cleanBrand} ${cleanName}`);
+      if (!fragData) {
+         fragData = await fetchFragella(fragellaApiKey, cleanName);
+      }
+
+      if (fragData) {
+         console.log("¡Fragella API Match encontrado!");
+         useFallback = false;
+         fragellaImage = fragData["Image URL"] || "";
+         
+         const getNotesText = (notesArray: any) => {
+           if (!notesArray || !Array.isArray(notesArray) || notesArray.length === 0) return "Información no disponible";
+           return notesArray.map((n: any) => n.name).join(", ");
+         };
+         
+         let accordsText = "";
+         if (fragData["Main Accords Percentage"]) {
+            accordsText = Object.entries(fragData["Main Accords Percentage"])
+               .map(([key, value]) => `${key} (${value})`)
+               .join(", ");
+         }
+
+         contextPrompt = `
+NOTAS REALES DE FRAGELLA API (FUENTE PRIORITARIA Y ABSOLUTA):
+- Notas de Salida: ${getNotesText(fragData.Notes?.Top)}
+- Notas de Corazón: ${getNotesText(fragData.Notes?.Middle)}
+- Notas de Fondo: ${getNotesText(fragData.Notes?.Base)}
+- Acordes Principales: ${accordsText}
+- Duración (Longevity): ${fragData.Longevity || "No disponible"}
+- Estela (Sillage): ${fragData.Sillage || "No disponible"}
+
+Usa EXACTAMENTE estas notas de salida, corazón y fondo en sus respectivos campos.
+Usa los Acordes, Duración y Estela para enriquecer libremente los campos 'hook', 'caracter', 'sensacion' o 'ideal_para'.
+`;
+      }
     }
 
-    if (snippets.length > 0) {
-      webContext = snippets.join(" | ");
-      console.log(`Grounding OK: ${snippets.length} snippets encontrados para ${cleanName}`);
-    } else {
-      console.log(`Grounding FAIL: Sin resultados de Fragrantica para ${cleanName} (${cleanBrand})`);
+    if (useFallback) {
+      // Estrategia 1: site:fragrantica.com con marca y nombre
+      let snippets = await searchDDG(`site:fragrantica.com ${cleanBrand} ${cleanName}`);
+      
+      // Estrategia 2: solo el nombre del producto
+      if (snippets.length === 0) {
+        snippets = await searchDDG(`fragrantica ${cleanName} notas`);
+      }
+      
+      // Estrategia 3: nombre + marca + "notas de salida"
+      if (snippets.length === 0) {
+        snippets = await searchDDG(`fragrantica "${cleanName}" ${cleanBrand} "notas de salida"`);
+      }
+
+      if (snippets.length > 0) {
+        webContext = snippets.join(" | ");
+        console.log(`Grounding OK: ${snippets.length} snippets encontrados en DDG para ${cleanName}`);
+      } else {
+        console.log(`Grounding FAIL: Sin resultados de web para ${cleanName} (${cleanBrand})`);
+      }
+      
+      contextPrompt = webContext 
+        ? `\nNOTAS REALES DE FRAGRANTICA (FUENTE PRIORITARIA — usa estas notas como base):\n"${webContext}"\n` 
+        : "\nNo se pudo consultar ninguna base de datos automáticamente. Usa tu conocimiento de perfumería para proveer las notas olfativas si conoces este perfume. Si genuinamente NO conoces este perfume específico, pon 'Consultar en Fragrantica' en las notas.\n";
     }
-    
-    const contextPrompt = webContext 
-      ? `\nNOTAS REALES DE FRAGRANTICA (FUENTE PRIORITARIA — usa estas notas como base):\n"${webContext}"\n` 
-      : "\nNo se pudo consultar Fragrantica automáticamente. Usa tu conocimiento de perfumería para proveer las notas olfativas si conoces este perfume. Si genuinamente NO conoces este perfume específico, pon 'Consultar en Fragrantica' en las notas.\n";
 
     // --- PROMPT: La IA devuelve SOLO datos estructurados, NO HTML ---
     const systemPrompt = `
@@ -292,7 +354,7 @@ REGLAS CRÍTICAS:
       aroma: jsonResponse.aroma || "",
       sexo_objetivo: jsonResponse.sexo_objetivo || "",
     };
-    jsonResponse.image_url = "";
+    jsonResponse.image_url = fragellaImage;
 
     return NextResponse.json(jsonResponse);
 
